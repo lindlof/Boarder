@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="fi.mikuz.boarder"
+      android:versionCode="4" android:versionName="0.10">
+	
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.WRITE_SETTINGS" />
+	<uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+	<uses-permission android:name="android.permission.INTERNET" />
+	
+	<uses-sdk android:minSdkVersion="15" />
+	
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
+        <activity android:name=".gui.SoundboardMenu"
+                  android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.CREATE_SHORTCUT" />
+           		<category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        
+        <activity
+          android:name="com.dropbox.client2.android.AuthActivity"
+          android:launchMode="singleTask"
+          android:configChanges="orientation|keyboard">
+          <intent-filter>
+            <!-- Change this to be db- followed by your app key -->
+            <data android:scheme="db-u4842ck2zfx0vy2" />
+            <action android:name="android.intent.action.VIEW" />                
+            <category android:name="android.intent.category.BROWSABLE"/>
+            <category android:name="android.intent.category.DEFAULT" /> 
+          </intent-filter>
+        </activity>
+        
+        <activity android:name=".gui.ZipImporter" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/zip" />
+            </intent-filter>
+        </activity>
+        
+		<activity android:name=".gui.SoundboardEditor" />
+		<activity android:name=".gui.GraphicalSoundboardEditor" />
+		<activity android:name=".gui.FileExplorer" />
+		<activity android:name=".gui.ColorChanger" />
+		<activity android:name=".gui.internet.InternetMenu"
+		    android:screenOrientation="portrait" />
+		<activity android:name=".gui.internet.DownloadBoardList"
+		    android:screenOrientation="portrait"
+		    android:windowSoftInputMode="stateHidden" />
+		<activity android:name=".gui.internet.DownloadBoard"
+		    android:screenOrientation="portrait" />
+		<activity android:name=".gui.internet.DownloadBoardComments"
+		    android:screenOrientation="portrait"
+		    android:windowSoftInputMode="stateHidden" />
+		<activity android:name=".gui.internet.Register"
+		    android:screenOrientation="portrait" />
+		<activity android:name=".gui.internet.Login"
+		    android:screenOrientation="portrait" />
+		<activity android:name=".gui.internet.Uploads"
+		    android:screenOrientation="portrait" />
+		<activity android:name=".gui.internet.Favorites"
+		    android:screenOrientation="portrait" />		<activity android:name=".gui.internet.Settings"
+		    android:screenOrientation="portrait" />
+		<activity android:name=".gui.DropboxMenu"
+		    android:screenOrientation="portrait" />
+		
+	</application>
+
+</manifest> 

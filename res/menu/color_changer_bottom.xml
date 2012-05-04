@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<group android:id="@+id/pick">
+        <item android:id="@+id/menu_pick_color"
+              android:title="@string/menu_pick_color" />
+    </group>
+    
+    <group android:id="@+id/copy">
+        <item android:id="@+id/menu_copy_color"
+              android:title="@string/menu_copy_color" />
+    </group>
+
+	<group android:id="@+id/project_actions">
+	    <item android:id="@+id/menu_save_color"
+	          android:title="@string/menu_save_color" />
+	    <item android:id="@+id/menu_cancel_color"
+	          android:title="@string/menu_cancel_color" />
+    </group>
+    
+</menu>

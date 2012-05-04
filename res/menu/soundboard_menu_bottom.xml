@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/menu_play_pause"
+        android:title="@string/menu_play_pause"/>
+    <item
+        android:id="@+id/menu_add_board"
+        android:title="@string/menu_add_board"/>
+    <item
+        android:id="@+id/menu_internet"
+        android:title="@string/menu_internet"/>
+        <item
+        android:id="@+id/menu_dropbox"
+        android:title="@string/menu_dropbox"/>
+    <item
+        android:id="@+id/menu_global_settings"
+        android:title="@string/menu_global_settings"/>
+    <item
+        android:id="@+id/menu_help"
+        android:title="@string/menu_help"/>
+    <item
+        android:id="@+id/menu_about"
+        android:title="@string/menu_about"/>
+    <item
+        android:id="@+id/menu_rate"
+        android:title="Rate"/>
+    <item
+        android:id="@+id/menu_donate"
+        android:title="Donate"/>
+    <item
+        android:id="@+id/menu_email"
+        android:title="@string/menu_email"/>
+    <item
+        android:id="@+id/xda"
+        android:title="XDA forums"/>
+    <item
+        android:id="@+id/menu_github"
+        android:title="github"/>
+
+</menu>

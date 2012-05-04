@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/menu_change_volume"
+    	android:title="@string/menu_change_volume" />
+	<item android:id="@+id/menu_rename_sound"
+    	android:title="@string/menu_rename_sound" />
+	<item android:id="@+id/menu_move_sound"
+    	android:title="@string/menu_move_sound" />
+    <item android:id="@+id/menu_remove_sound"
+    	android:title="@string/menu_remove_sound" />
+    	<item android:id="@+id/menu_set_as"
+    	android:title="@string/menu_set_as" />
+    
+</menu>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<item android:id="@+id/menu_rename_board"
+		android:title="@string/menu_rename_board" />
+	<item android:id="@+id/menu_delete_board"
+		android:title="@string/menu_delete_board" />
+	<item android:id="@+id/menu_move_board"
+		android:title="@string/menu_move_board" />
+	<item android:id="@+id/menu_duplicate_board"
+		android:title="@string/menu_duplicate_board" />
+	<item android:id="@+id/menu_zip_board"
+		android:title="Zip for sharing" />
+    
+</menu>

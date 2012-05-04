@@ -1,0 +1,9 @@
+This directory contains all API keys Boarder uses.
+BugSense and Dropbox API keys are not publicly distributed.
+
+
+API keys are stored in following files:
+
+BugSenseApiKey.txt
+DropboxApiKey.txt
+DropboxApiSecret.txt

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView>
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/alert_settings_root"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:scrollbarAlwaysDrawVerticalTrack="true"
+        android:scrollbars="vertical" >
+        
+        <TextView
+            android:id="@+id/wikiLink"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="50"
+            android:scrollbars="vertical"
+            android:textColor="#FFF"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/boardNameText"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="Board name" />
+
+        <EditText
+            android:id="@+id/boardNameInput"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+        
+        <TextView
+            android:id="@+id/boardVersionText"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="Board version" />
+        
+        <EditText
+            android:id="@+id/boardVersionInput"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:text="0" />
+        
+        <TextView
+            android:id="@+id/boardDescriptionText"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="Description" />
+
+        <EditText
+            android:id="@+id/boardDescriptionInput"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/boardURLText"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="URLs to the zip files.\nFill at least one." />
+
+        <EditText
+            android:id="@+id/boardUrl0Input"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:text="http://www." />
+        
+        <EditText
+            android:id="@+id/boardUrl1Input"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri" />
+        
+        <EditText
+            android:id="@+id/boardUrl2Input"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri" />
+        
+        <EditText
+            android:id="@+id/boardUrl3Input"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri" />
+        
+        <EditText
+            android:id="@+id/boardUrl4Input"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri" />
+        
+        <TextView
+            android:id="@+id/boardScreenshotURLText"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="Direct URL to a screenshot" />
+
+        <EditText
+            android:id="@+id/boardScreenshotUrl0Input"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:text="http://www." />
+
+        <Button
+            android:id="@+id/sendButton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Send" />
+        
+    </LinearLayout>
+
+</ScrollView>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/root"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+    
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:orientation="horizontal"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center"
+	    >
+	    
+	    <TextView android:id="@+id/alphaText"
+	   		android:layout_width="wrap_content"
+	   		android:layout_height="wrap_content"
+	   		android:textColor="#FFF"
+	   		android:textSize="17sp"
+	   		android:width="55dip"
+	   		android:text="Alpha"
+	   		/>
+	    
+		<TextView android:id="@+id/alphaValueText"
+	   		android:layout_width="wrap_content"
+	   		android:layout_height="wrap_content"
+	   		android:textColor="#FFF"
+	   		android:textSize="17sp"
+	   		android:width="30dip"
+	   		android:text="0"
+	   		/>
+			
+		<SeekBar android:id="@+id/alphaBar"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:max="255"
+			android:padding="4dip"
+			/>
+	              
+	</LinearLayout>
+	
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:orientation="horizontal"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center"
+	    >
+	    
+	    <TextView android:id="@+id/redText"
+	   		android:layout_width="wrap_content"
+	   		android:layout_height="wrap_content"
+	   		android:textColor="#FFF"
+	   		android:textSize="17sp"
+	   		android:width="55dip"
+	   		android:text="Red"
+	   		/>
+	    
+		<TextView android:id="@+id/redValueText"
+	   		android:layout_width="wrap_content"
+	   		android:layout_height="wrap_content"
+	   		android:textColor="#FFF"
+	   		android:textSize="17sp"
+	   		android:width="30dip"
+	   		android:text="0"
+	   		/>
+			
+		<SeekBar android:id="@+id/redBar"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:max="255"
+			android:padding="4dip"
+			/>
+	              
+	</LinearLayout>
+	
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:orientation="horizontal"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center"
+	    >
+	    
+	    <TextView android:id="@+id/greenText"
+	   		android:layout_width="wrap_content"
+	   		android:layout_height="wrap_content"
+	   		android:textColor="#FFF"
+	   		android:textSize="17sp"
+	   		android:width="55dip"
+	   		android:text="Green"
+	   		/>
+	    
+		<TextView android:id="@+id/greenValueText"
+	   		android:layout_width="wrap_content"
+	   		android:layout_height="wrap_content"
+	   		android:textColor="#FFF"
+	   		android:textSize="17sp"
+	   		android:width="30dip"
+	   		android:text="0"
+	   		/>
+			
+		<SeekBar android:id="@+id/greenBar"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:max="255"
+			android:padding="4dip"
+			/>
+	              
+	</LinearLayout>
+	
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:orientation="horizontal"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center"
+	    >
+	    
+	    <TextView android:id="@+id/blueText"
+	   		android:layout_width="wrap_content"
+	   		android:layout_height="wrap_content"
+	   		android:textColor="#FFF"
+	   		android:textSize="17sp"
+	   		android:width="55dip"
+	   		android:text="Blue"
+	   		/>
+	    
+		<TextView android:id="@+id/blueValueText"
+	   		android:layout_width="wrap_content"
+	   		android:layout_height="wrap_content"
+	   		android:textColor="#FFF"
+	   		android:textSize="17sp"
+	   		android:width="30dip"
+	   		android:text="0"
+	   		/>
+			
+		<SeekBar android:id="@+id/blueBar"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:max="255"
+			android:padding="4dip"
+			/>
+	              
+	</LinearLayout>
+	
+	<View android:id="@+id/preview"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		/>
+	
+</LinearLayout>

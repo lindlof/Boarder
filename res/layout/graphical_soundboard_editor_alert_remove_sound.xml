@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView>
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/alert_remove_sound_root"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:scrollbarAlwaysDrawVerticalTrack="true"
+        android:scrollbars="vertical" >
+
+        <CheckBox
+            android:id="@+id/removeFile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_x="50px"
+            android:layout_y="22px"
+            android:text=" Remove file" />
+    </LinearLayout>
+
+</ScrollView>
