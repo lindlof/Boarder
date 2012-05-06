@@ -42,6 +42,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Filterable;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
@@ -69,7 +70,7 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 public class SoundboardMenu extends ListActivity {
 	public static final String TAG = "SoundboardMenu";
 	
-	public static final boolean mDevelopmentMode = false; //FIXME for release
+	public static final boolean mDevelopmentMode = true; //FIXME for release
 	
 	public static Context context;
 	
@@ -106,9 +107,6 @@ public class SoundboardMenu extends ListActivity {
 	public static final String mExtLinkXDA = "http://forum.xda-developers.com/showthread.php?p=23224859#post23224859";
 	public static final String mExtLinkMarket = "market://details?id=fi.mikuz.boarder";
 	
-	
-	private Button mEnableNotificationButton;
-	private Button mDisableNotificationButton;
     private final static int mNotificationId = 0; 
 	
     @Override
@@ -166,18 +164,17 @@ public class SoundboardMenu extends ListActivity {
         
         refreshBoards();
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
-        View layout = inflater.inflate(R.layout.soundboard_menu_list,
-        		(ViewGroup) findViewById(R.id.soundboard_menu_root));
-        mEnableNotificationButton = (Button) layout.findViewById(R.id.enableNotificationButton);
-        mDisableNotificationButton = (Button) layout.findViewById(R.id.disableNotificationButton);
+        View layout = inflater.inflate(R.layout.soundboard_menu_list, (ViewGroup) findViewById(R.id.soundboard_menu_root));
+        Button enableNotificationButton = (Button) layout.findViewById(R.id.enableNotificationButton);
+        Button disableNotificationButton = (Button) layout.findViewById(R.id.disableNotificationButton);
 
-        mEnableNotificationButton.setOnClickListener(new OnClickListener() {
+        enableNotificationButton.setOnClickListener(new OnClickListener() {
         	public void onClick(View v) {
         		updateNotification(SoundboardMenu.this, "Soundboard menu", null);
         	}
         });
 
-        mDisableNotificationButton.setOnClickListener(new OnClickListener() {
+        disableNotificationButton.setOnClickListener(new OnClickListener() {
         	public void onClick(View v) {
         		final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         		notificationManager.cancel(SoundboardMenu.TAG, mNotificationId);
@@ -419,11 +416,25 @@ public class SoundboardMenu extends ListActivity {
             	AlertDialog.Builder helpBuilder = new AlertDialog.Builder(this);
             	helpBuilder.setTitle("Help");
             	
-            	TextView tv = new TextView(this); 
-            	helpBuilder.setView(tv);
+            	LinearLayout helpLayout = new LinearLayout(this);
+            	helpLayout.setOrientation(LinearLayout.VERTICAL);
+            	helpBuilder.setView(helpLayout);
             	
+            	TextView tv = new TextView(this);
             	tv.setText(Html.fromHtml(getResources().getString(R.string.menu_help_text)));
             	tv.setMovementMethod(LinkMovementMethod.getInstance());
+            	
+            	Button introductionButton = new Button(this);
+            	introductionButton.setText("Introduction");
+            	introductionButton.setOnClickListener(new OnClickListener() {
+					public void onClick(View v) {
+						Intent i = new Intent(SoundboardMenu.this, Introduction.class);
+		            	startActivity(i);
+					}
+				});
+            	
+            	helpLayout.addView(introductionButton);
+            	helpLayout.addView(tv);
             	
             	AlertDialog helpAlert = helpBuilder.create();
             	helpAlert.show();
