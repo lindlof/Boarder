@@ -589,7 +589,7 @@ public class DropboxMenu extends ListActivity {
             					shareString += "\n\n" +
             							"Importing a board:\n" +
             							"1. Open Boarder'\n" +
-            							"2. Open Dropbox from menu in 'Soundboard menu'\n" +
+            							"2. Open Dropbox from menu in 'Soundboard Menu'\n" +
             							"3. Open 'Import share' from menu\n" +
             							"4. Copy a reference from above to textfield\n";
 

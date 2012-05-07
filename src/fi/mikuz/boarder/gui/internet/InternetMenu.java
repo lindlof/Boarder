@@ -463,7 +463,7 @@ public class InternetMenu extends Activity implements ConnectionListener {
         });
 		
 		lastWords.setText("\n\n" +
-				"These options are also available in soundboard menu.\n");
+				"These options are also available in 'Soundboard Menu'.\n");
 		
 		builder.show();
 	}

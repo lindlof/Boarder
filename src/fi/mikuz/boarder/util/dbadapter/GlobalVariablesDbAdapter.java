@@ -31,6 +31,7 @@ public class GlobalVariablesDbAdapter extends DbAdapter {
     public static final String KEY_VARIABLE = "variable";
     public static final String KEY_DATA = "data";
     
+    public static final String FIRST_START_KEY = "firstStart";
     public static final String TOS_VERSION_KEY = "tosVersion";
     public static final String FADE_OUT_DURATION_KEY = "fadeOutDuration";
     public static final String FADE_IN_DURATION_KEY = "fadeInDuration";

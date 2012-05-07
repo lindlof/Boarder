@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.StaleDataException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -44,6 +45,7 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -170,7 +172,7 @@ public class SoundboardMenu extends ListActivity {
 
         enableNotificationButton.setOnClickListener(new OnClickListener() {
         	public void onClick(View v) {
-        		updateNotification(SoundboardMenu.this, "Soundboard menu", null);
+        		updateNotification(SoundboardMenu.this, "Soundboard Menu", null);
         	}
         });
 
@@ -184,6 +186,8 @@ public class SoundboardMenu extends ListActivity {
         setContentView(layout);
         registerForContextMenu(getListView());
         context = this.getBaseContext();
+        
+        firstStartIntroduction();
     }
     
     @Override
@@ -220,83 +224,87 @@ public class SoundboardMenu extends ListActivity {
     
     private void updateBoards() {
     	
-    	Log.v(TAG, "updating boardlist");
-    	if (Environment.getExternalStorageDirectory().canRead() == false) {
-    		Toast msg = Toast.makeText(this, "Can't read sdcard", Toast.LENGTH_LONG);
-    		msg.show();
-    	} else if (mSbDir.canRead()) {
+    	try {
+    		Log.v(TAG, "Updating board list");
+        	if (Environment.getExternalStorageDirectory().canRead() == false) {
+        		Toast msg = Toast.makeText(this, "Can't read sdcard", Toast.LENGTH_LONG);
+        		msg.show();
+        	} else if (mSbDir.canRead()) {
 
-    		Cursor boardsCursor = mDbHelper.fetchAllBoards();
-    		startManagingCursor(boardsCursor);
+        		Cursor boardsCursor = mDbHelper.fetchAllBoards();
+        		startManagingCursor(boardsCursor);
 
-    		File[] files = mSbDir.listFiles();
+        		File[] files = mSbDir.listFiles();
 
-    		for(int i = 0; i < files.length; i++) {
+        		for(int i = 0; i < files.length; i++) {
 
-    			if (files[i].isDirectory() && files[i].listFiles().length > 0) {
+        			if (files[i].isDirectory() && files[i].listFiles().length > 0) {
 
-    				boolean databaseContainsFile = false;
+        				boolean databaseContainsFile = false;
 
-    				if (boardsCursor.moveToFirst()) {
-    					do {
-    						String boardName = boardsCursor.getString(
-    								boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE));
+        				if (boardsCursor.moveToFirst()) {
+        					do {
+        						String boardName = boardsCursor.getString(
+        								boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE));
 
-    						if (boardName.equals(files[i].getName().toString())) {
-    							databaseContainsFile = true;
-    							break;
-    						}
-    					} while (boardsCursor.moveToNext());
-    				}
-    				if (databaseContainsFile == false && !files[i].getName().toString().equals(mBackupDir.getName())) {
-    					int boardLocaltion = 0;
-    					try {
-    						boardLocaltion = 
-    								BoardLocal.testIfBoardIsLocal(files[i].getName().toString());
-    					} catch (IOException e) {
-    						e.printStackTrace();
-    					}
-    					mDbHelper.createBoard(files[i].getName().toString(), boardLocaltion);
-    				}
-    			} else if (files[i].equals(SoundboardMenu.mDropboxCache) || files[i].equals(mBackupDir)) {
-    			} else {
-    				files[i].delete();
-    			}
-    		}
+        						if (boardName.equals(files[i].getName().toString())) {
+        							databaseContainsFile = true;
+        							break;
+        						}
+        					} while (boardsCursor.moveToNext());
+        				}
+        				if (databaseContainsFile == false && !files[i].getName().toString().equals(mBackupDir.getName())) {
+        					int boardLocaltion = 0;
+        					try {
+        						boardLocaltion = 
+        								BoardLocal.testIfBoardIsLocal(files[i].getName().toString());
+        					} catch (IOException e) {
+        						e.printStackTrace();
+        					}
+        					mDbHelper.createBoard(files[i].getName().toString(), boardLocaltion);
+        				}
+        			} else if (files[i].equals(SoundboardMenu.mDropboxCache) || files[i].equals(mBackupDir)) {
+        			} else {
+        				files[i].delete();
+        			}
+        		}
 
-    		if (boardsCursor.moveToFirst()) {
-    			do {
-    				String boardName = boardsCursor.getString(
-    						boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE));
+        		if (boardsCursor.moveToFirst()) {
+        			do {
+        				String boardName = boardsCursor.getString(
+        						boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE));
 
-    				boolean boardInDbExists = false;
-    				for (int i = 0; i < files.length; i++) {
-    					if (files[i].getName().toString().equals(boardName)) {
-    						boardInDbExists = true;
-    						break;
-    					}
-    				}
+        				boolean boardInDbExists = false;
+        				for (int i = 0; i < files.length; i++) {
+        					if (files[i].getName().toString().equals(boardName)) {
+        						boardInDbExists = true;
+        						break;
+        					}
+        				}
 
-    				if (boardInDbExists) {
+        				if (boardInDbExists) {
 
-    					int boardLocal = BoardsDbAdapter.LOCAL_RED;
-    					try {
-    						boardLocal = BoardLocal.testIfBoardIsLocal(boardName);
-    					} catch (IOException e) {
-    						e.printStackTrace();
-    					}
+        					int boardLocal = BoardsDbAdapter.LOCAL_RED;
+        					try {
+        						boardLocal = BoardLocal.testIfBoardIsLocal(boardName);
+        					} catch (IOException e) {
+        						e.printStackTrace();
+        					}
 
-    					mDbHelper.updateBoard(
-    							boardsCursor.getInt(boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_ROWID)), 
-    							boardsCursor.getString(boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE)), 
-    							boardLocal);
+        					mDbHelper.updateBoard(
+        							boardsCursor.getInt(boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_ROWID)), 
+        							boardsCursor.getString(boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE)), 
+        							boardLocal);
 
-    				} else {
-    					mDbHelper.deleteBoard(boardsCursor.getInt(boardsCursor.getColumnIndexOrThrow(
-    							BoardsDbAdapter.KEY_ROWID)));
-    				}
-    			} while (boardsCursor.moveToNext());
-    		}
+        				} else {
+        					mDbHelper.deleteBoard(boardsCursor.getInt(boardsCursor.getColumnIndexOrThrow(
+        							BoardsDbAdapter.KEY_ROWID)));
+        				}
+        			} while (boardsCursor.moveToNext());
+        		}
+        	}
+    	} catch (StaleDataException e) {
+    		Log.w(TAG, "Unable to update board list", e);
     	}
 
     }
@@ -310,7 +318,21 @@ public class SoundboardMenu extends ListActivity {
     		refreshBoards();
     	}
     };
-
+    
+    private void firstStartIntroduction() {
+    	Cursor variableCursor = mGlobalVariableDbHelper.fetchVariable(GlobalVariablesDbAdapter.FIRST_START_KEY);
+		startManagingCursor(variableCursor);
+		int firstStart = 1;
+		try {
+			firstStart = variableCursor.getInt(variableCursor.getColumnIndexOrThrow(GlobalVariablesDbAdapter.KEY_DATA));
+		} catch (Exception e) {
+			mGlobalVariableDbHelper.createIntVariable(GlobalVariablesDbAdapter.FIRST_START_KEY, 0);
+		}
+		if (firstStart == 1) {
+			Intent i = new Intent(SoundboardMenu.this, Introduction.class);
+        	startActivity(i);
+		}
+    }
     
     public class BoardsCursorAdapter extends SimpleCursorAdapter implements Filterable {
 
@@ -416,9 +438,12 @@ public class SoundboardMenu extends ListActivity {
             	AlertDialog.Builder helpBuilder = new AlertDialog.Builder(this);
             	helpBuilder.setTitle("Help");
             	
+            	ScrollView scroll = new ScrollView(this);
+            	helpBuilder.setView(scroll);
+            	
             	LinearLayout helpLayout = new LinearLayout(this);
             	helpLayout.setOrientation(LinearLayout.VERTICAL);
-            	helpBuilder.setView(helpLayout);
+            	scroll.addView(helpLayout);
             	
             	TextView tv = new TextView(this);
             	tv.setText(Html.fromHtml(getResources().getString(R.string.menu_help_text)));
