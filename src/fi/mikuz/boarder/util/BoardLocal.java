@@ -62,7 +62,7 @@ public class BoardLocal {
 			return BoardsDbAdapter.LOCAL_GREEN;
 		} catch (Exception e) {
 			// Do not crash here, just return red
-			Log.e(TAG, "Can't get board color for " + boardName, e);
+			Log.w(TAG, "Can't get board color for " + boardName + "\nError: " + e.getMessage());
 			return BoardsDbAdapter.LOCAL_RED;
 		}
     }
