@@ -20,20 +20,20 @@
 
         <LinearLayout
             xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal" >
 
             <Button
                 android:id="@+id/changeSoundPathButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
                 android:text="Change sound" />
 
             <Button
                 android:id="@+id/secondClickActionButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
                 android:text="Second click action" />
         </LinearLayout>
 
@@ -70,17 +70,17 @@
 
             <EditText
                 android:id="@+id/leftVolumeInput"
-                android:layout_width="wrap_content"
+                android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:inputType="number" />
+                android:inputType="numberDecimal" />
 
             <EditText
                 android:id="@+id/rightVolumeInput"
-                android:layout_width="wrap_content"
+                android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:inputType="number" />
+                android:inputType="numberDecimal" />
         </LinearLayout>
     </LinearLayout>
 

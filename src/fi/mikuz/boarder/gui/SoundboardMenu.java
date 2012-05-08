@@ -503,7 +503,7 @@ public class SoundboardMenu extends ListActivity {
 
             case R.id.menu_global_settings:
             	LayoutInflater inflater = (LayoutInflater) SoundboardMenu.this.getSystemService(LAYOUT_INFLATER_SERVICE);
-            	View layout = inflater.inflate(R.layout.soundboard_menu_global_settings, (ViewGroup) findViewById(R.id.alert_settings_root));
+            	View layout = inflater.inflate(R.layout.soundboard_menu_alert_global_settings, (ViewGroup) findViewById(R.id.alert_settings_root));
 
             	final EditText fadeInInput = (EditText) layout.findViewById(R.id.fadeInInput);
             	fadeInInput.setText(Integer.toString(mGlobalSettings.getFadeInDuration()));
