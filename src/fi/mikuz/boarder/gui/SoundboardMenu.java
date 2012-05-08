@@ -310,7 +310,11 @@ public class SoundboardMenu extends ListActivity {
     }
     
     private void refreshBoards() {
-    	setListAdapter(new BoardsCursorAdapter(mDbHelper.fetchAllBoards()));
+    	try {
+    		setListAdapter(new BoardsCursorAdapter(mDbHelper.fetchAllBoards()));
+    	} catch (IllegalStateException e) {
+    		Log.w(TAG, "Unable to refresh board list", e);
+    	}
     }
     
     final Runnable mFinalizeBoardUpdating = new Runnable() {
