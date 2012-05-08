@@ -20,27 +20,12 @@
 				&lt;h2>Help Center&lt;/h2>
 				This dialog is for necessary information that everyone should read.&lt;br />
 				For tutorials and stuff you can visit &lt;a href=\"https://github.com/Mikuz/Boarder/wiki\">The Boarder wiki&lt;/a>.&lt;br />
-				&lt;h3>Image for board&lt;/h3>
-				Place \'icon.png\' to soundboard folder.&lt;br />
-				Recommended size 48x48
-				&lt;br />
 				&lt;h3>Yellow/Green&lt;/h3>
 				Green means that your sounds are inside board directory and messing with &lt;br />
 				another directories won\'t break your board. &lt;br />
 				You can also share your board directory when it\'s green. &lt;br />
 				Use convert in board to make your board green.&lt;br />
 				&lt;br />
-				&lt;h3>Dropbox&lt;/h3>
-				Use menu button on menu and select Dropbox.&lt;br />
-				&lt;br />
-				Upload local board to Dropbox or download board in Dropbox to local device.&lt;br />
-				All boards will be located in /Boarder in Dropbox.&lt;br />
-				Press back during transfer to cancel - corrupts file being transferred.&lt;br />
-				You don\'t need to transfer files that are already transferred.&lt;br />
-				&lt;br />
-				&lt;h3>Sharing a board&lt;/h3>
-				When sharing a board make sure it\'s green. Please read Yellow/Green.&lt;br />
-			&lt;/body>
 		&lt;/html>
     </string>
     

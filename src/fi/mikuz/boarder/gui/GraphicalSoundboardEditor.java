@@ -516,7 +516,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		                	resetBuilder.setTitle("Change board icon");
 		                	resetBuilder.setMessage("You can change icon for this board.\n\n" +
 		                			"You need a png image:\n " + mSbDir + "/" + mBoardName + "/" + "icon.png\n\n" +
-		                			"Recommended size is 48x48 pixels.");
+		                			"Recommended size is about 80x80 pixels.");
 		                	AlertDialog resetAlert = resetBuilder.create();
 		                	resetAlert.show();
             	    	} else if (item == 3) {
