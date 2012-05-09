@@ -18,13 +18,11 @@
         &lt;html>
 			&lt;body bgcolor = \"#1C1C1C\" TEXT = \"#ffffff\" LINK = \"ffcc33\" VLINK = \"ff9933\">
 				&lt;h2>Help Center&lt;/h2>
-				This dialog is for necessary information that everyone should read.&lt;br />
+				This dialog is for the most vital information.&lt;br />
 				For tutorials and stuff you can visit &lt;a href=\"https://github.com/Mikuz/Boarder/wiki\">The Boarder wiki&lt;/a>.&lt;br />
 				&lt;h3>Yellow/Green&lt;/h3>
-				Green means that your sounds are inside board directory and messing with &lt;br />
-				another directories won\'t break your board. &lt;br />
-				You can also share your board directory when it\'s green. &lt;br />
-				Use convert in board to make your board green.&lt;br />
+				Green means that your resources are inside board directory and the board is fully portable. &lt;br />
+				Use convert option in a board to make it green.&lt;br />
 				&lt;br />
 		&lt;/html>
     </string>
