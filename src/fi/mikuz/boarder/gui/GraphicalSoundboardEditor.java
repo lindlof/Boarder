@@ -520,7 +520,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		                	AlertDialog resetAlert = resetBuilder.create();
 		                	resetAlert.show();
             	    	} else if (item == 3) {
-            	    		final CharSequence[] items = {"Portait", "Landscape (BETA)"};
+            	    		final CharSequence[] items = {"Portait", "Landscape"};
 
 		                	AlertDialog.Builder orientationBuilder = new AlertDialog.Builder(
 		                			GraphicalSoundboardEditor.this);
@@ -2239,13 +2239,13 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
                     }
                 }
                 try {
-            		if (mMode == EDIT_BOARD && mDrawDragSound) {
+            		if (mMode == EDIT_BOARD && (mDrawDragSound || mMoveBackground )) {
             			Thread.sleep(10);
-            		} else if (mMode == EDIT_BOARD && mDrawDragSound == false) {
+            		} else if (mMode == EDIT_BOARD && mDrawDragSound == false && mMoveBackground == false) {
             			
             			for (int i = 0; i <= 5; i++) {
             				Thread.sleep(100);
-            				if (mDrawDragSound) {
+            				if (mDrawDragSound || mMoveBackground) {
             					break;
             				}
             			}
@@ -2257,6 +2257,9 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
             					break;
             				}
             			}
+            		} else {
+            			Log.e(TAG, "Undefined redraw rate state");
+            			Thread.sleep(1000);
             		}
 				} catch (InterruptedException e) {}
             }
