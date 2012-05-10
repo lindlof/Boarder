@@ -71,6 +71,18 @@ public class SoundPlayerControl {
 	    	}
 		}
 		
+		// Remove all idling sounds if we are toggling to pause
+		if (playing == true) {
+    		ListIterator<SoundPlayer> iterator = SoundboardMenu.mSoundPlayerList.listIterator();
+			while (iterator.hasNext()) {
+				SoundPlayer iteratedPlayer = iterator.next();
+				if (!iteratedPlayer.isPlaying()) {
+					iterator.remove();
+					iteratedPlayer.release();
+				}
+			}
+        }
+		
 		if (playing == true && globalSettings.getFadeOutDuration() > 0) {
 			
 			Thread t = new Thread() {
