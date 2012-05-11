@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.Notification;
@@ -45,6 +46,7 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RemoteViews;
 import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
@@ -56,6 +58,7 @@ import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.component.GlobalSettings;
 import fi.mikuz.boarder.component.SoundPlayer;
 import fi.mikuz.boarder.gui.internet.InternetMenu;
+import fi.mikuz.boarder.service.TogglePlayPauseService;
 import fi.mikuz.boarder.util.ApiKeyLoader;
 import fi.mikuz.boarder.util.BoardLocal;
 import fi.mikuz.boarder.util.FileProcessor;
@@ -76,8 +79,9 @@ public class SoundboardMenu extends ListActivity {
 	
 	public static Context context;
 	
-	public static final String EXTRA_KEY = "SoundboardMenu.boardToLaunch";
+	public static final String EXTRA_LAUNCH_BAORD_KEY = "SoundboardMenu.boardToLaunch";
 	public static final String EXTRA_HIDE_SOUNDBOARDMENU = "SoundboardMenu.hideSoundboardmenu";
+	
 
 	private static final int ACTIVITY_ADD = 0;
 	private static final int ACTIVITY_EDIT = 1;
@@ -125,18 +129,18 @@ public class SoundboardMenu extends ListActivity {
         	setTitle("Soundboard Menu");
         }
         
-        String extra = mIntent.getStringExtra(EXTRA_KEY);
-        if (extra != null) {
+        String launchExtra = mIntent.getStringExtra(EXTRA_LAUNCH_BAORD_KEY);
+        if (launchExtra != null) {
         	try {
         		Intent i = null;
 
-        		for (File boardDirContent : new File(mSbDir, extra).listFiles()) {
+        		for (File boardDirContent : new File(mSbDir, launchExtra).listFiles()) {
         			if (boardDirContent.getName().equals("graphicalBoard")) {
         				i = new Intent(this, GraphicalSoundboardEditor.class);
         				break;
         			}
         		}
-        		i.putExtra(BoardsDbAdapter.KEY_TITLE, extra);
+        		i.putExtra(BoardsDbAdapter.KEY_TITLE, launchExtra);
         		startActivityForResult(i, ACTIVITY_EDIT);
         	} catch (NullPointerException e) {
         		mIntent = new Intent();
@@ -197,19 +201,44 @@ public class SoundboardMenu extends ListActivity {
     }
     
     public static void updateNotification(Context context, String description, String boardToLaunch) {
-    	Notification notification = new Notification(R.drawable.icon, "Notification enabled", System.currentTimeMillis());
+        
+    	RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.notification);
+    	views.setImageViewResource(R.id.play_pause, R.drawable.play_pause);
+    	views.setTextViewText(R.id.description, " " + description);
+    	
+    	
+    	File icon = new File(mSbDir, boardToLaunch + "/icon.png");
+    	if (icon.exists()) {
+    		Bitmap bitmap = BitmapFactory.decodeFile(icon.getAbsolutePath());
+    		views.setImageViewBitmap(R.id.icon, bitmap);
+    	} else {
+    		views.setImageViewResource(R.id.icon, R.drawable.board_icon);
+    	}
+    	
+    	Intent pauseIntent = new Intent(context, TogglePlayPauseService.class);
+    	PendingIntent pausePendingIntent = PendingIntent.getService(context, 0, pauseIntent, 0);
+    	views.setOnClickPendingIntent(R.id.play_pause, pausePendingIntent);
+    	
     	final Intent notificationIntent = new Intent(context, SoundboardMenu.class);
-    	notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    	notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
     	
     	if (boardToLaunch != null) {
-    		notificationIntent.putExtra(SoundboardMenu.EXTRA_KEY, boardToLaunch);
+    		notificationIntent.putExtra(SoundboardMenu.EXTRA_LAUNCH_BAORD_KEY, boardToLaunch);
     	}
-        
-    	notification.setLatestEventInfo(context, "Boarder", description,
-    			PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT));
-    	notification.flags = Notification.FLAG_ONGOING_EVENT;
+    	
+    	PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    	
+    	Notification.Builder builder = new Notification.Builder(context)
+    	.setOngoing(true)
+    	.setSmallIcon(R.drawable.icon)
+    	.setAutoCancel(false)
+    	.setTicker("Boarder")
+    	.setContentText(description)
+    	.setContentIntent(pendingIntent)
+    	.setContent(views);
+
     	final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-    	notificationManager.notify(SoundboardMenu.TAG, mNotificationId, notification);
+    	notificationManager.notify(SoundboardMenu.TAG, mNotificationId, builder.getNotification());
     }
     
     private void initializeBoardUpdateThread() {
@@ -390,7 +419,7 @@ public class SoundboardMenu extends ListActivity {
             	title_icon.setMaxWidth(viewSize);
             	title_icon.setMinimumHeight(viewSize);
             	title_icon.setMinimumWidth(viewSize);
-            	title_icon.setScaleType(ImageView.ScaleType.FIT_XY);
+            	title_icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
             	title_icon.setImageBitmap(bitmap);
             }
 
@@ -755,7 +784,7 @@ public class SoundboardMenu extends ListActivity {
         	
         	Intent shortcutIntent = new Intent(Intent.ACTION_MAIN);
             shortcutIntent.setClassName(this, this.getClass().getName());
-            shortcutIntent.putExtra(EXTRA_KEY, boardName);
+            shortcutIntent.putExtra(EXTRA_LAUNCH_BAORD_KEY, boardName);
             shortcutIntent.putExtra(EXTRA_HIDE_SOUNDBOARDMENU, true);
             shortcutIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
