@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.Notification;
@@ -15,6 +14,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.database.StaleDataException;
 import android.graphics.Bitmap;
@@ -75,7 +75,7 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 public class SoundboardMenu extends ListActivity {
 	public static final String TAG = "SoundboardMenu";
 	
-	public static final boolean mDevelopmentMode = true; //FIXME for release
+	public static final boolean mDevelopmentMode = false; //FIXME for release
 	
 	public static Context context;
 	
@@ -117,6 +117,14 @@ public class SoundboardMenu extends ListActivity {
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	String versionName = null;
+    	try {
+    		versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+		} catch (NameNotFoundException e) {
+			Log.e(TAG, "Unable to get info from manifest", e);
+		}
+    	Log.v(TAG, "Starting Boarder v" + versionName + " dev: " + mDevelopmentMode);
+    	
     	if (!mDevelopmentMode) BugSenseHandler.setup(this, ApiKeyLoader.loadBugSenseApiKey(this.getApplicationContext(), TAG));
         super.onCreate(savedInstanceState);
         
