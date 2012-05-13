@@ -60,6 +60,7 @@ import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.component.Slot;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
+import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHistory;
 import fi.mikuz.boarder.util.AutoArrange;
 import fi.mikuz.boarder.util.FileProcessor;
 import fi.mikuz.boarder.util.IconUtils;
@@ -78,8 +79,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 	
 	private GraphicalSoundboard mGsb;
 	
-	private List<GraphicalSoundboard> mHistory;
-	private int mCurrentHistoryIndex;
+	private GraphicalSoundboardHistory mGsbh;
 	
 	private static final int LISTEN_BOARD = 0;
 	private static final int EDIT_BOARD = 1;
@@ -143,9 +143,6 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        
-        mHistory = new ArrayList<GraphicalSoundboard>();
-		mCurrentHistoryIndex = -1;
 		
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
@@ -154,14 +151,17 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 			setTitle(mBoardName);
 			
 			loadBoard(GraphicalSoundboardProvider.getBoard(mBoardName, GraphicalSoundboard.SCREEN_ORIENTATION_PORTAIT));
+			mGsbh = FileProcessor.loadGraphicalBoardHistory(mBoardName);
 			
 			if (mGsb.getSoundList().isEmpty()) {
 				mMode = EDIT_BOARD;
-			}	
+			}
 		} else {
 			mMode = EDIT_BOARD;
 			
 			mGsb = new GraphicalSoundboard();
+			mGsbh = new GraphicalSoundboardHistory();
+			createHistoryCheckpoint();
 			
 			AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
@@ -209,7 +209,6 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
         mSoundImagePaint.setTextAlign(Align.LEFT);
         
         setRequestedOrientation(mGsb.getScreenOrientation());
-        createHistoryCheckpoint();
         
         setContentView(new DrawingPanel(this));
         
@@ -641,44 +640,62 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
     }
 	
 	private void createHistoryCheckpoint() {
-		for (int i = mHistory.size()-mCurrentHistoryIndex; i > 1; i--) {
+		List<GraphicalSoundboard> history = mGsbh.getHistory();
+		int index = mGsbh.getIndex();
+		
+		for (int i = history.size()-index; i > 1; i--) {
 			// User has undone and then creates a checkpoint
-			mHistory.remove(mHistory.size()-1);
-			Log.v(TAG, "removing history from end, size is " + mHistory.size());
+			history.remove(history.size()-1);
+			Log.v(TAG, "removing history from end, size is " + history.size());
 		}
 		GraphicalSoundboard hGsb = GraphicalSoundboard.copy(mGsb);
 		GraphicalSoundboard.unloadImages(hGsb);
-		mCurrentHistoryIndex++;
-		mHistory.add(hGsb);
-		while (mHistory.size() >= 30) {
-			Log.v(TAG, "removing history from start, size is " + mHistory.size());
-			mCurrentHistoryIndex--;
+		index++;
+		history.add(hGsb);
+		while (history.size() >= 30) {
+			Log.v(TAG, "removing history from start, size is " + history.size());
+			index--;
 			// Remove the second last save, keep the originally loaded board
-			mHistory.remove(1);
+			history.remove(1);
 		}
 		//StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 		//Log.d(TAG, "create: index is " + mCurrentHistoryIndex + " size is " + mHistory.size() + " caller: " + stack[3].getMethodName() + " - " + stack[3].getLineNumber());
+		
+		mGsbh.setHistory(history);
+		mGsbh.setIndex(index);
 	}
 	
 	private void undo() {
-		if (mCurrentHistoryIndex <= 0) {
+		List<GraphicalSoundboard> history = mGsbh.getHistory();
+		int index = mGsbh.getIndex();
+		
+		if (index <= 0) {
 			Toast.makeText(getApplicationContext(), "Unable to undo", Toast.LENGTH_SHORT).show();
 		} else {
-			mCurrentHistoryIndex--;
-			loadBoard(GraphicalSoundboard.copy(mHistory.get(mCurrentHistoryIndex)));
+			index--;
+			loadBoard(GraphicalSoundboard.copy(history.get(index)));
 			issueResolutionConversion();
 		}
-		Log.v(TAG, "undo: index is " + mCurrentHistoryIndex + " size is " + mHistory.size());
+		Log.v(TAG, "undo: index is " + index + " size is " + history.size());
+		
+		mGsbh.setHistory(history);
+		mGsbh.setIndex(index);
 	}
 	
 	private void redo() {
-		if (mCurrentHistoryIndex+1 >= mHistory.size()) {
+		List<GraphicalSoundboard> history = mGsbh.getHistory();
+		int index = mGsbh.getIndex();
+		
+		if (index+1 >= history.size()) {
 			Toast.makeText(getApplicationContext(), "Unable to redo", Toast.LENGTH_SHORT).show();
 		} else {
-			mCurrentHistoryIndex++;
-			loadBoard(GraphicalSoundboard.copy(mHistory.get(mCurrentHistoryIndex)));
+			index++;
+			loadBoard(GraphicalSoundboard.copy(history.get(index)));
 		}
-		Log.v(TAG, "redo: index is " + mCurrentHistoryIndex + " size is " + mHistory.size());
+		Log.v(TAG, "redo: index is " + index + " size is " + history.size());
+		
+		mGsbh.setHistory(history);
+		mGsbh.setIndex(index);
 	}
 	
 	private void loadBoard(GraphicalSoundboard board) {
@@ -1009,6 +1026,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
     			GraphicalSoundboard gsb = GraphicalSoundboard.copy(mGsb);
     			if (mDragSound != null && mDrawDragSound == true) gsb.getSoundList().add(mDragSound);
         		GraphicalSoundboardProvider.saveBoard(mBoardName, gsb);
+        		FileProcessor.saveGraphicalBoardHistory(mBoardName, mGsbh);
         		Log.v(TAG, "Board " + mBoardName + " saved");
     		} catch (IOException e) {
     			Log.e(TAG, "Unable to save " + mBoardName, e);

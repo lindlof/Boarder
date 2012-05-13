@@ -27,6 +27,7 @@ import com.thoughtworks.xstream.io.StreamException;
 
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
+import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHistory;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
 import fi.mikuz.boarder.gui.SoundboardMenu;
 
@@ -182,6 +183,32 @@ public class FileProcessor {
 			} catch (IOException e) {
 				Log.e(TAG, "Failed to backup", e);
 			}
+		}
+	}
+	
+	public static GraphicalSoundboardHistory loadGraphicalBoardHistory(String boardName) {
+		GraphicalSoundboardHistory gsbh = null;
+		
+		try{
+			XStream xstream = XStreamUtil.graphicalBoardHistoryXStream();
+			gsbh = (GraphicalSoundboardHistory) xstream.fromXML(new File(SoundboardMenu.mHistoryDir, boardName));
+		} catch (Exception e) {
+			Log.e(TAG, "Failed to load history", e);
+			gsbh = new GraphicalSoundboardHistory();
+		}
+		
+		return gsbh;
+	}
+	
+	public static void saveGraphicalBoardHistory(String boardName, GraphicalSoundboardHistory gsbh) {
+		if (!SoundboardMenu.mHistoryDir.exists()) SoundboardMenu.mHistoryDir.mkdirs();
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(SoundboardMenu.mHistoryDir, boardName)));
+			XStream xstream = XStreamUtil.graphicalBoardHistoryXStream();
+			xstream.toXML(gsbh, out);
+			out.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Failed to save history", e);
 		}
 	}
 	

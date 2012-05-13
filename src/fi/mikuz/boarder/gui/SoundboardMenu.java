@@ -99,6 +99,7 @@ public class SoundboardMenu extends ListActivity {
 	public static final File mBoarderDir = new File(Environment.getExternalStorageDirectory(), "boarder");
 	public static final File mSbDir = new File(mBoarderDir, "boards");
 	public static final File mBackupDir = new File(mBoarderDir, "backups");
+	public static final File mHistoryDir = new File(mBoarderDir, "history");
 	public static final File mDropboxCache = new File(mBoarderDir, "dropbox.cache");
 	public static final File mShareDir = new File(mBoarderDir, "share");
 	
