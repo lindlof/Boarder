@@ -14,6 +14,7 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -44,6 +45,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -115,10 +118,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 	private Menu mMenu;
 	private DrawingPanel mPanel;
 	boolean mCanvasInvalidated = false;
-	boolean mFirstDraw = true;
-	
-	int mWindowHeight;
-	int mWindowWidth;
+	boolean mPanelInitialized = false;
 	
 	private boolean mMoveBackground = false;
 	private float mBackgroundLeftDistance = 0;
@@ -219,6 +219,17 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
             Drawable drawable = new BitmapDrawable(getResources(), IconUtils.resizeIcon(this, bitmap, (40/6)));
         	this.getActionBar().setLogo(drawable);
         }
+        
+        ViewTreeObserver vto = mPanel.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+            	if (!mPanelInitialized) {
+            		mPanelInitialized = true;
+            		issueResolutionConversion();
+            	}
+            }
+        });
 	}
 	
     @Override
@@ -400,7 +411,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
                 				public void onClick(View v) {
                 					Intent i = new Intent(GraphicalSoundboardEditor.this, ColorChanger.class);
                 			    	i.putExtra("parentKey", "changeBackgroundColor");
-                			    	i.putExtra("backgroundColorKey", mGsb.getBackgroundColor());
+                			    	i.putExtras(XStreamUtil.getSoundboardBundle(mGsb));
                 			    	startActivityForResult(i, CHANGE_BACKGROUND_COLOR);
                 				}
                       		});
@@ -655,7 +666,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		} else {
 			mCurrentHistoryIndex--;
 			loadBoard(GraphicalSoundboard.copy(mHistory.get(mCurrentHistoryIndex)));
-			mFirstDraw = true;
+			issueResolutionConversion();
 		}
 		Log.v(TAG, "undo: index is " + mCurrentHistoryIndex + " size is " + mHistory.size());
 	}
@@ -1220,159 +1231,174 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		
 	}
 	
-	final Runnable mResolutionConverter = new Runnable() {
-        public void run() {
-			
-	        if (mGsb.getScreenHeight() == 0 || mGsb.getScreenWidth() == 0) {
-	        	mGsb.setScreenHeight(mWindowHeight);
-				mGsb.setScreenWidth(mWindowWidth);
-	        } else if (mGsb.getScreenHeight() != mWindowHeight || mGsb.getScreenWidth() != mWindowWidth) {
-	        	
-                	AlertDialog.Builder builder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
-                	builder.setTitle("Display size");
-                	builder.setMessage("Display size used to make this board differs from your display size.\n\n" +
-                			"You can resize this board to fill your display or " +
-                			"fit this board to your display.");
-                	
-                	builder.setPositiveButton("Resize", new DialogInterface.OnClickListener() {
-                		public void onClick(DialogInterface dialog, int whichButton) {
-                			Log.v(TAG, "Resizing board");
-                			float xScale = (float) (mWindowWidth)/(float) (mGsb.getScreenWidth());
-                			float yScale = (float) (mWindowHeight)/(float) (mGsb.getScreenHeight());
-    						
-    						float avarageScale = xScale+(yScale-xScale)/2;
-    						Log.v(TAG, "X scale: \"" + xScale + "\"" + ", old width: \""+mGsb.getScreenWidth() + "\", new width: \"" + mWindowWidth + "\"");
-    						Log.v(TAG, "Y scale: \"" + yScale + "\"" + ", old height: \""+mGsb.getScreenHeight() + "\", new height: \"" + mWindowHeight + "\"");
-    						Log.v(TAG, "Avarage scale: \"" + avarageScale + "\"");
-    						
-    						mGsb.setBackgroundX(mGsb.getBackgroundX()*xScale);
-    						mGsb.setBackgroundY(mGsb.getBackgroundY()*yScale);
-    						mGsb.setBackgroundWidth(mGsb.getBackgroundWidth()*xScale);
-    						mGsb.setBackgroundHeight(mGsb.getBackgroundHeight()*yScale);
-    						
-    						for (GraphicalSound sound : mGsb.getSoundList()) {
-    							
-    							sound = SoundNameDrawing.getScaledTextSize(sound, avarageScale);
-    							
-    							sound.setNameFrameX(sound.getNameFrameX()*xScale);
-    							sound.setNameFrameY(sound.getNameFrameY()*yScale);
-    							
-    							sound.setImageX(sound.getImageX()*xScale);
-    							sound.setImageY(sound.getImageY()*yScale);
-    							sound.setImageWidth(sound.getImageWidth()*avarageScale);
-    							sound.setImageHeight(sound.getImageHeight()*avarageScale);
-    							
-    							if (sound.getLinkNameAndImage()) sound.generateNameFrameXYFromImageLocation();
-    						}
-    						
-    						mGsb.setScreenHeight(mWindowHeight);
-    						mGsb.setScreenWidth(mWindowWidth);
-    						createHistoryCheckpoint();
-                		}
-                	});
-                	
-                	builder.setNeutralButton("Fit", new DialogInterface.OnClickListener() {
-                		public void onClick(DialogInterface dialog, int whichButton) {
-                			Log.v(TAG, "Fitting board");
-                			
-                			float xScale = (float) (mWindowWidth)/(float) (mGsb.getScreenWidth());
-                			float yScale = (float) (mWindowHeight)/(float) (mGsb.getScreenHeight());
-                			
-                			boolean xFillsDisplay = xScale < yScale;
-    						float applicableScale = (xScale < yScale) ? xScale : yScale;
-    						
-    						float hiddenAreaSize;
-    						
-    						if (xFillsDisplay) {
-    							hiddenAreaSize = ((float) mWindowHeight-(float) mGsb.getScreenHeight()*applicableScale)/2;
-    						} else {
-    							hiddenAreaSize = ((float) mWindowWidth-(float) mGsb.getScreenWidth()*applicableScale)/2;
-    						}
-    						
-    						Log.v(TAG, "X scale: \"" + xScale + "\"" + ", old width: \""+mGsb.getScreenWidth() + "\", new width: \"" + mWindowWidth + "\"");
-    						Log.v(TAG, "Y scale: \"" + yScale + "\"" + ", old height: \""+mGsb.getScreenHeight() + "\", new height: \"" + mWindowHeight + "\"");
-    						Log.v(TAG, "Applicable scale: \"" + applicableScale + "\"");
-    						Log.v(TAG, "Hidden area size: \"" + hiddenAreaSize + "\"");
-    						
-    						mGsb.setBackgroundWidth(mGsb.getBackgroundWidth()*applicableScale);
-    						mGsb.setBackgroundHeight(mGsb.getBackgroundHeight()*applicableScale);
-    						
-    						if (xFillsDisplay) {
-    							mGsb.setBackgroundX(mGsb.getBackgroundX()*applicableScale);
-    							mGsb.setBackgroundY(hiddenAreaSize+mGsb.getBackgroundY()*applicableScale);
-    						} else {
-    							mGsb.setBackgroundX(hiddenAreaSize+mGsb.getBackgroundX()*applicableScale);
-        						mGsb.setBackgroundY(mGsb.getBackgroundY()*applicableScale);
-    						}
-    						
-    						for (GraphicalSound sound : mGsb.getSoundList()) {
-    							
-    							sound = SoundNameDrawing.getScaledTextSize(sound, applicableScale);
-    							
-    							if (xFillsDisplay) {
-    								sound.setNameFrameX(sound.getNameFrameX()*applicableScale);
-        							sound.setNameFrameY(hiddenAreaSize+sound.getNameFrameY()*applicableScale);
-        							sound.setImageX(sound.getImageX()*applicableScale);
-        							sound.setImageY(hiddenAreaSize+sound.getImageY()*applicableScale);
-        						} else {
-        							Log.w(TAG, "sound: " + sound.getName());
-        							Log.w(TAG, "hiddenAreaSize: " + hiddenAreaSize + " sound.getNameFrameX(): " + sound.getNameFrameX() + " applicableScale: " + applicableScale);
-        							Log.w(TAG, "hiddenAreaSize+sound.getNameFrameX()*applicableScale: " + (hiddenAreaSize+sound.getNameFrameX()*applicableScale));
-        							sound.setNameFrameX(hiddenAreaSize+sound.getNameFrameX()*applicableScale);
-        							sound.setNameFrameY(sound.getNameFrameY()*applicableScale);
-            						sound.setImageX(hiddenAreaSize+sound.getImageX()*applicableScale);
-        							sound.setImageY(sound.getImageY()*applicableScale);
-        						}
-    							
-    							sound.setImageWidth(sound.getImageWidth()*applicableScale);
-    							sound.setImageHeight(sound.getImageHeight()*applicableScale);
-    							
-    							if (sound.getLinkNameAndImage()) sound.generateNameFrameXYFromImageLocation();
-    						}
-    						
-    						GraphicalSound blackBar1 = new GraphicalSound();
-    						blackBar1.setNameFrameInnerColor(255, 0, 0, 0);
-    						
-    						GraphicalSound blackBar2 = new GraphicalSound();
-    						blackBar2.setNameFrameInnerColor(255, 0, 0, 0);
-    						
-    						if (xFillsDisplay) {
-    							blackBar1.setName("I hide top of the board.");
-    							blackBar2.setName("I hide bottom of the board.");
-    							blackBar1.setPath(new File(SoundboardMenu.mTopBlackBarSoundFilePath));
-    							blackBar2.setPath(new File(SoundboardMenu.mBottomBlackBarSoundFilePath));
-    							blackBar1.setNameFrameY(hiddenAreaSize);
-    							blackBar2.setNameFrameY((float) mWindowHeight-hiddenAreaSize);
-    						} else {
-    							blackBar1.setName("I hide left side of the board.");
-    							blackBar2.setName("I hide right side of the board.");
-    							blackBar1.setPath(new File(SoundboardMenu.mLeftBlackBarSoundFilePath));
-    							blackBar2.setPath(new File(SoundboardMenu.mRightBlackBarSoundFilePath));
-    							blackBar1.setNameFrameX(hiddenAreaSize);
-    							blackBar2.setNameFrameX((float) mWindowWidth-hiddenAreaSize);
-    						}
-    						
-    						mGsb.addSound(blackBar1);
-    						mGsb.addSound(blackBar2);
-    						
-    						mGsb.setScreenHeight(mWindowHeight);
-    						mGsb.setScreenWidth(mWindowWidth);
-    						createHistoryCheckpoint();
-                		}
-                	});
-                	
-                	builder.setNegativeButton("Keep", new DialogInterface.OnClickListener() {
-                		public void onClick(DialogInterface dialog, int whichButton) {
-                			mGsb.setScreenHeight(mWindowHeight);
-    						mGsb.setScreenWidth(mWindowWidth);
-    						createHistoryCheckpoint();
-                		}
-                	});
-                	
-                	builder.show();
-	        }
-        }
-    };
+	private void issueResolutionConversion() {
+		Thread t = new Thread() {
+			public void run() {
+				Looper.prepare();
+				
+				final int windowWidth = mPanel.getWidth();
+				final int windowHeight = mPanel.getHeight();
+
+				if (mGsb.getScreenHeight() == 0 || mGsb.getScreenWidth() == 0) {
+					mGsb.setScreenWidth(windowWidth);
+					mGsb.setScreenHeight(windowHeight);
+				} else if (mGsb.getScreenWidth() != windowWidth || mGsb.getScreenHeight() != windowHeight) {
+					Log.v(TAG, "Soundoard resolution has been changed");
+
+					AlertDialog.Builder builder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+					builder.setTitle("Display size");
+					builder.setMessage("Display size used to make this board differs from your display size.\n\n" +
+							"You can resize this board to fill your display or " +
+							"fit this board to your display. Fit looks accurately like the original one.\n\n" +
+							"(Ps. In 'Edit board' mode you can undo this.)");
+
+					builder.setPositiveButton("Resize", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {
+							Log.v(TAG, "Resizing board");
+							float xScale = (float) windowWidth/(float) (mGsb.getScreenWidth());
+							float yScale = (float) windowHeight/(float) (mGsb.getScreenHeight());
+
+							float avarageScale = xScale+(yScale-xScale)/2;
+							Log.v(TAG, "X scale: \"" + xScale + "\"" + ", old width: \""+mGsb.getScreenWidth() + "\", new width: \"" + windowWidth + "\"");
+							Log.v(TAG, "Y scale: \"" + yScale + "\"" + ", old height: \""+mGsb.getScreenHeight() + "\", new height: \"" + windowHeight + "\"");
+							Log.v(TAG, "Avarage scale: \"" + avarageScale + "\"");
+
+							mGsb.setBackgroundX(mGsb.getBackgroundX()*xScale);
+							mGsb.setBackgroundY(mGsb.getBackgroundY()*yScale);
+							mGsb.setBackgroundWidth(mGsb.getBackgroundWidth()*xScale);
+							mGsb.setBackgroundHeight(mGsb.getBackgroundHeight()*yScale);
+
+							for (GraphicalSound sound : mGsb.getSoundList()) {
+
+								sound = SoundNameDrawing.getScaledTextSize(sound, avarageScale);
+
+								sound.setNameFrameX(sound.getNameFrameX()*xScale);
+								sound.setNameFrameY(sound.getNameFrameY()*yScale);
+
+								sound.setImageX(sound.getImageX()*xScale);
+								sound.setImageY(sound.getImageY()*yScale);
+								sound.setImageWidth(sound.getImageWidth()*avarageScale);
+								sound.setImageHeight(sound.getImageHeight()*avarageScale);
+
+								if (sound.getLinkNameAndImage()) sound.generateNameFrameXYFromImageLocation();
+							}
+
+							mGsb.setScreenWidth(windowWidth);
+							mGsb.setScreenHeight(windowHeight);
+						}
+					});
+
+					builder.setNeutralButton("Fit", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {
+							Log.v(TAG, "Fitting board");
+
+							float xScale = (float) (windowWidth)/(float) (mGsb.getScreenWidth());
+							float yScale = (float) (windowHeight)/(float) (mGsb.getScreenHeight());
+
+							boolean xFillsDisplay = xScale < yScale;
+							float applicableScale = (xScale < yScale) ? xScale : yScale;
+
+							float hiddenAreaSize;
+
+							if (xFillsDisplay) {
+								hiddenAreaSize = ((float) windowHeight-(float) mGsb.getScreenHeight()*applicableScale)/2;
+							} else {
+								hiddenAreaSize = ((float) windowWidth-(float) mGsb.getScreenWidth()*applicableScale)/2;
+							}
+
+							Log.v(TAG, "X scale: \"" + xScale + "\"" + ", old width: \""+mGsb.getScreenWidth() + "\", new width: \"" + windowWidth + "\"");
+							Log.v(TAG, "Y scale: \"" + yScale + "\"" + ", old height: \""+mGsb.getScreenHeight() + "\", new height: \"" + windowHeight + "\"");
+							Log.v(TAG, "Applicable scale: \"" + applicableScale + "\"");
+							Log.v(TAG, "Hidden area size: \"" + hiddenAreaSize + "\"");
+
+							mGsb.setBackgroundWidth(mGsb.getBackgroundWidth()*applicableScale);
+							mGsb.setBackgroundHeight(mGsb.getBackgroundHeight()*applicableScale);
+
+							if (xFillsDisplay) {
+								mGsb.setBackgroundX(mGsb.getBackgroundX()*applicableScale);
+								mGsb.setBackgroundY(hiddenAreaSize+mGsb.getBackgroundY()*applicableScale);
+							} else {
+								mGsb.setBackgroundX(hiddenAreaSize+mGsb.getBackgroundX()*applicableScale);
+								mGsb.setBackgroundY(mGsb.getBackgroundY()*applicableScale);
+							}
+
+							for (GraphicalSound sound : mGsb.getSoundList()) {
+
+								sound = SoundNameDrawing.getScaledTextSize(sound, applicableScale);
+
+								if (xFillsDisplay) {
+									sound.setNameFrameX(sound.getNameFrameX()*applicableScale);
+									sound.setNameFrameY(hiddenAreaSize+sound.getNameFrameY()*applicableScale);
+									sound.setImageX(sound.getImageX()*applicableScale);
+									sound.setImageY(hiddenAreaSize+sound.getImageY()*applicableScale);
+								} else {
+									Log.w(TAG, "sound: " + sound.getName());
+									Log.w(TAG, "hiddenAreaSize: " + hiddenAreaSize + " sound.getNameFrameX(): " + sound.getNameFrameX() + " applicableScale: " + applicableScale);
+									Log.w(TAG, "hiddenAreaSize+sound.getNameFrameX()*applicableScale: " + (hiddenAreaSize+sound.getNameFrameX()*applicableScale));
+									sound.setNameFrameX(hiddenAreaSize+sound.getNameFrameX()*applicableScale);
+									sound.setNameFrameY(sound.getNameFrameY()*applicableScale);
+									sound.setImageX(hiddenAreaSize+sound.getImageX()*applicableScale);
+									sound.setImageY(sound.getImageY()*applicableScale);
+								}
+
+								sound.setImageWidth(sound.getImageWidth()*applicableScale);
+								sound.setImageHeight(sound.getImageHeight()*applicableScale);
+
+								if (sound.getLinkNameAndImage()) sound.generateNameFrameXYFromImageLocation();
+							}
+
+							GraphicalSound blackBar1 = new GraphicalSound();
+							blackBar1.setNameFrameInnerColor(255, 0, 0, 0);
+
+							GraphicalSound blackBar2 = new GraphicalSound();
+							blackBar2.setNameFrameInnerColor(255, 0, 0, 0);
+
+							if (xFillsDisplay) {
+								blackBar1.setName("I hide top of the board.");
+								blackBar2.setName("I hide bottom of the board.");
+								blackBar1.setPath(new File(SoundboardMenu.mTopBlackBarSoundFilePath));
+								blackBar2.setPath(new File(SoundboardMenu.mBottomBlackBarSoundFilePath));
+								blackBar1.setNameFrameY(hiddenAreaSize);
+								blackBar2.setNameFrameY((float) windowHeight-hiddenAreaSize);
+							} else {
+								blackBar1.setName("I hide left side of the board.");
+								blackBar2.setName("I hide right side of the board.");
+								blackBar1.setPath(new File(SoundboardMenu.mLeftBlackBarSoundFilePath));
+								blackBar2.setPath(new File(SoundboardMenu.mRightBlackBarSoundFilePath));
+								blackBar1.setNameFrameX(hiddenAreaSize);
+								blackBar2.setNameFrameX((float) windowWidth-hiddenAreaSize);
+							}
+
+							mGsb.addSound(blackBar1);
+							mGsb.addSound(blackBar2);
+
+							mGsb.setScreenWidth(windowWidth);
+							mGsb.setScreenHeight(windowHeight);
+						}
+					});
+
+					builder.setNegativeButton("Keep", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {
+							mGsb.setScreenWidth(windowWidth);
+							mGsb.setScreenHeight(windowHeight);
+						}
+					});
+					
+					AlertDialog alert = builder.create();
+					alert.setOnDismissListener(new OnDismissListener() {
+						public void onDismiss(DialogInterface dialog) {
+							createHistoryCheckpoint();
+						}
+					});
+
+					alert.show();
+				}
+				Looper.loop();
+				Looper.myLooper().quit();
+			}
+		};
+		t.start();
+	}
 	
 	class DrawingPanel extends SurfaceView implements SurfaceHolder.Callback {
 		
@@ -1511,16 +1537,6 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				                			R.layout.graphical_soundboard_editor_alert_sound_name_settings, 
 				                			(ViewGroup) findViewById(R.id.alert_settings_root));
 				                	
-				                	SoundNameDrawing soundNameDrawing = new SoundNameDrawing(mDragSound);
-				                	Bundle colorChangerBundle = new Bundle();
-				                	colorChangerBundle.putString("nameKey", mDragSound.getName());
-				                	colorChangerBundle.putFloat("nameFrameWidthKey", soundNameDrawing.getNameFrameRect().width());
-				                	colorChangerBundle.putFloat("nameFrameHeightKey", soundNameDrawing.getNameFrameRect().height());
-				                	colorChangerBundle.putInt("nameTextColorKey", mDragSound.getNameTextColor());
-				                	colorChangerBundle.putInt("nameFrameInnerColorKey", mDragSound.getNameFrameInnerColor());
-				                	colorChangerBundle.putInt("nameFrameBorderColorKey", mDragSound.getNameFrameBorderColor());
-				                	final Bundle colorChangerBundleFinal = colorChangerBundle;
-				                	
 				                	final EditText soundNameInput = 
 				              	  		(EditText) layout.findViewById(R.id.soundNameInput);
 				              	  	soundNameInput.setText(mDragSound.getName());
@@ -1550,7 +1566,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				    			  			
 				    			  			Intent i = new Intent(GraphicalSoundboardEditor.this, ColorChanger.class);
 				    		        		i.putExtra("parentKey", "changeNameColor");
-				    		        		i.putExtras(colorChangerBundleFinal);
+				    		        		i.putExtras(XStreamUtil.getSoundBundle(mDragSound, mGsb));
 				    		            	startActivityForResult(i, CHANGE_NAME_COLOR);
 				    					}
 				              	  	});
@@ -1564,7 +1580,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				    			  			
 				    			  			Intent i = new Intent(GraphicalSoundboardEditor.this, ColorChanger.class);
 				    		        		i.putExtra("parentKey", "changeinnerPaintColor");
-				    		        		i.putExtras(colorChangerBundleFinal);
+				    		        		i.putExtras(XStreamUtil.getSoundBundle(mDragSound, mGsb));
 				    		            	startActivityForResult(i, CHANGE_INNER_PAINT_COLOR);
 				    					}
 				              	  	});
@@ -1578,7 +1594,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				    			  			
 				    			  			Intent i = new Intent(GraphicalSoundboardEditor.this, ColorChanger.class);
 				    		        		i.putExtra("parentKey", "changeBorderPaintColor");
-				    		        		i.putExtras(colorChangerBundleFinal);
+				    		        		i.putExtras(XStreamUtil.getSoundBundle(mDragSound, mGsb));
 				    		            	startActivityForResult(i, CHANGE_BORDER_PAINT_COLOR);
 				    					}
 				              	  	});
@@ -2053,16 +2069,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 			} else {
 				super.dispatchDraw(canvas);
 				
-				if (mFirstDraw) {
-					mFirstDraw = false;
-					mWindowHeight = mPanel.getHeight();
-					mWindowWidth = mPanel.getWidth();
-					mHandler.post(mResolutionConverter);
-				}
-				
-				Paint bgColor = new Paint();
-				bgColor.setColor(mGsb.getBackgroundColor());
-				canvas.drawPaint(bgColor);
+				canvas.drawColor(mGsb.getBackgroundColor());
 				
 				if (mGsb.getUseBackgroundImage() == true && mGsb.getBackgroundImagePath().exists()) {
 					RectF bitmapRect = new RectF();
@@ -2099,9 +2106,10 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 							canvas.drawRect(sound.getNameFrameX(), 0, canvas.getWidth(), canvas.getHeight(), barPaint);
 						} else {
 							if (sound.getHideImageOrText() != GraphicalSound.HIDE_TEXT) {
-								float NAME_LOCATION_SCALE = SoundNameDrawing.NAME_LOCATION_SCALE;
+								float NAME_DRAWING_SCALE = SoundNameDrawing.NAME_DRAWING_SCALE;
 								
-								canvas.scale(1/NAME_LOCATION_SCALE, 1/NAME_LOCATION_SCALE);
+								
+								canvas.scale(1/NAME_DRAWING_SCALE, 1/NAME_DRAWING_SCALE);
 								SoundNameDrawing soundNameDrawing = new SoundNameDrawing(sound);
 								
 								Paint nameTextPaint = soundNameDrawing.getBigCanvasNameTextPaint();
@@ -2111,20 +2119,20 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 								RectF bigCanvasNameFrameRect = soundNameDrawing.getBigCanvasNameFrameRect();
 								
 								if (sound.getShowNameFrameInnerPaint() == true) {
-							    	canvas.drawRoundRect(bigCanvasNameFrameRect, 2*NAME_LOCATION_SCALE, 2*NAME_LOCATION_SCALE, innerPaint);
+							    	canvas.drawRoundRect(bigCanvasNameFrameRect, 2*NAME_DRAWING_SCALE, 2*NAME_DRAWING_SCALE, innerPaint);
 							    }
 								
 								if (sound.getShowNameFrameBorderPaint()) {
-									canvas.drawRoundRect(bigCanvasNameFrameRect, 2*NAME_LOCATION_SCALE, 2*NAME_LOCATION_SCALE, borderPaint);
+									canvas.drawRoundRect(bigCanvasNameFrameRect, 2*NAME_DRAWING_SCALE, 2*NAME_DRAWING_SCALE, borderPaint);
 								}
 							    
 								int i = 0;
 							    for (String row : sound.getName().split("\n")) {
-						    		canvas.drawText(row, (sound.getNameFrameX()+2)*NAME_LOCATION_SCALE, 
-						    				sound.getNameFrameY()*NAME_LOCATION_SCALE+(i+1)*sound.getNameSize()*NAME_LOCATION_SCALE, nameTextPaint);
+						    		canvas.drawText(row, (sound.getNameFrameX()+2)*NAME_DRAWING_SCALE, 
+						    				sound.getNameFrameY()*NAME_DRAWING_SCALE+(i+1)*sound.getNameSize()*NAME_DRAWING_SCALE, nameTextPaint);
 						    		i++;
 							    }
-							    canvas.scale(NAME_LOCATION_SCALE, NAME_LOCATION_SCALE);
+							    canvas.scale(NAME_DRAWING_SCALE, NAME_DRAWING_SCALE);
 							}
 						    
 						    if (sound.getHideImageOrText() != GraphicalSound.HIDE_IMAGE) {

@@ -2,42 +2,51 @@ package fi.mikuz.boarder.gui;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorFilter;
 import android.graphics.Paint;
-import android.graphics.Paint.Align;
-import android.graphics.Paint.Style;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.SeekBar;
+import android.widget.Toast;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+
+import com.thoughtworks.xstream.XStream;
+
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.component.soundboard.GraphicalSound;
+import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
+import fi.mikuz.boarder.util.XStreamUtil;
+import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
 /**
  * 
  * @author Jan Mikael Lindlöf
  */
 public class ColorChanger extends Activity implements OnSeekBarChangeListener, ColorPickerDialog.OnColorChangedListener {
+	private String TAG = "ColorChanger";
 	
 	private String mParent;
-	private int mBackgroundColor;
-	private String mName;
-	private float mNameFrameWidth;
-	private float mNameFrameHeight;
-	private int mNameTextColor;
-	private int mNameFrameInnerColor;
-	private int mNameFrameBorderColor;
+	private GraphicalSound mSound;
+	private GraphicalSoundboard mGsb;
+	
+	private boolean mChangingSoundColor = true;
 	
 	private TextView mAlphaValueText, mRedValueText, mGreenValueText, mBlueValueText;
 	private SeekBar alphaBar, redBar, greenBar, blueBar;
@@ -50,16 +59,12 @@ public class ColorChanger extends Activity implements OnSeekBarChangeListener, C
 		
 		Bundle extras = getIntent().getExtras();
 		mParent = extras.getString("parentKey");
-		if (mParent.equals("changeBackgroundColor")) {
-			mBackgroundColor = extras.getInt("backgroundColorKey");
-		} else {
-			mName = extras.getString("nameKey");
-			mNameFrameWidth = extras.getFloat("nameFrameWidthKey");
-			mNameFrameHeight = extras.getFloat("nameFrameHeightKey");
-			mNameTextColor = extras.getInt("nameTextColorKey");
-			mNameFrameInnerColor = extras.getInt("nameFrameInnerColorKey");
-			mNameFrameBorderColor = extras.getInt("nameFrameBorderColorKey");
-		}
+		
+		if (mParent.equals("changeBackgroundColor")) mChangingSoundColor = false;
+		
+		XStream xstream = XStreamUtil.graphicalBoardXStream();
+		if (mChangingSoundColor) mSound = (GraphicalSound) xstream.fromXML(extras.getString(XStreamUtil.SOUND_KEY));
+		mGsb = (GraphicalSoundboard) xstream.fromXML(extras.getString(XStreamUtil.SOUNDBOARD_KEY));
 		
 		LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
 		View layout = inflater.inflate(R.layout.color_changer, (ViewGroup) findViewById(R.id.root));
@@ -80,25 +85,29 @@ public class ColorChanger extends Activity implements OnSeekBarChangeListener, C
 		
 		int initialColor = 0;
 		if (mParent.equals("changeNameColor")) {
-			initialColor = Integer.valueOf(mNameTextColor);
+			initialColor = Integer.valueOf(mSound.getNameTextColor());
 		} else if (mParent.equals("changeinnerPaintColor")) {
-			initialColor = Integer.valueOf(mNameFrameInnerColor);
+			initialColor = Integer.valueOf(mSound.getNameFrameInnerColor());
 		} else if (mParent.equals("changeBorderPaintColor")) {
-			initialColor = Integer.valueOf(mNameFrameBorderColor);
+			initialColor = Integer.valueOf(mSound.getNameFrameBorderColor());
 		} else if (mParent.equals("changeBackgroundColor")) {
-			initialColor = Integer.valueOf(mBackgroundColor);
+			initialColor = Integer.valueOf(mGsb.getBackgroundColor());
 		}
 		alphaBar.setProgress(Color.alpha(initialColor));
 		redBar.setProgress(Color.red(initialColor));
 		greenBar.setProgress(Color.green(initialColor));
 		blueBar.setProgress(Color.blue(initialColor));
 		
-		if (mParent.equals("changeBackgroundColor") == false) {
-			mPreview.setBackgroundDrawable(new NameFramePreview());	
-		}
-		
 		setContentView(layout);
 		
+        ViewTreeObserver vto = mPreview.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+            	if (mChangingSoundColor) setNamePreviewPosition();
+                drawPreview();
+            }
+        });
 	}
 	
 	@Override
@@ -113,7 +122,7 @@ public class ColorChanger extends Activity implements OnSeekBarChangeListener, C
 		MenuInflater inflater = getMenuInflater();
 	    inflater.inflate(R.menu.color_changer_bottom, menu);
 	    
-	    if (mParent.equals("changeBackgroundColor") == true) {
+	    if (!mChangingSoundColor) {
 	    	menu.setGroupVisible(R.id.copy, false);
 	    }
 	    return true;
@@ -126,20 +135,16 @@ public class ColorChanger extends Activity implements OnSeekBarChangeListener, C
         
         	case R.id.menu_pick_color:
         		if (mParent.equals("changeNameColor")) {
-        			Dialog colorDialog = new ColorPickerDialog(this, 
-        					this, Integer.valueOf(mNameTextColor));
+        			Dialog colorDialog = new ColorPickerDialog(this, this, Integer.valueOf(mSound.getNameTextColor()));
         			colorDialog.show();	
         		} else if (mParent.equals("changeinnerPaintColor")) {
-        			Dialog colorDialog = new ColorPickerDialog(this, 
-        					this, Integer.valueOf(mNameFrameInnerColor));
+        			Dialog colorDialog = new ColorPickerDialog(this, this, Integer.valueOf(mSound.getNameFrameInnerColor()));
         			colorDialog.show();	
         		} else if (mParent.equals("changeBorderPaintColor")) {
-        			Dialog colorDialog = new ColorPickerDialog(this, 
-        					this, Integer.valueOf(mNameFrameBorderColor));
+        			Dialog colorDialog = new ColorPickerDialog(this, this, Integer.valueOf(mSound.getNameFrameBorderColor()));
         			colorDialog.show();	
         		} else if (mParent.equals("changeBackgroundColor")) {
-        			Dialog colorDialog = new ColorPickerDialog(this, 
-        					this, Integer.valueOf(mBackgroundColor));
+        			Dialog colorDialog = new ColorPickerDialog(this, this, Integer.valueOf(mGsb.getBackgroundColor()));
         			colorDialog.show();	
         		}
         		return true;
@@ -162,6 +167,7 @@ public class ColorChanger extends Activity implements OnSeekBarChangeListener, C
         		return true;
         		
         	case R.id.menu_copy_color:
+        		Toast.makeText(getApplicationContext(), "Select a sound to copy", Toast.LENGTH_LONG).show();
         		Bundle copyBundle = new Bundle();
     			copyBundle.putBoolean("copyKey", true);
     			
@@ -198,99 +204,87 @@ public class ColorChanger extends Activity implements OnSeekBarChangeListener, C
 		mBlueValueText.setText(blueValue.substring(0, blueValue.indexOf('.')));
 		
 		if (mParent.equals("changeNameColor")) {
-			mNameTextColor = Color.argb(alphaBar.getProgress(), redBar.getProgress(), 
-					greenBar.getProgress(), blueBar.getProgress());
+			mSound.setNameTextColor(alphaBar.getProgress(), redBar.getProgress(), greenBar.getProgress(), blueBar.getProgress());
 		} else if (mParent.equals("changeinnerPaintColor")) {
-			mNameFrameInnerColor = Color.argb(alphaBar.getProgress(), redBar.getProgress(), 
-					greenBar.getProgress(), blueBar.getProgress());
+			mSound.setNameFrameInnerColor(alphaBar.getProgress(), redBar.getProgress(), greenBar.getProgress(), blueBar.getProgress());
 		} else if (mParent.equals("changeBorderPaintColor")) {
-			mNameFrameBorderColor = Color.argb(alphaBar.getProgress(), redBar.getProgress(), 
-					greenBar.getProgress(), blueBar.getProgress());
+			mSound.setNameFrameBorderColor(alphaBar.getProgress(), redBar.getProgress(), greenBar.getProgress(), blueBar.getProgress());
 		} else if (mParent.equals("changeBackgroundColor")) {
-			mBackgroundColor = Color.argb(alphaBar.getProgress(), redBar.getProgress(), 
-					greenBar.getProgress(), blueBar.getProgress());
+			mGsb.setBackgroundColor(alphaBar.getProgress(), redBar.getProgress(), greenBar.getProgress(), blueBar.getProgress());
 		}
 		
-		if (mParent.equals("changeBackgroundColor")) {
-			mPreview.setBackgroundColor(mBackgroundColor);
+		drawPreview();
+	}
+	
+	private void setNamePreviewPosition() {
+		SoundNameDrawing soundNameDrawing = new SoundNameDrawing(mSound);
+		RectF nameFrameRect = soundNameDrawing.getNameFrameRect();
+		
+		float padding = 10;
+		
+		if (nameFrameRect.width()+padding > (float) mPreview.getWidth()) {
+			float xScale = (float) mPreview.getWidth()/nameFrameRect.width();
+			mSound.setNameSize(mSound.getNameSize()*xScale-padding*xScale);
+			soundNameDrawing = new SoundNameDrawing(mSound);
+			nameFrameRect = soundNameDrawing.getNameFrameRect();
+		}
+		
+		if (nameFrameRect.height()+padding > (float) mPreview.getHeight()) {
+			float yScale = (float) mPreview.getHeight()/nameFrameRect.height();
+			mSound.setNameSize(mSound.getNameSize()*yScale-padding*yScale);
+			soundNameDrawing = new SoundNameDrawing(mSound);
+			nameFrameRect = soundNameDrawing.getNameFrameRect();
+		}
+		
+		mSound.setNameFrameX((float) mPreview.getWidth()/2-nameFrameRect.width()/2);
+		mSound.setNameFrameY(0);
+	}
+	
+	private void drawPreview() {
+		if (mPreview.getWidth() == 0 || mPreview.getHeight() == 0) {
+			Log.d(TAG, "Waiting for layout to initialize");
 		} else {
-			mPreview.invalidate();
+			Bitmap bitmap = Bitmap.createBitmap(mPreview.getWidth(), mPreview.getHeight(), Bitmap.Config.ARGB_8888);
+			Canvas canvas = new Canvas(bitmap);
+			new PreviewDrawer(this).onDraw(canvas);
+			mPreview.setBackgroundDrawable(new BitmapDrawable(getResources(), bitmap));
 		}
 	}
 	
-	public class NameFramePreview extends Drawable {
+	public class PreviewDrawer extends SurfaceView {
 		
+		public PreviewDrawer(Context context) {
+			super(context);
+		}
+
 		@Override
-		public void draw(Canvas canvas) { //TODO realistic preview
+		public void onDraw(Canvas canvas) {
 			
-			float initialX = canvas.getWidth()/2 - mNameFrameWidth/2;
-			float initialY = 5;
+			canvas.drawColor(mGsb.getBackgroundColor());
 			
-			RectF nameFrameRect = new RectF();
-			nameFrameRect.set(initialX, 
-					initialY, 
-					mNameFrameWidth + initialX, 
-					mNameFrameHeight + initialY);
-			
-			//if (sound.getShowNameFrameInnerPaint() == true) {
-		    	Paint innerPaint = new Paint();
-		    	int innerPaintColor = mNameFrameInnerColor;
-		    	innerPaint.setARGB(Color.alpha(innerPaintColor), Color.red(innerPaintColor), 
-		    			Color.green(innerPaintColor), Color.blue(innerPaintColor));
-		    	canvas.drawRoundRect(nameFrameRect, 2, 2, innerPaint);
-		    //}
-			
-			//if (sound.getShowNameFrameBorderPaint()) {
-				Paint borderPaint = new Paint();
-				int borderPaintColor = mNameFrameBorderColor;
-				borderPaint.setARGB(Color.alpha(borderPaintColor), Color.red(borderPaintColor), 
-			    		Color.green(borderPaintColor), Color.blue(borderPaintColor));
-				borderPaint.setAntiAlias(true);
-				borderPaint.setStyle(Style.STROKE);
-				borderPaint.setStrokeWidth(2);
-				canvas.drawRoundRect(nameFrameRect, 2, 2, borderPaint);
-			//}
-			
-			Paint nameTextPaint = new Paint();
-		    int nameTextColor = mNameTextColor;
-		    nameTextPaint.setARGB(Color.alpha(nameTextColor), Color.red(nameTextColor), 
-					Color.green(nameTextColor), Color.blue(nameTextColor));
-		    nameTextPaint.setAntiAlias(true);
-		    nameTextPaint.setTextAlign(Align.LEFT);
-		    
-			if (mName.contains("\n")) {
-				int indexCursor = -1;
-		    	int lastIndex = -1;
-		    	int i = 0;
-		    	do {
-		    		if (indexCursor == mName.lastIndexOf("\n")) {
-		    			indexCursor = mName.length();
-		    		} else {
-		    			indexCursor = mName.indexOf("\n", indexCursor+1);
-		    		}
-		    		canvas.drawText(mName.substring(lastIndex+1, indexCursor), 
-		    				0+2+initialX, 0+(i+1)*12+initialY, nameTextPaint);
-		    		lastIndex = indexCursor;
+			if (mChangingSoundColor) {
+				float NAME_DRAWING_SCALE = SoundNameDrawing.NAME_DRAWING_SCALE;
+				
+				canvas.scale(1/NAME_DRAWING_SCALE, 1/NAME_DRAWING_SCALE);
+				SoundNameDrawing soundNameDrawing = new SoundNameDrawing(mSound);
+				
+				Paint nameTextPaint = soundNameDrawing.getBigCanvasNameTextPaint();
+				Paint borderPaint = soundNameDrawing.getBorderPaint();
+				Paint innerPaint = soundNameDrawing.getInnerPaint();
+				
+				RectF bigCanvasNameFrameRect = soundNameDrawing.getBigCanvasNameFrameRect();
+				
+			    canvas.drawRoundRect(bigCanvasNameFrameRect, 2*NAME_DRAWING_SCALE, 2*NAME_DRAWING_SCALE, innerPaint);
+				canvas.drawRoundRect(bigCanvasNameFrameRect, 2*NAME_DRAWING_SCALE, 2*NAME_DRAWING_SCALE, borderPaint);
+			    
+				int i = 0;
+			    for (String row : mSound.getName().split("\n")) {
+		    		canvas.drawText(row, (mSound.getNameFrameX()+2)*NAME_DRAWING_SCALE, 
+		    				mSound.getNameFrameY()*NAME_DRAWING_SCALE+(i+1)*mSound.getNameSize()*NAME_DRAWING_SCALE, nameTextPaint);
 		    		i++;
-		    	} while(indexCursor < mName.length());
-		    } else {
-		    	canvas.drawText(mName, 0+2+initialX, 0+12+initialY, nameTextPaint);
-		    }
-		}
-
-		@Override
-		public int getOpacity() {
-			return 0;
-		}
-
-		@Override
-		public void setAlpha(int alpha) {
-			
-		}
-
-		@Override
-		public void setColorFilter(ColorFilter cf) {
-			
+			    }
+			    canvas.scale(NAME_DRAWING_SCALE, NAME_DRAWING_SCALE);
+			}
 		}
 	}
 

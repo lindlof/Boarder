@@ -75,6 +75,11 @@ public class GraphicalSound implements Cloneable {
 		this.setShowNameFrameBorderPaint(true);
 	}
 	
+	static public void unloadImages(GraphicalSound sound) {
+		sound.setActiveImage(null);
+		sound.setImage(null);
+	}
+	
 	public int getAutoArrangeColumn() {
 		return autoArrangeColumn;
 	}

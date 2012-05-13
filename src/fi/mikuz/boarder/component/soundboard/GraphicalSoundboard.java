@@ -114,8 +114,7 @@ public class GraphicalSoundboard {
 	static public void unloadImages(GraphicalSoundboard gsb) {
 		gsb.setBackgroundImage(null);
 		for (GraphicalSound sound : gsb.getSoundList()) {
-			sound.setActiveImage(null);
-			sound.setImage(null);
+			GraphicalSound.unloadImages(sound);
 		}
 	}
 	
@@ -183,6 +182,9 @@ public class GraphicalSoundboard {
 	}
 	public void setBackgroundColor(int backgroundColor) {
 		this.backgroundColor = backgroundColor;
+	}
+	public void setBackgroundColor(int alpha, int red, int green, int blue) {
+		this.backgroundColor = Color.argb(alpha, red, green, blue);
 	}
 	public File getBackgroundImagePath() {
 		return backgroundImagePath;

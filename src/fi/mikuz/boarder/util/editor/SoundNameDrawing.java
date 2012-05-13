@@ -16,7 +16,7 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 public class SoundNameDrawing {
 	public static final String TAG = "SoundNameDrawing";
 	
-	public static final float NAME_LOCATION_SCALE = 20;
+	public static final float NAME_DRAWING_SCALE = 20;
 	
 	GraphicalSound sound;
 	String name;
@@ -46,7 +46,7 @@ public class SoundNameDrawing {
 	    		Color.green(borderPaintColor), Color.blue(borderPaintColor));
 		borderPaint.setAntiAlias(true);
 		borderPaint.setStyle(Style.STROKE);
-		borderPaint.setStrokeWidth(2*NAME_LOCATION_SCALE);
+		borderPaint.setStrokeWidth(2*NAME_DRAWING_SCALE);
 		return borderPaint;
 	}
 	
@@ -61,17 +61,17 @@ public class SoundNameDrawing {
 	public RectF getNameFrameRect() {
 		
 		RectF nameFrameRect = getBigCanvasNameFrameRect();
-		nameFrameRect.left = nameFrameRect.left/NAME_LOCATION_SCALE;
-		nameFrameRect.top = nameFrameRect.top/NAME_LOCATION_SCALE;
-		nameFrameRect.right = nameFrameRect.right/NAME_LOCATION_SCALE;
-		nameFrameRect.bottom = nameFrameRect.bottom/NAME_LOCATION_SCALE;
+		nameFrameRect.left = nameFrameRect.left/NAME_DRAWING_SCALE;
+		nameFrameRect.top = nameFrameRect.top/NAME_DRAWING_SCALE;
+		nameFrameRect.right = nameFrameRect.right/NAME_DRAWING_SCALE;
+		nameFrameRect.bottom = nameFrameRect.bottom/NAME_DRAWING_SCALE;
 		
 		return nameFrameRect;
 	}
 	
 	public Paint getBigCanvasNameTextPaint() {
 		Paint nameTextPaint = getNameTextPaint();
-		nameTextPaint.setTextSize(nameTextPaint.getTextSize()*NAME_LOCATION_SCALE);
+		nameTextPaint.setTextSize(nameTextPaint.getTextSize()*NAME_DRAWING_SCALE);
 	    return nameTextPaint;
 	}
 	
@@ -86,7 +86,7 @@ public class SoundNameDrawing {
 	    FontMetrics metrics = getBigCanvasNameTextPaint().getFontMetrics();
 	    float height = 0;
 	    float textPaddingY = metrics.bottom/2;
-	    float textPaddingWidth = 4*NAME_LOCATION_SCALE; //Editor adds 2 for text left padding
+	    float textPaddingWidth = 4*NAME_DRAWING_SCALE; //Editor adds 2 for text left padding
 	    
     	if (nameSize < 14) {
     		height =+ 1;
@@ -94,10 +94,10 @@ public class SoundNameDrawing {
     	
 		RectF nameFrameRect = new RectF();
 		nameFrameRect.set(
-				sound.getNameFrameX()*NAME_LOCATION_SCALE, 
-				(sound.getNameFrameY() - height)*NAME_LOCATION_SCALE + textPaddingY, 
-				sound.getNameFrameX()*NAME_LOCATION_SCALE + textPaddingWidth + nameFrameWidth, 
-				(sound.getNameFrameY() + height)*NAME_LOCATION_SCALE + textPaddingY + lineCount*nameSize*NAME_LOCATION_SCALE);
+				sound.getNameFrameX()*NAME_DRAWING_SCALE, 
+				(sound.getNameFrameY() - height)*NAME_DRAWING_SCALE + textPaddingY, 
+				sound.getNameFrameX()*NAME_DRAWING_SCALE + textPaddingWidth + nameFrameWidth, 
+				(sound.getNameFrameY() + height)*NAME_DRAWING_SCALE + textPaddingY + lineCount*nameSize*NAME_DRAWING_SCALE);
 		
 		return nameFrameRect;
 	}
