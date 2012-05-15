@@ -197,7 +197,6 @@ public class FileProcessor {
 			gsbh = (GraphicalSoundboardHistory) xstream.fromXML(new File(SoundboardMenu.mHistoryDir, boardName));
 		} catch (Exception e) {
 			Log.e(TAG, "Failed to load history", e);
-			BugSenseHandler.log(TAG, e);
 			gsbh = new GraphicalSoundboardHistory();
 		}
 		
