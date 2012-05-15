@@ -22,6 +22,7 @@ import android.app.AlertDialog;
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import com.bugsense.trace.BugSenseHandler;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.StreamException;
 
@@ -180,8 +181,10 @@ public class FileProcessor {
 			    IOUtils.copy(in, out);
 			} catch (FileNotFoundException e) {
 				Log.e(TAG, "Failed to backup", e);
+				BugSenseHandler.log(TAG, e);
 			} catch (IOException e) {
 				Log.e(TAG, "Failed to backup", e);
+				BugSenseHandler.log(TAG, e);
 			}
 		}
 	}
@@ -194,6 +197,7 @@ public class FileProcessor {
 			gsbh = (GraphicalSoundboardHistory) xstream.fromXML(new File(SoundboardMenu.mHistoryDir, boardName));
 		} catch (Exception e) {
 			Log.e(TAG, "Failed to load history", e);
+			BugSenseHandler.log(TAG, e);
 			gsbh = new GraphicalSoundboardHistory();
 		}
 		
@@ -209,6 +213,7 @@ public class FileProcessor {
 			out.close();
 		} catch (IOException e) {
 			Log.e(TAG, "Failed to save history", e);
+			BugSenseHandler.log(TAG, e);
 		}
 	}
 	
@@ -349,6 +354,7 @@ public class FileProcessor {
 	    	}
 			return returnString;
 		} catch (FileNotFoundException e) {
+			BugSenseHandler.log(TAG, e);
 			Log.e(TAG, "Error saving screenshot", e);
 			returnString = "Error saving screenshot";
 		}
@@ -371,6 +377,7 @@ public class FileProcessor {
 		    out.close();
 		}
 		catch(IOException e) {
+			BugSenseHandler.log(TAG, e);
 			Log.e(TAG, "Error zipping", e);
 		}
 	}
