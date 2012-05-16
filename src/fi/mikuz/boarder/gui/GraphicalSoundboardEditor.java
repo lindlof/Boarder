@@ -209,6 +209,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
         mSoundImagePaint.setTextAlign(Align.LEFT);
         
         setRequestedOrientation(mGsb.getScreenOrientation());
+        createHistoryCheckpoint();
         
         setContentView(new DrawingPanel(this));
         
