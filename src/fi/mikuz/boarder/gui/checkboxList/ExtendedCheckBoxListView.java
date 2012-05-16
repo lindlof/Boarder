@@ -29,7 +29,7 @@
  * 
  * Copyright 2009 Moritz Wundke
  */
-package fi.mikuz.boarder.checkboxList;
+package fi.mikuz.boarder.gui.checkboxList;
 
 import android.content.Context;
 import android.view.View;

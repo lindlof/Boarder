@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package fi.mikuz.boarder.checkboxList;
+package fi.mikuz.boarder.gui.checkboxList;
 
 import android.app.ListActivity;
 import android.os.Bundle;

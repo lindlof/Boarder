@@ -48,10 +48,10 @@ import com.dropbox.client2.session.Session.AccessType;
 import com.dropbox.client2.session.TokenPair;
 
 import fi.mikuz.boarder.R;
-import fi.mikuz.boarder.checkboxList.ExtendedCheckBox;
-import fi.mikuz.boarder.checkboxList.ExtendedCheckBoxListAdapter;
 import fi.mikuz.boarder.component.DropboxCache;
 import fi.mikuz.boarder.component.DropboxCacheFile;
+import fi.mikuz.boarder.gui.checkboxList.ExtendedCheckBox;
+import fi.mikuz.boarder.gui.checkboxList.ExtendedCheckBoxListAdapter;
 import fi.mikuz.boarder.util.ApiKeyLoader;
 import fi.mikuz.boarder.util.DropboxCacheUtils;
 
