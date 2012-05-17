@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.ConcurrentModificationException;
-import java.util.List;
 import java.util.ListIterator;
 
 import android.app.Activity;
@@ -77,7 +76,7 @@ import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 public class GraphicalSoundboardEditor extends Activity { //TODO destroy god object
 	private String TAG = "GraphicalSoundboardEditor";
 	
-	private GraphicalSoundboard mGsb;
+	public GraphicalSoundboard mGsb;
 	
 	private GraphicalSoundboardHistory mGsbh;
 	
@@ -143,7 +142,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-		
+        
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
 			
@@ -151,7 +150,6 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 			setTitle(mBoardName);
 			
 			loadBoard(GraphicalSoundboardProvider.getBoard(mBoardName, GraphicalSoundboard.SCREEN_ORIENTATION_PORTAIT));
-			mGsbh = FileProcessor.loadGraphicalBoardHistory(mBoardName);
 			
 			if (mGsb.getSoundList().isEmpty()) {
 				mMode = EDIT_BOARD;
@@ -160,8 +158,6 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 			mMode = EDIT_BOARD;
 			
 			mGsb = new GraphicalSoundboard();
-			mGsbh = new GraphicalSoundboardHistory();
-			createHistoryCheckpoint();
 			
 			AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
@@ -209,7 +205,9 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
         mSoundImagePaint.setTextAlign(Align.LEFT);
         
         setRequestedOrientation(mGsb.getScreenOrientation());
-        createHistoryCheckpoint();
+        
+        mGsbh = new GraphicalSoundboardHistory(GraphicalSoundboardEditor.this);
+        mGsbh.createHistoryCheckpoint();
         
         setContentView(new DrawingPanel(this));
         
@@ -269,11 +267,11 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
         		return true;
         		
         	case R.id.menu_undo:
-        		undo();
+        		mGsbh.undo();
         		return true;
         	
         	case R.id.menu_redo:
-        		redo();
+        		mGsbh.redo();
         		return true;
         		
         	case R.id.menu_add_sound:
@@ -511,7 +509,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
             	          				Toast.makeText(getApplicationContext(), "Incorrect value", 
             	          						Toast.LENGTH_SHORT).show();
             	          			}
-            	          			createHistoryCheckpoint();
+            	          			mGsbh.createHistoryCheckpoint();
             	          		}
             	          	});
 
@@ -591,7 +589,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
         	          					Toast.makeText(getApplicationContext(), "Not enought slots", 
             	          						Toast.LENGTH_SHORT).show();
         	          				}
-        	          				createHistoryCheckpoint();
+        	          				mGsbh.createHistoryCheckpoint();
         	          			} catch(NumberFormatException nfe) {
         	          				Toast.makeText(getApplicationContext(), "Incorrect value", 
         	          						Toast.LENGTH_SHORT).show();
@@ -621,7 +619,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		                	    	sound.setNameFrameX(50);
 		        	    			sound.setNameFrameY(50);
 		        	    			sound.generateImageXYFromNameFrameLocation();
-		        	    			createHistoryCheckpoint();
+		        	    			mGsbh.createHistoryCheckpoint();
 		                	    }
 		                	});
 		                	AlertDialog resetAlert = resetBuilder.create();
@@ -640,80 +638,9 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
         }
     }
 	
-	private void createHistoryCheckpoint() {
-		List<GraphicalSoundboard> history = mGsbh.getHistory();
-		int index = mGsbh.getIndex();
-		
-		for (int i = history.size()-index; i > 1; i--) {
-			// User has undone and then creates a checkpoint
-			history.remove(history.size()-1);
-			Log.v(TAG, "removing history from end, size is " + history.size());
-		}
-		GraphicalSoundboard hGsb = GraphicalSoundboard.copy(mGsb);
-		GraphicalSoundboard.unloadImages(hGsb);
-		index++;
-		history.add(hGsb);
-		while (history.size() >= 30) {
-			Log.v(TAG, "removing history from start, size is " + history.size());
-			index--;
-			// Remove the second last save, keep the originally loaded board
-			history.remove(1);
-		}
-		//StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-		//Log.d(TAG, "create: index is " + mCurrentHistoryIndex + " size is " + mHistory.size() + " caller: " + stack[3].getMethodName() + " - " + stack[3].getLineNumber());
-		
-		mGsbh.setHistory(history);
-		mGsbh.setIndex(index);
-	}
-	
-	private void undo() {
-		List<GraphicalSoundboard> history = mGsbh.getHistory();
-		int index = mGsbh.getIndex();
-		
-		if (index <= 0) {
-			Toast.makeText(getApplicationContext(), "Unable to undo", Toast.LENGTH_SHORT).show();
-		} else {
-			index--;
-			loadBoard(GraphicalSoundboard.copy(history.get(index)));
-			issueResolutionConversion();
-		}
-		Log.v(TAG, "undo: index is " + index + " size is " + history.size());
-		
-		mGsbh.setHistory(history);
-		mGsbh.setIndex(index);
-	}
-	
-	private void redo() {
-		List<GraphicalSoundboard> history = mGsbh.getHistory();
-		int index = mGsbh.getIndex();
-		
-		if (index+1 >= history.size()) {
-			Toast.makeText(getApplicationContext(), "Unable to redo", Toast.LENGTH_SHORT).show();
-		} else {
-			index++;
-			loadBoard(GraphicalSoundboard.copy(history.get(index)));
-		}
-		Log.v(TAG, "redo: index is " + index + " size is " + history.size());
-		
-		mGsbh.setHistory(history);
-		mGsbh.setIndex(index);
-	}
-	
-	private void loadBoard(GraphicalSoundboard board) {
-		if (board.getBackgroundImagePath() != null) {
-			board.setBackgroundImage(BitmapFactory.decodeFile(board.getBackgroundImagePath().getAbsolutePath()));
-		}
-		for (GraphicalSound sound : board.getSoundList()) {
-			if (sound.getImagePath() == null) {
-				sound.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.sound));
-			} else {
-				sound.setImage(BitmapFactory.decodeFile(sound.getImagePath().getAbsolutePath()));
-			}
-			if (sound.getActiveImagePath() != null) {
-				sound.setActiveImage(BitmapFactory.decodeFile(sound.getActiveImagePath().getAbsolutePath()));
-			}
-		}
-		mGsb = board;
+	public void loadBoard(GraphicalSoundboard gsb) {
+		GraphicalSoundboard.loadImages(gsb);
+		mGsb = gsb;
 	}
 	
 	private void screenOrientationWarning(final int orientation) {
@@ -804,7 +731,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		        		placeToFreeSpace(sound);
 		        		mGsb.getSoundList().add(sound);
 		        	}
-		        	createHistoryCheckpoint();
+		        	mGsbh.createHistoryCheckpoint();
 	        	}
 	        	break;
 	        	
@@ -819,7 +746,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		        	mGsb.setBackgroundHeight(mGsb.getBackgroundImage().getHeight());
 		        	mGsb.setBackgroundX(0);
 					mGsb.setBackgroundY(0);
-					createHistoryCheckpoint();
+					mGsbh.createHistoryCheckpoint();
 	        	}
 	        	backgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
 				backgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
@@ -890,7 +817,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 	        	if (resultCode == RESULT_OK) {
 	        		Bundle extras = intent.getExtras();
 		        	mGsb.setBackgroundColor(extras.getInt("colorKey"));
-		        	createHistoryCheckpoint();
+		        	mGsbh.createHistoryCheckpoint();
 	        	}
 	        	break;
 	        	
@@ -1027,7 +954,6 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
     			GraphicalSoundboard gsb = GraphicalSoundboard.copy(mGsb);
     			if (mDragSound != null && mDrawDragSound == true) gsb.getSoundList().add(mDragSound);
         		GraphicalSoundboardProvider.saveBoard(mBoardName, gsb);
-        		FileProcessor.saveGraphicalBoardHistory(mBoardName, mGsbh);
         		Log.v(TAG, "Board " + mBoardName + " saved");
     		} catch (IOException e) {
     			Log.e(TAG, "Unable to save " + mBoardName, e);
@@ -1081,7 +1007,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				break;
 		}
 		mCopyColor = 0;
-		createHistoryCheckpoint();
+		mGsbh.createHistoryCheckpoint();
 	}
     
     void moveSound(float X, float Y) {
@@ -1163,7 +1089,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		
 		sound.setAutoArrangeColumn(column);
 		sound.setAutoArrangeRow(row);
-		createHistoryCheckpoint();
+		mGsbh.createHistoryCheckpoint();
 	}
 	
 	public boolean placeToFreeSlot(GraphicalSound sound) {
@@ -1242,7 +1168,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				mDragSound.setImageX(mDragSound.getImageX() + movementX);
 				mDragSound.setImageY(mDragSound.getImageY() + movementY);
 			}
-			createHistoryCheckpoint();
+			mGsbh.setHistoryCheckpoint();
 			return true;
 		} else {
 			return false;
@@ -1250,7 +1176,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		
 	}
 	
-	private void issueResolutionConversion() {
+	public void issueResolutionConversion() {
 		Thread t = new Thread() {
 			public void run() {
 				Looper.prepare();
@@ -1406,7 +1332,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 					AlertDialog alert = builder.create();
 					alert.setOnDismissListener(new OnDismissListener() {
 						public void onDismiss(DialogInterface dialog) {
-							createHistoryCheckpoint();
+							mGsbh.createHistoryCheckpoint();
 						}
 					});
 
@@ -1654,7 +1580,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				    	          						Toast.LENGTH_SHORT).show();
 				    	          			}
 				    	          			
-				    	          			createHistoryCheckpoint();
+				    	          			mGsbh.createHistoryCheckpoint();
 				    	          		}
 				    	          	});
 	
@@ -1789,7 +1715,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				    	          			if (notifyIncorrectValue == true) {
 				    	          				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
 				    	          			}
-				    	          			createHistoryCheckpoint();
+				    	          			mGsbh.createHistoryCheckpoint();
 				    	          		}
 				    	          	});
 
@@ -1906,7 +1832,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				    	          			if (notifyIncorrectValue == true) {
 				    	          				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
 				    	          			}
-				    	          			createHistoryCheckpoint();
+				    	          			mGsbh.createHistoryCheckpoint();
 				    	          		}
 				    	          	});
 
@@ -1926,7 +1852,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				    	    			placeToFreeSpace(duplicate);
 				    	    			mGsb.getSoundList().add(duplicate);
 				    	    		}
-				    	    		createHistoryCheckpoint();
+				    	    		mGsbh.createHistoryCheckpoint();
 				    	    		
 				    	    	} else if (item == 5) {
 				                	
@@ -1951,7 +1877,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				    	          	  			mDragSound.getPath().delete();
 				    	          	  		}
 				    	          	  		mGsb.getSoundList().remove(mDragSound);
-				    	          	  		createHistoryCheckpoint();
+				    	          	  		mGsbh.createHistoryCheckpoint();
 				    	          	    }
 				    	          	});
 
@@ -2072,7 +1998,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 						} else {
 							moveSound(event.getX(), event.getY());
 						}
-						createHistoryCheckpoint();
+						mGsbh.createHistoryCheckpoint();
 						
 					}
 				}

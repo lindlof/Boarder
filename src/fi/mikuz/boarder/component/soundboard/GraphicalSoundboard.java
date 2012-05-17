@@ -7,6 +7,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 
 /**
@@ -109,6 +110,15 @@ public class GraphicalSoundboard {
 		gsb.setScreenWidth(tempGsb.getScreenWidth());
 		
 		return gsb;
+	}
+	
+	static public void loadImages(GraphicalSoundboard gsb) {
+		if (gsb.getBackgroundImagePath() != null) {
+			gsb.setBackgroundImage(BitmapFactory.decodeFile(gsb.getBackgroundImagePath().getAbsolutePath()));
+		}
+		for (GraphicalSound sound : gsb.getSoundList()) {
+			GraphicalSound.loadImages(sound);
+		}
 	}
 	
 	static public void unloadImages(GraphicalSoundboard gsb) {

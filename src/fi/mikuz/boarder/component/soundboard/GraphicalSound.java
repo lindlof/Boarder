@@ -3,10 +3,13 @@ package fi.mikuz.boarder.component.soundboard;
 import java.io.File;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
+import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.gui.SoundboardMenu;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
 /**
@@ -73,6 +76,17 @@ public class GraphicalSound implements Cloneable {
 		this.setNameFrameBorderColor(255, 255, 255, 255);
 		this.setShowNameFrameInnerPaint(true);
 		this.setShowNameFrameBorderPaint(true);
+	}
+	
+	static public void loadImages(GraphicalSound sound) {
+		if (sound.getImagePath() == null) {
+			sound.setImage(BitmapFactory.decodeResource(SoundboardMenu.context.getResources(), R.drawable.sound));
+		} else {
+			sound.setImage(BitmapFactory.decodeFile(sound.getImagePath().getAbsolutePath()));
+		}
+		if (sound.getActiveImagePath() != null) {
+			sound.setActiveImage(BitmapFactory.decodeFile(sound.getActiveImagePath().getAbsolutePath()));
+		}
 	}
 	
 	static public void unloadImages(GraphicalSound sound) {

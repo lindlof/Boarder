@@ -9,7 +9,6 @@ import com.thoughtworks.xstream.io.xml.DomDriver;
 
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
-import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHistory;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
 
 /**
@@ -23,12 +22,6 @@ public class XStreamUtil {
 		xstream.processAnnotations(GraphicalSoundboardHolder.class);
 		xstream.processAnnotations(GraphicalSoundboard.class);
 		xstream.processAnnotations(GraphicalSound.class);
-		return xstream;
-	}
-	
-	public static XStream graphicalBoardHistoryXStream() {
-		XStream xstream = graphicalBoardXStream();
-		xstream.processAnnotations(GraphicalSoundboardHistory.class);
 		return xstream;
 	}
 	
