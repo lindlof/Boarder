@@ -1,0 +1,11 @@
+.classpath
+.project
+
+bin/
+gen/
+
+lint.xml
+
+assets/ApiKeys/BugSenseApiKey.txt
+assets/ApiKeys/DropboxApiKey.txt
+assets/ApiKeys/DropboxApiSecret.txt
