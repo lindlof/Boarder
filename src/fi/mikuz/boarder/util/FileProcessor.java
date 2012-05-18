@@ -190,19 +190,16 @@ public class FileProcessor {
 	
 	public static void convertGraphicalBoard(Activity activity, String boardName, GraphicalSoundboard gsb) throws IOException {
 		
-		File projectDir = new File(SoundboardMenu.mSbDir, boardName);
+		String projectDir = new File(SoundboardMenu.mSbDir, boardName).getAbsolutePath();
 		String doesntExist = " doesn't exist";
-		String baseDir = SoundboardMenu.mSbDir.getAbsolutePath();
 		
 		if (gsb.getBackgroundImagePath() != null) {
 			if (!gsb.getBackgroundImagePath().exists()) {
-				notify(activity, "Background image" + doesntExist);
-			} else if (gsb.getBackgroundImagePath().getAbsolutePath().contains(baseDir) == false) {
-				
-				File outFile = new File(SoundboardMenu.mSbDir, gsb.getBackgroundImagePath().getName());
-				InputStream in = new FileInputStream(gsb.getBackgroundImagePath());
-			    OutputStream out = new FileOutputStream(outFile);
-				IOUtils.copy(in, out);
+				String error = "Background image" + doesntExist;
+				notify(activity, error);
+				Log.w(TAG, error);
+			} else if (gsb.getBackgroundImagePath().getAbsolutePath().contains(projectDir) == false) {
+				File outFile = copySoundElement(projectDir, gsb.getBackgroundImagePath());
 				gsb.setBackgroundImagePath(outFile);
 			}
 		}
@@ -211,46 +208,47 @@ public class FileProcessor {
 		for (GraphicalSound sound : gsb.getSoundList()) {
 			if (BoardLocal.isFunctionSound(sound)) {
 			} else if (!sound.getPath().exists()) {
-				notify(activity, "Sound:\n" + sound.getName() + "\n\nSound file" + doesntExist);
-			} else if (sound.getPath().getAbsolutePath().contains(baseDir) == false) {
-				File soundFile = new File(projectDir, sound.getPath().getName());
-				try {
-					InputStream in = new FileInputStream(sound.getPath());
-				    OutputStream out = new FileOutputStream(soundFile);
-				    IOUtils.copy(in, out);
-					sound.setPath(soundFile);
-				} catch(FileNotFoundException fnfe) {}
+				String error = "Sound:\n" + sound.getName() + "\n\nSound file" + doesntExist;
+				notify(activity, error);
+				Log.w(TAG, error);
+			} else if (sound.getPath().getAbsolutePath().contains(projectDir) == false) {
+				File outFile = copySoundElement(projectDir, sound.getPath());
+				sound.setPath(outFile);
 			}
 			
 			if (sound.getImagePath() != null) {
 				if (!sound.getImagePath().exists()) {
-					notify(activity, "Sound:\n" + sound.getName() + "\n\nImage file " + doesntExist);
-				} else if (sound.getImagePath().getAbsolutePath().contains(baseDir) == false) {
-					File imageFile = new File(projectDir, sound.getImagePath().getName());
-					try {
-						InputStream in = new FileInputStream(sound.getImagePath().getAbsolutePath());
-					    OutputStream out = new FileOutputStream(imageFile);
-					    IOUtils.copy(in, out);
-						sound.setImagePath(imageFile);
-					} catch(FileNotFoundException fnfe) {}
+					String error = "Sound:\n" + sound.getName() + "\n\nImage file " + doesntExist;
+					notify(activity, error);
+					Log.w(TAG, error);
+				} else if (sound.getImagePath().getAbsolutePath().contains(projectDir) == false) {
+					File outFile = copySoundElement(projectDir, sound.getImagePath());
+					sound.setImagePath(outFile);
 				}
 			}
 			
 			if (sound.getActiveImagePath() != null) {
 				if (!sound.getActiveImagePath().exists()) {
-					notify(activity, "Sound:\n" + sound.getName() + "\n\nActive image file" + doesntExist);
-				} else if (sound.getActiveImagePath().getAbsolutePath().contains(baseDir) == false) {
-					File activeImageFile = new File(projectDir, sound.getActiveImagePath().getName());
-					try {
-						InputStream in = new FileInputStream(sound.getActiveImagePath().getAbsolutePath());
-					    OutputStream out = new FileOutputStream(activeImageFile);
-					    IOUtils.copy(in, out);
-						sound.setActiveImagePath(activeImageFile);
-					} catch(FileNotFoundException fnfe) {}
+					String error = "Sound:\n" + sound.getName() + "\n\nActive image file" + doesntExist;
+					notify(activity, error);
+					Log.w(TAG, error);
+				} else if (sound.getActiveImagePath().getAbsolutePath().contains(projectDir) == false) {
+					File outFile = copySoundElement(projectDir, sound.getActiveImagePath());
+					sound.setActiveImagePath(outFile);
 				}
 			}
 		}
 		Log.v(TAG, boardName + " converted");
+	}
+	
+	private static File copySoundElement(String projectDir, File inFile) throws IOException {
+		File outFile = new File(projectDir, inFile.getName());
+
+		InputStream in = new FileInputStream(inFile);
+		OutputStream out = new FileOutputStream(outFile);
+		IOUtils.copy(in, out);
+		Log.v(TAG, "Copied " + inFile.getAbsolutePath() + " to " + outFile);
+		return outFile;
 	}
 	
 	private static void notify(final Activity activity, final String text) {
