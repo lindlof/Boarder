@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -71,6 +72,8 @@ public class DownloadBoard extends Activity implements ConnectionListener {
     protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		
 		mWaitDialog = new TimeoutProgressDialog(DownloadBoard.this, "Waiting for response", TAG, true);
 		
 		Bundle extras = getIntent().getExtras();
@@ -136,6 +139,8 @@ public class DownloadBoard extends Activity implements ConnectionListener {
 								
 							}
 						});
+						
+						setProgressBarIndeterminateVisibility(false);
 					}
 				});
 		        return null;
@@ -179,6 +184,7 @@ public class DownloadBoard extends Activity implements ConnectionListener {
 	};
 	
 	private void getBoard() {
+		setProgressBarIndeterminateVisibility(true);
 		HashMap<String, String> sendList = new HashMap<String, String>();
 		sendList.put(InternetMenu.BOARD_ID_KEY, Integer.toString(boardId));
 		if (mLoggedIn) {

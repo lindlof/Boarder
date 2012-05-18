@@ -39,6 +39,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.Button;
 import android.widget.EditText;
@@ -118,6 +119,8 @@ public class SoundboardMenu extends ListActivity {
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+    	
     	String versionName = null;
     	try {
     		versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
@@ -251,6 +254,7 @@ public class SoundboardMenu extends ListActivity {
     }
     
     private void initializeBoardUpdateThread() {
+    	setProgressBarIndeterminateVisibility(true);
     	Thread t = new Thread() {
 			public void run() {
 				updateBoards();
@@ -358,6 +362,7 @@ public class SoundboardMenu extends ListActivity {
     final Runnable mFinalizeBoardUpdating = new Runnable() {
     	public void run() {
     		refreshBoards();
+    		setProgressBarIndeterminateVisibility(false);
     	}
     };
     
