@@ -76,8 +76,9 @@ public class ConnectionManager {
 					}
 
 				} catch(Exception e) {
-					Log.e(TAG, "Cannot establish connection");
-					connectionErrorResponse = new ConnectionErrorResponse("Cannot estabilish connection", 
+					String error = "Cannot establish connection";
+					Log.e(TAG, error);
+					connectionErrorResponse = new ConnectionErrorResponse(error, 
 							ConnectionUtils.getUrlConnectionId(url));
 					mHandler.post(connectionError);
 				}
