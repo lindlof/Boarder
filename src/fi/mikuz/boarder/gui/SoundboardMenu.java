@@ -76,7 +76,7 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 public class SoundboardMenu extends ListActivity {
 	public static final String TAG = "SoundboardMenu";
 	
-	public static final boolean mDevelopmentMode = true; //FIXME for release
+	public static final boolean mDevelopmentMode = false; //FIXME for release
 	
 	public static Context context;
 	
