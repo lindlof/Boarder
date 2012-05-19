@@ -11,7 +11,7 @@
               android:title="@string/menu_copy_color" />
     </group>
 
-	<group android:id="@+id/project_actions">
+	<group android:id="@+id/board_actions">
 	    <item android:id="@+id/menu_save_color"
 	          android:title="@string/menu_save_color" />
 	    <item android:id="@+id/menu_cancel_color"

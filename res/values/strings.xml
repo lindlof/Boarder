@@ -30,8 +30,8 @@
     <!--Soundboard Editor-->
     <string name="no_sounds">You do not have any sounds.\n\nPlease press menu button.</string>
     <string name="menu_add_sound">Add sound</string>
-    <string name="menu_save_project">Save</string>
-    <string name="menu_convert_project">Convert</string>
+    <string name="menu_save_board">Save</string>
+    <string name="menu_convert_board">Convert</string>
     <string name="menu_change_volume">Change volume</string>
     <string name="menu_board_settings">Settings</string>
     <string name="menu_rename_sound">Rename</string>

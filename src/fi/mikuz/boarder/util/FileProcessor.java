@@ -41,18 +41,18 @@ public class FileProcessor {
 	public static GraphicalSoundboardHolder loadGraphicalSoundboardHolder(String boardName) throws IOException {
 		
 		GraphicalSoundboardHolder gsbHolder = new GraphicalSoundboardHolder();
-		File projectDir = new File(SoundboardMenu.mSbDir, boardName);
+		File boardDir = new File(SoundboardMenu.mSbDir, boardName);
 		
 		try{
 			XStream xstream = XStreamUtil.graphicalBoardXStream();
-			gsbHolder = (GraphicalSoundboardHolder) xstream.fromXML(new File(projectDir + "/graphicalBoard"));
+			gsbHolder = (GraphicalSoundboardHolder) xstream.fromXML(new File(boardDir + "/graphicalBoard"));
 			return gsbHolder;
 		} catch(StreamException e) {
 			Log.e(TAG, "Can't open the board " + boardName, e);
 			
 			GraphicalSoundboard gsb = new GraphicalSoundboard();
 			
-			DataInputStream in = new DataInputStream(new FileInputStream(projectDir + "/graphicalBoard"));
+			DataInputStream in = new DataInputStream(new FileInputStream(boardDir + "/graphicalBoard"));
 	        BufferedReader br = new BufferedReader(new InputStreamReader(in), 8192);
 	        
 		    String line;
@@ -146,14 +146,14 @@ public class FileProcessor {
 	
 	public static void saveGraphicalSoundboardHolder(String boardName, GraphicalSoundboardHolder boardHolder) throws IOException {
 		
-		File project = new File(SoundboardMenu.mSbDir, boardName);
-		File sbFile = new File(project, "graphicalBoard");
+		File boardDir = new File(SoundboardMenu.mSbDir, boardName);
+		File sbFile = new File(boardDir, "graphicalBoard");
 		
-		project.mkdirs();
+		boardDir.mkdirs();
 		attemptBackup(sbFile);
 
-		if (project.exists() == false) {
-			project.mkdirs();
+		if (boardDir.exists() == false) {
+			boardDir.mkdirs();
 		}
 		
 		BufferedWriter out = new BufferedWriter(new FileWriter(sbFile));
@@ -190,7 +190,7 @@ public class FileProcessor {
 	
 	public static void convertGraphicalBoard(Activity activity, String boardName, GraphicalSoundboard gsb) throws IOException {
 		
-		String projectDir = new File(SoundboardMenu.mSbDir, boardName).getAbsolutePath();
+		String boardDir = new File(SoundboardMenu.mSbDir, boardName).getAbsolutePath();
 		String doesntExist = " doesn't exist";
 		
 		if (gsb.getBackgroundImagePath() != null) {
@@ -198,8 +198,8 @@ public class FileProcessor {
 				String error = "Background image" + doesntExist;
 				notify(activity, error);
 				Log.w(TAG, error);
-			} else if (gsb.getBackgroundImagePath().getAbsolutePath().contains(projectDir) == false) {
-				File outFile = copySoundElement(projectDir, gsb.getBackgroundImagePath());
+			} else if (gsb.getBackgroundImagePath().getAbsolutePath().contains(boardDir) == false) {
+				File outFile = copySoundElement(boardDir, gsb.getBackgroundImagePath());
 				gsb.setBackgroundImagePath(outFile);
 			}
 		}
@@ -211,8 +211,8 @@ public class FileProcessor {
 				String error = "Sound:\n" + sound.getName() + "\n\nSound file" + doesntExist;
 				notify(activity, error);
 				Log.w(TAG, error);
-			} else if (sound.getPath().getAbsolutePath().contains(projectDir) == false) {
-				File outFile = copySoundElement(projectDir, sound.getPath());
+			} else if (sound.getPath().getAbsolutePath().contains(boardDir) == false) {
+				File outFile = copySoundElement(boardDir, sound.getPath());
 				sound.setPath(outFile);
 			}
 			
@@ -221,8 +221,8 @@ public class FileProcessor {
 					String error = "Sound:\n" + sound.getName() + "\n\nImage file " + doesntExist;
 					notify(activity, error);
 					Log.w(TAG, error);
-				} else if (sound.getImagePath().getAbsolutePath().contains(projectDir) == false) {
-					File outFile = copySoundElement(projectDir, sound.getImagePath());
+				} else if (sound.getImagePath().getAbsolutePath().contains(boardDir) == false) {
+					File outFile = copySoundElement(boardDir, sound.getImagePath());
 					sound.setImagePath(outFile);
 				}
 			}
@@ -232,8 +232,8 @@ public class FileProcessor {
 					String error = "Sound:\n" + sound.getName() + "\n\nActive image file" + doesntExist;
 					notify(activity, error);
 					Log.w(TAG, error);
-				} else if (sound.getActiveImagePath().getAbsolutePath().contains(projectDir) == false) {
-					File outFile = copySoundElement(projectDir, sound.getActiveImagePath());
+				} else if (sound.getActiveImagePath().getAbsolutePath().contains(boardDir) == false) {
+					File outFile = copySoundElement(boardDir, sound.getActiveImagePath());
 					sound.setActiveImagePath(outFile);
 				}
 			}
@@ -241,8 +241,8 @@ public class FileProcessor {
 		Log.v(TAG, boardName + " converted");
 	}
 	
-	private static File copySoundElement(String projectDir, File inFile) throws IOException {
-		File outFile = new File(projectDir, inFile.getName());
+	private static File copySoundElement(String boardDir, File inFile) throws IOException {
+		File outFile = new File(boardDir, inFile.getName());
 
 		InputStream in = new FileInputStream(inFile);
 		OutputStream out = new FileOutputStream(outFile);

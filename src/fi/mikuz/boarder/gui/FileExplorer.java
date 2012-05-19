@@ -38,24 +38,33 @@ import fi.mikuz.boarder.util.XStreamUtil;
  * @author Jan Mikael Lindlöf
  */
 public class FileExplorer extends ListActivity {
+	
+	public static final String ACTION_SELECT_BACKGROUND_FILE = "selectBackgroundFile";
+	public static final String ACTION_SELECT_SOUND_IMAGE_FILE = "selectSoundImageFile";
+	public static final String ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE = "selectSoundActiveImageFile";
+	public static final String ACTION_CHANGE_SOUND_PATH = "changeSoundPath";
+	public static final String ACTION_ADD_GRAPHICAL_SOUND = "addGraphicalSound";
+	
+	public static final String EXTRA_ACTION_KEY = "actionKey";
+	public static final String EXTRA_BOARD_NAME_KEY = "boardNameKey";
  
- private List<String> mItem = null;
- private List<String> mPath = null;
- private boolean mSdDir = false;
- private File selectedFile;
- private String mSdcard = Environment.getExternalStorageDirectory().toString();
- private String mBoardPath = mSdcard;
- 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);  
-        setContentView(R.layout.file_browser);
-        mBoardPath = SoundboardMenu.mSbDir.getPath() + "/" + getIntent().getExtras().getString("projectNameKey");
-        getDir(mSdcard);
-    }
-    
-    @Override
+	private List<String> mItem = null;
+	private List<String> mPath = null;
+	private boolean mSdDir = false;
+	private File selectedFile;
+	private String mSdcard = Environment.getExternalStorageDirectory().toString();
+	private String mBoardPath = mSdcard;
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);  
+		setContentView(R.layout.file_browser);
+		mBoardPath = SoundboardMenu.mSbDir.getPath() + "/" + getIntent().getExtras().getString(FileExplorer.EXTRA_BOARD_NAME_KEY);
+		getDir(mSdcard);
+	}
+
+	@Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
             if(mSdDir) {
@@ -151,14 +160,14 @@ public class FileExplorer extends ListActivity {
 				msg.show();
     		}
     	} else {
-    		final String parent = getIntent().getExtras().getString("parentKey");
+    		final String action = getIntent().getExtras().getString(FileExplorer.EXTRA_ACTION_KEY);
     		
-    		if (parent.equals("selectBackgroundFile")) {
+    		if (action.equals(FileExplorer.ACTION_SELECT_BACKGROUND_FILE)) {
     			try {
     				new Canvas().drawBitmap(BitmapFactory.decodeFile(selectedFile.getAbsolutePath()), 0, 0, null);
     				
         			Bundle bundle = new Bundle();
-        			bundle.putString("backgroundKey", selectedFile.getAbsoluteFile().toString());
+        			bundle.putString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE, selectedFile.getAbsoluteFile().toString());
         			
         			Intent intent = new Intent();
     				intent.putExtras(bundle);
@@ -170,12 +179,12 @@ public class FileExplorer extends ListActivity {
 					msg.show();
 				}
 				
-    		} else if (parent.equals("selectSoundImageFile")) {
+    		} else if (action.equals(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE)) {
     			try {
     				new Canvas().drawBitmap(BitmapFactory.decodeFile(selectedFile.getAbsolutePath()), 0, 0, null);
     				
 	    			Bundle bundle = new Bundle();
-	    			bundle.putString("soundImageKey", selectedFile.getAbsoluteFile().toString());
+	    			bundle.putString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE, selectedFile.getAbsoluteFile().toString());
 	    			
 	    			Intent intent = new Intent();
 					intent.putExtras(bundle);
@@ -187,12 +196,12 @@ public class FileExplorer extends ListActivity {
 					msg.show();
 				}
     			
-    		} else if (parent.equals("selectSoundActiveImageFile")) {
+    		} else if (action.equals(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE)) {
     			try {
     				new Canvas().drawBitmap(BitmapFactory.decodeFile(selectedFile.getAbsolutePath()), 0, 0, null);
     				
 	    			Bundle bundle = new Bundle();
-	    			bundle.putString("soundActiveImageKey", selectedFile.getAbsoluteFile().toString());
+	    			bundle.putString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE, selectedFile.getAbsoluteFile().toString());
 	    			
 	    			Intent intent = new Intent();
 					intent.putExtras(bundle);
@@ -204,9 +213,9 @@ public class FileExplorer extends ListActivity {
 					msg.show();
 				}
 				
-    		} else if (parent.equals("changeSoundPath")) {
+    		} else if (action.equals(FileExplorer.ACTION_CHANGE_SOUND_PATH)) {
     			Bundle bundle = new Bundle();
-    			bundle.putString("soundPathKey", selectedFile.getAbsoluteFile().toString());
+    			bundle.putString(FileExplorer.ACTION_CHANGE_SOUND_PATH, selectedFile.getAbsoluteFile().toString());
     			
     			Intent intent = new Intent();
 				intent.putExtras(bundle);
@@ -240,7 +249,7 @@ public class FileExplorer extends ListActivity {
 						
 						Bundle bundle = new Bundle();
 				  
-						if (parent.equals("addGraphicalSound")) {
+						if (action.equals(FileExplorer.ACTION_ADD_GRAPHICAL_SOUND)) {
 							GraphicalSound sound = new GraphicalSound();
 							sound.setName(input.getText().toString());
 							sound.setPath(selectedFile.getAbsoluteFile());
@@ -251,7 +260,7 @@ public class FileExplorer extends ListActivity {
 							sound.setImageHeight(image.getHeight());
 					  
 							XStream xstream = XStreamUtil.graphicalBoardXStream();
-							bundle.putString("soundKey", xstream.toXML(sound));
+							bundle.putString(FileExplorer.ACTION_ADD_GRAPHICAL_SOUND, xstream.toXML(sound));
 						}
 				  
 						Intent intent = new Intent();

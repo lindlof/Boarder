@@ -276,16 +276,16 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
         		
         	case R.id.menu_add_sound:
         		Intent i = new Intent(this, FileExplorer.class);
-        		i.putExtra("parentKey", "addGraphicalSound");
-        		i.putExtra("projectNameKey", mBoardName);
+        		i.putExtra(FileExplorer.EXTRA_ACTION_KEY, FileExplorer.ACTION_ADD_GRAPHICAL_SOUND);
+        		i.putExtra(FileExplorer.EXTRA_BOARD_NAME_KEY, mBoardName);
             	startActivityForResult(i, EXPLORE_SOUND);
             	return true;
             	
-            case R.id.menu_save_project:
+            case R.id.menu_save_board:
             	save();
                 return true;
                 
-            case R.id.menu_convert_project:
+            case R.id.menu_convert_board:
             	
             	AlertDialog.Builder convertBuilder = new AlertDialog.Builder(this);
           	  	convertBuilder.setTitle("Convert");
@@ -689,22 +689,22 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 	
 	private void selectBackgroundFile() {
 		Intent i = new Intent(this, FileExplorer.class);
-		i.putExtra("parentKey", "selectBackgroundFile");
-		i.putExtra("projectNameKey", mBoardName);
+		i.putExtra(FileExplorer.EXTRA_ACTION_KEY, FileExplorer.ACTION_SELECT_BACKGROUND_FILE);
+		i.putExtra(FileExplorer.EXTRA_BOARD_NAME_KEY, mBoardName);
     	startActivityForResult(i, EXPLORE_BACKGROUD);
 	}
 	
 	private void selectImageFile() {
 		Intent i = new Intent(this, FileExplorer.class);
-		i.putExtra("parentKey", "selectSoundImageFile");
-		i.putExtra("projectNameKey", mBoardName);
+		i.putExtra(FileExplorer.EXTRA_ACTION_KEY, FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE);
+		i.putExtra(FileExplorer.EXTRA_BOARD_NAME_KEY, mBoardName);
     	startActivityForResult(i, EXPLORE_SOUND_IMAGE);
 	}
 	
 	private void selectActiveImageFile() {
 		Intent i = new Intent(this, FileExplorer.class);
-		i.putExtra("parentKey", "selectSoundActiveImageFile");
-		i.putExtra("projectNameKey", mBoardName);
+		i.putExtra(FileExplorer.EXTRA_ACTION_KEY, FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE);
+		i.putExtra(FileExplorer.EXTRA_BOARD_NAME_KEY, mBoardName);
     	startActivityForResult(i, EXPLORE_SOUND_ACTIVE_IMAGE);
 	}
 	
@@ -719,7 +719,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		        	Bundle extras = intent.getExtras();
 		        	XStream xstream = XStreamUtil.graphicalBoardXStream();
 		        	
-		        	GraphicalSound sound = (GraphicalSound) xstream.fromXML(extras.getString("soundKey"));
+		        	GraphicalSound sound = (GraphicalSound) xstream.fromXML(extras.getString(FileExplorer.ACTION_ADD_GRAPHICAL_SOUND));
 		        	sound.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.sound));
 		        	sound.setAutoArrangeColumn(0);
 		        	sound.setAutoArrangeRow(0);
@@ -739,7 +739,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 	        	
 	        	if (resultCode == RESULT_OK) {
 		        	Bundle extras = intent.getExtras();
-		        	File background = new File(extras.getString("backgroundKey"));
+		        	File background = new File(extras.getString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE));
 		        	mGsb.setBackgroundImagePath(background);
 		        	mGsb.setBackgroundImage(BitmapFactory.decodeFile(mGsb.getBackgroundImagePath().getAbsolutePath()));
 		        	mGsb.setBackgroundWidth(mGsb.getBackgroundImage().getWidth());
@@ -758,7 +758,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 	        	
 	        	if (resultCode == RESULT_OK) {
 		        	Bundle extras = intent.getExtras();
-		        	File image = new File(extras.getString("soundImageKey"));
+		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE));
 		        	mDragSound.setImagePath(image);
 		        	mDragSound.setImage(BitmapFactory.decodeFile(mDragSound.getImagePath().getAbsolutePath()));
 	        	}
@@ -770,7 +770,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 	        	
 	        	if (resultCode == RESULT_OK) {
 		        	Bundle extras = intent.getExtras();
-		        	File image = new File(extras.getString("soundActiveImageKey"));
+		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE));
 		        	mDragSound.setActiveImagePath(image);
 		        	mDragSound.setActiveImage(BitmapFactory.decodeFile(mDragSound.getActiveImagePath().getAbsolutePath()));
 	        	}
@@ -845,7 +845,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
     	          	  			mDragSound.getPath().delete();
     	          	  		}
 	    	          	  	Bundle extras = intent.getExtras();
-				        	mDragSound.setPath(new File(extras.getString("soundPathKey")));
+				        	mDragSound.setPath(new File(extras.getString(FileExplorer.ACTION_CHANGE_SOUND_PATH)));
     	          	    }
     	          	});
 
@@ -1743,8 +1743,8 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				    	    		changeSoundPathButton.setOnClickListener(new OnClickListener() {
 				    					public void onClick(View v) {
 				    						Intent i = new Intent(GraphicalSoundboardEditor.this, FileExplorer.class);
-				    						i.putExtra("parentKey", "changeSoundPath");
-				    						i.putExtra("projectNameKey", mBoardName);
+				    						i.putExtra(FileExplorer.EXTRA_ACTION_KEY, FileExplorer.ACTION_CHANGE_SOUND_PATH);
+				    						i.putExtra(FileExplorer.EXTRA_BOARD_NAME_KEY, mBoardName);
 				    						startActivityForResult(i, CHANGE_SOUND_PATH);
 				    					}
 				              	  	});

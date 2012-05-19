@@ -22,12 +22,12 @@
 
 	<item android:id="@+id/menu_add_sound"
 		android:title="@string/menu_add_sound" />
-	<item android:id="@+id/menu_save_project"
-		android:title="@string/menu_save_project" />
+	<item android:id="@+id/menu_save_board"
+		android:title="@string/menu_save_board" />
 	<item android:id="@+id/menu_notification" 
 		android:title="@string/menu_notification" />
-	<item android:id="@+id/menu_convert_project"
-		android:title="@string/menu_convert_project" />
+	<item android:id="@+id/menu_convert_board"
+		android:title="@string/menu_convert_board" />
 	<item android:id="@+id/menu_take_screenshot"
 		android:title="Screenshot" />
     

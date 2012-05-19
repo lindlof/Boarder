@@ -22,19 +22,19 @@ public class BoardLocal {
 
 	public static int testIfBoardIsLocal(String boardName) throws IOException {
 		
-		File projectDir = new File(SoundboardMenu.mSbDir, boardName);
+		File boardDir = new File(SoundboardMenu.mSbDir, boardName);
 		
 		try {
 			// No failsafes, return red if error occurs
 			XStream xstream = XStreamUtil.graphicalBoardXStream();
-			GraphicalSoundboardHolder boardHolder = (GraphicalSoundboardHolder) xstream.fromXML(new File(projectDir + "/graphicalBoard"));
+			GraphicalSoundboardHolder boardHolder = (GraphicalSoundboardHolder) xstream.fromXML(new File(boardDir + "/graphicalBoard"));
 			
 			// TODO fails for multiple boards
 			for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
 				
 				if (gsb.getBackgroundImagePath() != null) {
 					if (!gsb.getBackgroundImagePath().exists()) return BoardsDbAdapter.LOCAL_ORANGE;
-					else if (!gsb.getBackgroundImagePath().getAbsolutePath().contains(projectDir.getAbsolutePath())) return BoardsDbAdapter.LOCAL_YELLOW;
+					else if (!gsb.getBackgroundImagePath().getAbsolutePath().contains(boardDir.getAbsolutePath())) return BoardsDbAdapter.LOCAL_YELLOW;
 				}
 				
 				if (gsb.getSoundList().size() == 0) return BoardsDbAdapter.LOCAL_WHITE;
@@ -43,17 +43,17 @@ public class BoardLocal {
 					if (sound.getPath() != null) {
 						if (isFunctionSound(sound));
 						else if (!sound.getPath().exists()) return BoardsDbAdapter.LOCAL_ORANGE;
-						else if (!sound.getPath().getAbsolutePath().contains(projectDir.getAbsolutePath())) return BoardsDbAdapter.LOCAL_YELLOW;
+						else if (!sound.getPath().getAbsolutePath().contains(boardDir.getAbsolutePath())) return BoardsDbAdapter.LOCAL_YELLOW;
 					} else {
 						return BoardsDbAdapter.LOCAL_RED;
 					}
 					if (sound.getImagePath() != null) {
 						if (!sound.getImagePath().exists()) return BoardsDbAdapter.LOCAL_ORANGE;
-						else if (!sound.getImagePath().getAbsolutePath().contains(projectDir.getAbsolutePath())) return BoardsDbAdapter.LOCAL_YELLOW;
+						else if (!sound.getImagePath().getAbsolutePath().contains(boardDir.getAbsolutePath())) return BoardsDbAdapter.LOCAL_YELLOW;
 					}
 					if (sound.getActiveImagePath() != null) {
 						if (!sound.getActiveImagePath().exists()) return BoardsDbAdapter.LOCAL_ORANGE;
-						else if (!sound.getActiveImagePath().getAbsolutePath().contains(projectDir.getAbsolutePath())) return BoardsDbAdapter.LOCAL_YELLOW;
+						else if (!sound.getActiveImagePath().getAbsolutePath().contains(boardDir.getAbsolutePath())) return BoardsDbAdapter.LOCAL_YELLOW;
 					}
 				}
 				
