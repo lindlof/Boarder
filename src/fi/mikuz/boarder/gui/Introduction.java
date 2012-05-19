@@ -115,7 +115,7 @@ public class Introduction extends Activity {
 	        	promo.setScaleType(ScaleType.CENTER_INSIDE);
 	        	mBody.addView(promo);
 	        	text.setText("\n\nThanks for reading Boarder introduction.\n\n" +
-	        			"I wish you pleasant boading.");
+	        			"I wish you pleasant boarding.");
 	        	text.setGravity(Gravity.CENTER_HORIZONTAL);
 	        	mBody.addView(text);
 	        	break;
