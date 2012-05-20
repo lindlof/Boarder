@@ -35,6 +35,7 @@ public class GlobalVariablesDbAdapter extends DbAdapter {
     public static final String TOS_VERSION_KEY = "tosVersion";
     public static final String FADE_OUT_DURATION_KEY = "fadeOutDuration";
     public static final String FADE_IN_DURATION_KEY = "fadeInDuration";
+    public static final String SENSITIVE_LOGGING = "sensitiveLogging";
 
     private DatabaseHelper mDbHelper;
     private SQLiteDatabase mDb;
@@ -78,6 +79,32 @@ public class GlobalVariablesDbAdapter extends DbAdapter {
 
         return mDb.insert(DATABASE_TABLE, null, initialValues);
     }
+    
+    public long createBooleanVariable(String variable, boolean data) {
+    	int intValue = data ? 1 : 0;
+    	return createIntVariable(variable, intValue);
+    }
+    
+    public boolean updateVariable(String variable, String data) {
+        ContentValues args = new ContentValues();
+        args.put(KEY_VARIABLE, variable);
+        args.put(KEY_DATA, data);
+
+        return mDb.update(DATABASE_TABLE, args, KEY_VARIABLE + "= '" + variable + "'", null) > 0;
+    }
+    
+    public boolean updateIntVariable(String variable, int data) {
+        ContentValues args = new ContentValues();
+        args.put(KEY_VARIABLE, variable);
+        args.put(KEY_DATA, data);
+
+        return mDb.update(DATABASE_TABLE, args, KEY_VARIABLE + "= '" + variable + "'", null) > 0;
+    }
+    
+    public boolean updateBooleanVariable(String variable, boolean data) {
+    	int intValue = data ? 1 : 0;
+        return updateIntVariable(variable, intValue);
+    }
 
     public boolean deleteVariable(String variable) {
 
@@ -103,19 +130,4 @@ public class GlobalVariablesDbAdapter extends DbAdapter {
 
     }
 
-    public boolean updateVariable(String variable, String data) {
-        ContentValues args = new ContentValues();
-        args.put(KEY_VARIABLE, variable);
-        args.put(KEY_DATA, data);
-
-        return mDb.update(DATABASE_TABLE, args, KEY_VARIABLE + "= '" + variable + "'", null) > 0;
-    }
-    
-    public boolean updateIntVariable(String variable, int data) {
-        ContentValues args = new ContentValues();
-        args.put(KEY_VARIABLE, variable);
-        args.put(KEY_DATA, data);
-
-        return mDb.update(DATABASE_TABLE, args, KEY_VARIABLE + "= '" + variable + "'", null) > 0;
-    }
 }

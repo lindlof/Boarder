@@ -64,6 +64,15 @@
                 android:inputType="number"
                 android:layout_weight="1" />
         </LinearLayout>
+        
+        <CheckBox
+            android:id="@+id/sensitiveLoggingCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_x="50dp"
+            android:layout_y="22dp"
+            android:text=" Enable sensitive logging" />
+        
     </LinearLayout>
 
 </ScrollView>

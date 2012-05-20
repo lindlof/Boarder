@@ -42,6 +42,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Filterable;
 import android.widget.ImageView;
@@ -553,6 +554,9 @@ public class SoundboardMenu extends ListActivity {
             	
             	final EditText fadeOutInput = (EditText) layout.findViewById(R.id.fadeOutInput);
             	fadeOutInput.setText(Integer.toString(mGlobalSettings.getFadeOutDuration()));
+            	
+            	final CheckBox sensitiveLoggingCheckbox = (CheckBox) layout.findViewById(R.id.sensitiveLoggingCheckbox);
+            	sensitiveLoggingCheckbox.setChecked(mGlobalSettings.getSensitiveLogging());
 
             	AlertDialog.Builder builder = new AlertDialog.Builder(SoundboardMenu.this);
             	builder.setView(layout);
@@ -566,6 +570,8 @@ public class SoundboardMenu extends ListActivity {
             				
             				int fadeOut = Integer.valueOf(fadeOutInput.getText().toString()).intValue();
             				mGlobalVariableDbHelper.updateIntVariable(GlobalVariablesDbAdapter.FADE_OUT_DURATION_KEY, fadeOut);
+            				
+            				mGlobalVariableDbHelper.updateBooleanVariable(GlobalVariablesDbAdapter.SENSITIVE_LOGGING, sensitiveLoggingCheckbox.isChecked());
             				
             				mGlobalSettings = loadGlobalSettings();
             			} catch(NumberFormatException nfe) {
@@ -620,26 +626,36 @@ public class SoundboardMenu extends ListActivity {
     
     private GlobalSettings loadGlobalSettings() {
     	GlobalSettings globalSettings = new GlobalSettings();
-    	int fadeInInput = 0;
+    	int fadeIn = 0;
     	try {
     		Cursor variableCursor = mGlobalVariableDbHelper.fetchVariable(GlobalVariablesDbAdapter.FADE_IN_DURATION_KEY);
 			startManagingCursor(variableCursor);
-			fadeInInput = variableCursor.getInt(variableCursor.getColumnIndexOrThrow(LoginDbAdapter.KEY_DATA));
+			fadeIn = variableCursor.getInt(variableCursor.getColumnIndexOrThrow(LoginDbAdapter.KEY_DATA));
         } catch (Exception e) {
         	mGlobalVariableDbHelper.createIntVariable(GlobalVariablesDbAdapter.FADE_IN_DURATION_KEY, 0);
         	Log.d(TAG, "Couldn't get fade-in", e);
 		}
-    	globalSettings.setFadeInDuration(fadeInInput);
-    	int fadeOutInput = 0;
+    	globalSettings.setFadeInDuration(fadeIn);
+    	int fadeOut = 0;
     	try {
     		Cursor variableCursor = mGlobalVariableDbHelper.fetchVariable(GlobalVariablesDbAdapter.FADE_OUT_DURATION_KEY);
 			startManagingCursor(variableCursor);
-			fadeOutInput = variableCursor.getInt(variableCursor.getColumnIndexOrThrow(LoginDbAdapter.KEY_DATA));
+			fadeOut = variableCursor.getInt(variableCursor.getColumnIndexOrThrow(LoginDbAdapter.KEY_DATA));
         } catch (Exception e) {
         	mGlobalVariableDbHelper.createIntVariable(GlobalVariablesDbAdapter.FADE_OUT_DURATION_KEY, 0);
-        	Log.d(TAG, "Couldn't get fade-out", e);
+        	Log.d(TAG, "Couldn't get fadeOut", e);
 		}
-    	globalSettings.setFadeOutDuration(fadeOutInput);
+    	globalSettings.setFadeOutDuration(fadeOut);
+    	boolean sensitiveLogging = false;
+    	try {
+    		Cursor variableCursor = mGlobalVariableDbHelper.fetchVariable(GlobalVariablesDbAdapter.SENSITIVE_LOGGING);
+			startManagingCursor(variableCursor);
+			sensitiveLogging = variableCursor.getInt(variableCursor.getColumnIndexOrThrow(LoginDbAdapter.KEY_DATA)) > 0;
+        } catch (Exception e) {
+        	mGlobalVariableDbHelper.createBooleanVariable(GlobalVariablesDbAdapter.SENSITIVE_LOGGING, false);
+        	Log.d(TAG, "Couldn't get sensitiveLogging", e);
+		}
+    	globalSettings.setSensitiveLogging(sensitiveLogging);
     	return globalSettings;
     }
     

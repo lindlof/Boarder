@@ -64,7 +64,7 @@ public class ConnectionManager {
 					String result = convertStreamToString(in);
 					
 					try {
-						if (SoundboardMenu.mDevelopmentMode) Log.v(TAG, "Got from "+url+": "+result);
+						if (SoundboardMenu.mGlobalSettings.getSensitiveLogging()) Log.v(TAG, "Got from "+url+": "+result);
 						else Log.v(TAG, "Got answer from "+url);
 						connectionSuccessfulResponse = new ConnectionSuccessfulResponse(new JSONObject(result), 
 								ConnectionUtils.getUrlConnectionId(url));
