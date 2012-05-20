@@ -41,28 +41,27 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 public class InternetMenu extends Activity implements ConnectionListener {
     private static final String TAG = "InternetMenu";
     
-    public static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://www.mikuz.org/php/boarder_test/" : "http://www.mikuz.org/php/boarder/";
-    public static final String mGetSessionValidURL = phpRepURL + "getSessionValid.php";
-    public static final String mGetBoardsURL = InternetMenu.phpRepURL + "getBoards.php";
-    public static final String mGetBoardURL = InternetMenu.phpRepURL + "getBoard.php";
-    public static final String mRegistrationURL = InternetMenu.phpRepURL + "register.php";
-    public static final String mLoginURL = InternetMenu.phpRepURL + "login.php";
-    public static final String mLogoutURL = InternetMenu.phpRepURL + "logout.php";
-    public static final String mRecoverPasswordURL = InternetMenu.phpRepURL + "recoverPassword.php";
-    public static final String mChangePasswordURL = InternetMenu.phpRepURL + "changePassword.php";
-    public static final String mGetMd5MoreSaltURL = InternetMenu.phpRepURL + "getMd5MoreSalt.php";
-    public static final String mUserUploadListURL = phpRepURL + "getUserUploads.php";
-    public static final String mUploadBoardURL = phpRepURL + "uploadBoard.php";
-    public static final String mFavoriteListURL = phpRepURL + "getFavorites.php";
-    public static final String mFavoriteURL = phpRepURL + "favorite.php";
-    public static final String mUpdateFavoriteBoardURL = phpRepURL + "updateFavoriteBoard.php";
-    public static final String mGetBoardThumbStatusURL = phpRepURL + "getBoardThumbStatus.php";
-    public static final String mRateBoardURL = phpRepURL + "rateBoard.php";
-    public static final String mCommentURL = phpRepURL + "comment.php";
-    public static final String mGetCommentsURL = phpRepURL + "getComments.php";
-    public static final String mDeleteUploadedBoardURL = phpRepURL + "deleteUploadedBoard.php";
-    public static final String mDonationNotificationURL = phpRepURL + "donationNotification.php";
-    public static final String mGetDatabaseVersionURL = phpRepURL + "getDatabaseVersion.php";
+    private static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://www.mikuz.org/php/boarder_test/" : "http://www.mikuz.org/php/boarder/";
+    static final String mGetSessionValidURL = phpRepURL + "getSessionValid.php";
+    static final String mGetBoardsURL = InternetMenu.phpRepURL + "getBoards.php";
+    static final String mGetBoardURL = InternetMenu.phpRepURL + "getBoard.php";
+    static final String mRegistrationURL = InternetMenu.phpRepURL + "register.php";
+    static final String mLoginURL = InternetMenu.phpRepURL + "login.php";
+    static final String mLogoutURL = InternetMenu.phpRepURL + "logout.php";
+    static final String mRecoverPasswordURL = InternetMenu.phpRepURL + "recoverPassword.php";
+    static final String mChangePasswordURL = InternetMenu.phpRepURL + "changePassword.php";
+    static final String mUserUploadListURL = phpRepURL + "getUserUploads.php";
+    static final String mUploadBoardURL = phpRepURL + "uploadBoard.php";
+    static final String mFavoriteListURL = phpRepURL + "getFavorites.php";
+    static final String mFavoriteURL = phpRepURL + "favorite.php";
+    static final String mUpdateFavoriteBoardURL = phpRepURL + "updateFavoriteBoard.php";
+    static final String mGetBoardThumbStatusURL = phpRepURL + "getBoardThumbStatus.php";
+    static final String mRateBoardURL = phpRepURL + "rateBoard.php";
+    static final String mCommentURL = phpRepURL + "comment.php";
+    static final String mGetCommentsURL = phpRepURL + "getComments.php";
+    static final String mDeleteUploadedBoardURL = phpRepURL + "deleteUploadedBoard.php";
+    static final String mDonationNotificationURL = phpRepURL + "donationNotification.php";
+    static final String mGetDatabaseVersionURL = phpRepURL + "getDatabaseVersion.php";
     
     public static final String BOARD_ID_KEY = "board_id";
     public static final String BOARD_VERSION_KEY = "board_version";
@@ -93,26 +92,26 @@ public class InternetMenu extends Activity implements ConnectionListener {
     public static final String MAX_RESULTS_KEY = "max_results";
     public static final String SEARCH_WORD_KEY = "search_word";
     
-    public static final String PHP_OPERATION_KEY = "php_operation";
-    public static final int PHP_OPERATION_ADD = 0;
-    public static final int PHP_OPERATION_EDIT = 1;
+    static final String PHP_OPERATION_KEY = "php_operation";
+    static final int PHP_OPERATION_ADD = 0;
+    static final int PHP_OPERATION_EDIT = 1;
     
     private LoginDbAdapter mDbHelper;
     private GlobalVariablesDbAdapter mGlobalVariableDbHelper;
     
     private HashMap<String, String> mLoginInfo = null;
-    public static final String LOGIN_KEY = "loginKey";
+    static final String LOGIN_KEY = "loginKey";
     private static final int LOGIN_RETURN = 0;
     
-    public boolean mInternetAlive = true;
-    TimeoutProgressDialog mWaitDialog;
+    private boolean mInternetAlive = true;
+    private TimeoutProgressDialog mWaitDialog;
     private boolean mSessionValidityChecked = false;
     private boolean mDatabaseVersionChecked = false;
     
     private static final int mDbVersion = 3;
     private static final int mTosVersion = 2;
     
-    final Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler();
 
     private Button mInternetDownload;
     private Button mInternetRegisterSettings;
