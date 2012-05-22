@@ -209,6 +209,7 @@ public class Login extends Activity implements ConnectionListener {
 		Intent intent = new Intent();
 		intent.putExtras(bundle);
 		
+		InternetMenu.updateAaccountMessage("");
 		setResult(RESULT_OK, intent);
 		try {
 			finish();
@@ -237,6 +238,9 @@ public class Login extends Activity implements ConnectionListener {
 			String password = connectionSuccessfulResponse.getJSONObject().getString(InternetMenu.PASSWORD_KEY);
 			String sessionToken = connectionSuccessfulResponse.getJSONObject().getString(InternetMenu.SESSION_TOKEN_KEY);
 			String userId = connectionSuccessfulResponse.getJSONObject().getString(InternetMenu.USER_ID_KEY);
+			String accountMessage = connectionSuccessfulResponse.getJSONObject().getString(InternetMenu.ACCOUNT_MESSAGE_KEY);
+			
+			InternetMenu.updateAaccountMessage(accountMessage);
 			
 			if (mRememberSession) {
 				mDbHelper.createLogin(InternetMenu.USER_ID_KEY, userId);

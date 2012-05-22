@@ -42,7 +42,7 @@ public class InternetMenu extends Activity implements ConnectionListener {
     private static final String TAG = "InternetMenu";
     
     private static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://www.mikuz.org/php/boarder_test/" : "http://www.mikuz.org/php/boarder/";
-    static final String mGetSessionValidURL = phpRepURL + "getSessionValid.php";
+    static final String mGetSessionValidURL = InternetMenu.phpRepURL + "getSessionInfo.php";
     static final String mGetBoardsURL = InternetMenu.phpRepURL + "getBoards.php";
     static final String mGetBoardURL = InternetMenu.phpRepURL + "getBoard.php";
     static final String mRegistrationURL = InternetMenu.phpRepURL + "register.php";
@@ -51,18 +51,18 @@ public class InternetMenu extends Activity implements ConnectionListener {
     static final String mRecoverPasswordURL = InternetMenu.phpRepURL + "recoverPassword.php";
     static final String mChangePasswordURL = InternetMenu.phpRepURL + "changePassword.php";
     static final String mChangeEmailURL = InternetMenu.phpRepURL + "changeEmail.php";
-    static final String mUserUploadListURL = phpRepURL + "getUserUploads.php";
-    static final String mUploadBoardURL = phpRepURL + "uploadBoard.php";
-    static final String mFavoriteListURL = phpRepURL + "getFavorites.php";
-    static final String mFavoriteURL = phpRepURL + "favorite.php";
-    static final String mUpdateFavoriteBoardURL = phpRepURL + "updateFavoriteBoard.php";
-    static final String mGetBoardThumbStatusURL = phpRepURL + "getBoardThumbStatus.php";
-    static final String mRateBoardURL = phpRepURL + "rateBoard.php";
-    static final String mCommentURL = phpRepURL + "comment.php";
-    static final String mGetCommentsURL = phpRepURL + "getComments.php";
-    static final String mDeleteUploadedBoardURL = phpRepURL + "deleteUploadedBoard.php";
-    static final String mDonationNotificationURL = phpRepURL + "donationNotification.php";
-    static final String mGetDatabaseVersionURL = phpRepURL + "getDatabaseVersion.php";
+    static final String mUserUploadListURL = InternetMenu.phpRepURL + "getUserUploads.php";
+    static final String mUploadBoardURL = InternetMenu.phpRepURL + "uploadBoard.php";
+    static final String mFavoriteListURL = InternetMenu.phpRepURL + "getFavorites.php";
+    static final String mFavoriteURL = InternetMenu.phpRepURL + "favorite.php";
+    static final String mUpdateFavoriteBoardURL = InternetMenu.phpRepURL + "updateFavoriteBoard.php";
+    static final String mGetBoardThumbStatusURL = InternetMenu.phpRepURL + "getBoardThumbStatus.php";
+    static final String mRateBoardURL = InternetMenu.phpRepURL + "rateBoard.php";
+    static final String mCommentURL = InternetMenu.phpRepURL + "comment.php";
+    static final String mGetCommentsURL = InternetMenu.phpRepURL + "getComments.php";
+    static final String mDeleteUploadedBoardURL = InternetMenu.phpRepURL + "deleteUploadedBoard.php";
+    static final String mDonationNotificationURL = InternetMenu.phpRepURL + "donationNotification.php";
+    static final String mGetDatabaseVersionURL = InternetMenu.phpRepURL + "getDatabaseVersion.php";
     
     public static final String BOARD_ID_KEY = "board_id";
     public static final String BOARD_VERSION_KEY = "board_version";
@@ -81,7 +81,8 @@ public class InternetMenu extends Activity implements ConnectionListener {
     public static final String PASSWORD_KEY = "password";
     public static final String OLD_PASSWORD_KEY = "old_password";
     public static final String EMAIL_KEY = "email";
-    public static final String ACCOUNT_STATUS_KEY = "account_status";
+    public static final String SESSION_VALID_KEY = "session_valid";
+    public static final String ACCOUNT_MESSAGE_KEY = "account_message";
     public static final String OPERATION_KEY = "operation";
     public static final String RATING_KEY = "board_rating";
     public static final String SESSION_TOKEN_KEY = "session_token";
@@ -120,6 +121,7 @@ public class InternetMenu extends Activity implements ConnectionListener {
     private Button mInternetLoginLogout;
     private Button mInternetUploads;
     private Button mInternetFavorites;
+    private static TextView mAccountMessage;
     
     private final static String LOGIN_TEXT = "Login";
     private final static String LOGOUT_TEXT = "Logout";
@@ -141,6 +143,7 @@ public class InternetMenu extends Activity implements ConnectionListener {
         mInternetLoginLogout = (Button)findViewById(R.id.internet_login_logout);
         mInternetUploads = (Button)findViewById(R.id.internet_uploads);
         mInternetFavorites = (Button)findViewById(R.id.internet_favorites);
+        mAccountMessage = (TextView)findViewById(R.id.account_message_text);
         
         mDbHelper = new LoginDbAdapter(this);
 		mDbHelper.open();
@@ -218,7 +221,7 @@ public class InternetMenu extends Activity implements ConnectionListener {
     		}
         }
         
-        getVersionInfo(); // Keep uder login stuff
+        getVersionInfo(); // Keep under login stuff
 
         mInternetDownload.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -380,8 +383,11 @@ public class InternetMenu extends Activity implements ConnectionListener {
 			if (connectionSuccessfulResponse.getJSONObject().getInt(ConnectionUtils.returnData) == 1) showDonateNotification();
 		} else if (ConnectionUtils.checkConnectionId(connectionSuccessfulResponse, InternetMenu.mGetSessionValidURL)) {
 			mSessionValidityChecked = true;
-			if (connectionSuccessfulResponse.getJSONObject().getInt(ConnectionUtils.returnData) == 0) {
+			if (connectionSuccessfulResponse.getJSONObject().getInt(InternetMenu.SESSION_VALID_KEY) == 0) {
 				startLogin();
+			} else {
+				String accountMessage = connectionSuccessfulResponse.getJSONObject().getString(InternetMenu.ACCOUNT_MESSAGE_KEY);
+				InternetMenu.updateAaccountMessage(accountMessage);
 			}
 		}
 		
@@ -466,6 +472,10 @@ public class InternetMenu extends Activity implements ConnectionListener {
 		lastWords.setText("\n\n" +
 				"These options are also available in 'Soundboard Menu'.\n");
 		
-		builder.show();
+		if (this.hasWindowFocus()) builder.show();
+	}
+	
+	static void updateAaccountMessage(String accountMessage) {
+		mAccountMessage.setText(accountMessage);
 	}
 }
