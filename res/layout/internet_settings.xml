@@ -9,5 +9,11 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="Change password" />
+    
+    <Button
+        android:id="@+id/change_email"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Change email" />
 
 </LinearLayout>

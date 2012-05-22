@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView>
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/alert_settings_root"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:scrollbarAlwaysDrawVerticalTrack="true"
+        android:scrollbars="vertical" >
+
+        <TextView
+            android:id="@+id/passwordText"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Password" />
+
+        <EditText
+            android:id="@+id/passwordInput"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:inputType="textPassword" />
+        
+        <TextView
+            android:id="@+id/newEmailText"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="\nNew email" />
+
+        <EditText
+            android:id="@+id/newEmailInput"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:inputType="textEmailAddress" />
+        
+        <TextView
+            android:id="@+id/infoText"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="7dp"
+            android:text="This request will be posted to your current email. Email will change in 14 days if request is not confirmed of aborted before it." />
+
+        <Button
+            android:id="@+id/submitButton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Submit" />
+    </LinearLayout>
+
+</ScrollView>

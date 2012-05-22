@@ -50,6 +50,7 @@ public class InternetMenu extends Activity implements ConnectionListener {
     static final String mLogoutURL = InternetMenu.phpRepURL + "logout.php";
     static final String mRecoverPasswordURL = InternetMenu.phpRepURL + "recoverPassword.php";
     static final String mChangePasswordURL = InternetMenu.phpRepURL + "changePassword.php";
+    static final String mChangeEmailURL = InternetMenu.phpRepURL + "changeEmail.php";
     static final String mUserUploadListURL = phpRepURL + "getUserUploads.php";
     static final String mUploadBoardURL = phpRepURL + "uploadBoard.php";
     static final String mFavoriteListURL = phpRepURL + "getFavorites.php";
@@ -80,6 +81,7 @@ public class InternetMenu extends Activity implements ConnectionListener {
     public static final String PASSWORD_KEY = "password";
     public static final String OLD_PASSWORD_KEY = "old_password";
     public static final String EMAIL_KEY = "email";
+    public static final String ACCOUNT_STATUS_KEY = "account_status";
     public static final String OPERATION_KEY = "operation";
     public static final String RATING_KEY = "board_rating";
     public static final String SESSION_TOKEN_KEY = "session_token";

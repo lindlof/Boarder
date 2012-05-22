@@ -28,6 +28,7 @@ import fi.mikuz.boarder.util.Security;
 import fi.mikuz.boarder.util.TimeoutProgressDialog;
 
 /**
+ * Internet account settings. Accessible when logged in.
  * 
  * @author Jan Mikael Lindlöf
  */
@@ -36,8 +37,6 @@ public class Settings extends Activity implements ConnectionListener {
 	
 	final Handler mHandler = new Handler();
 	TimeoutProgressDialog mWaitDialog;
-	
-	private Button mChangePassword;
 	
 	private String mUserId;
 	private String mSessionToken;
@@ -60,9 +59,9 @@ public class Settings extends Activity implements ConnectionListener {
 			Settings.this.finish();
 		}
 		
-		mChangePassword = (Button) findViewById(R.id.change_password);
+		Button changePassword = (Button) findViewById(R.id.change_password);
 		
-		mChangePassword.setOnClickListener(new OnClickListener() {
+		changePassword.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
             	LayoutInflater inflater = (LayoutInflater) Settings.this.getSystemService(LAYOUT_INFLATER_SERVICE);
             	View layout = inflater.inflate(R.layout.internet_settings_alert_change_password, 
@@ -104,6 +103,48 @@ public class Settings extends Activity implements ConnectionListener {
             				}
                     	}
                     }
+            	});
+
+            	builder.show();
+            }
+		});
+		
+		Button changeEmail = (Button) findViewById(R.id.change_email);
+		
+		changeEmail.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+            	LayoutInflater inflater = (LayoutInflater) Settings.this.getSystemService(LAYOUT_INFLATER_SERVICE);
+            	View layout = inflater.inflate(R.layout.internet_settings_alert_change_email, 
+            			(ViewGroup) findViewById(R.id.alert_settings_root));
+            	
+            	final EditText passwordInput = (EditText) layout.findViewById(R.id.passwordInput);
+            	final EditText newEmailInput = (EditText) layout.findViewById(R.id.newEmailInput);
+            	Button submitButton = (Button) layout.findViewById(R.id.submitButton);
+            	
+            	AlertDialog.Builder builder = new AlertDialog.Builder(Settings.this);
+            	builder.setView(layout);
+            	builder.setTitle("Change email");
+            	
+            	submitButton.setOnClickListener(new OnClickListener() {
+            		public void onClick(View v) {
+            			String passwordText = passwordInput.getText().toString();
+            			String newEmailText = newEmailInput.getText().toString();
+
+            			try {
+            				mWaitDialog = new TimeoutProgressDialog(Settings.this, "Waiting for response", TAG, false);
+            				HashMap<String, String> sendList = new HashMap<String, String>();
+            				sendList.put(InternetMenu.PASSWORD_KEY, Security.md5(passwordText));
+            				sendList.put(InternetMenu.EMAIL_KEY, newEmailText);
+            				sendList.put(InternetMenu.USER_ID_KEY, mUserId);
+            				sendList.put(InternetMenu.SESSION_TOKEN_KEY, mSessionToken);
+            				new ConnectionManager(Settings.this, InternetMenu.mChangeEmailURL, sendList);
+            			} catch (NoSuchAlgorithmException e) {
+            				mWaitDialog.dismiss();
+            				String msg = "Couldn't make md5 hash";
+            				Toast.makeText(Settings.this, msg, Toast.LENGTH_LONG).show();
+            				Log.e(TAG, msg, e);
+            			}
+            		}
             	});
 
             	builder.show();
