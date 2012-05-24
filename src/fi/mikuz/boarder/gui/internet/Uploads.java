@@ -6,6 +6,9 @@ import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.thoughtworks.xstream.XStream;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -144,7 +147,7 @@ public class Uploads extends ListActivity implements ConnectionListener, OnScrol
 	private void boardUploader(final InternetFullBoard board, final int phpOperation) {
 		LayoutInflater inflater = (LayoutInflater) Uploads.this.
 				getSystemService(LAYOUT_INFLATER_SERVICE);
-		View layout = inflater.inflate(R.layout.internet_uploads_alert_upload_board,
+		final View layout = inflater.inflate(R.layout.internet_uploads_alert_upload_board,
 				(ViewGroup) findViewById(R.id.alert_settings_root));
 		
 		
@@ -158,6 +161,65 @@ public class Uploads extends ListActivity implements ConnectionListener, OnScrol
 				startActivity(browserIntent);
             }
         });
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(Uploads.this);
+		builder.setView(layout);
+		builder.setTitle("Upload board");
+		
+		refreshUploadAlertBoard(layout, board);
+
+		final Button sendButton = (Button) layout.findViewById(R.id.sendButton);
+		sendButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				mWaitDialog = new TimeoutProgressDialog(Uploads.this, "Waiting for response", TAG, false);
+				HashMap<String, String> sendList = getSendList(layout, board, phpOperation);
+				new ConnectionManager(Uploads.this, InternetMenu.mUploadBoardURL, sendList);
+			}
+		});
+		
+		final Button previewButton = (Button) layout.findViewById(R.id.previewButton);
+		previewButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				HashMap<String, String> sendList = getSendList(layout, board, phpOperation);
+				
+				// Simulate a board from web
+				sendList.put(InternetMenu.RATING_KEY, "0");
+				sendList.put(InternetMenu.BOARD_VERSION_KEY, "0");
+				sendList.put(InternetMenu.USERNAME_KEY, "Preview");
+				
+				JSONObject databaseValues = new JSONObject();
+				if (sendList != null) {
+					for (String key : sendList.keySet()) {
+						try {
+							databaseValues.put(key, sendList.get(key));
+						} catch (JSONException e) {
+							Log.e(TAG, "Error putting '" + key + "' to JSONObject as database value");
+						}
+					}
+				}
+				
+				JSONArray jArray = new JSONArray();
+				jArray.put(databaseValues);
+				JSONObject fakeMessage = null;
+				try {
+					fakeMessage = new JSONObject();
+					fakeMessage.put(ConnectionUtils.returnData, jArray);
+				} catch (JSONException e) {
+					Log.e(TAG, "Error constructing fake json message", e);
+				}
+				
+				Intent i = new Intent(Uploads.this, DownloadBoard.class);
+				XStream xstream = new XStream();
+				i.putExtra(DownloadBoard.SHOW_KEY, DownloadBoard.SHOW_PREVIEW_BOARD);
+				i.putExtra(DownloadBoard.JSON_KEY, xstream.toXML(fakeMessage));
+				startActivity(i);
+			}
+		});
+
+		builder.show();
+	}
+	
+	private void refreshUploadAlertBoard(final View layout, final InternetFullBoard board) {
 		
 		final EditText boardNameInput = (EditText) layout.findViewById(R.id.boardNameInput);
 		final EditText boardVersionInput = (EditText) layout.findViewById(R.id.boardVersionInput);
@@ -197,48 +259,47 @@ public class Uploads extends ListActivity implements ConnectionListener, OnScrol
 				i++;
 			}
 		}
+	}
+	
+	private HashMap<String, String> getSendList(final View layout, final InternetFullBoard board, final int phpOperation) {
+		
+		final EditText boardNameInput = (EditText) layout.findViewById(R.id.boardNameInput);
+		final EditText boardVersionInput = (EditText) layout.findViewById(R.id.boardVersionInput);
+		final EditText boardDescriptionInput = (EditText) layout.findViewById(R.id.boardDescriptionInput);
+		final EditText boardURL0Input = (EditText) layout.findViewById(R.id.boardUrl0Input);
+		final EditText boardURL1Input = (EditText) layout.findViewById(R.id.boardUrl1Input);
+		final EditText boardURL2Input = (EditText) layout.findViewById(R.id.boardUrl2Input);
+		final EditText boardURL3Input = (EditText) layout.findViewById(R.id.boardUrl3Input);
+		final EditText boardURL4Input = (EditText) layout.findViewById(R.id.boardUrl4Input);
+		final EditText boardScreenshotURL0Input = (EditText) layout.findViewById(R.id.boardScreenshotUrl0Input);
+		
+		HashMap<String, String> sendList = new HashMap<String, String>();
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(Uploads.this);
-		builder.setView(layout);
-		builder.setTitle("Upload board");
+		HashMap<String, String> urlMap = new HashMap<String, String>();
+		urlMap.put(InternetMenu.BOARD_URL_0_KEY, boardURL0Input.getText().toString());
+		urlMap.put(InternetMenu.BOARD_URL_1_KEY, boardURL1Input.getText().toString());
+		urlMap.put(InternetMenu.BOARD_URL_2_KEY, boardURL2Input.getText().toString());
+		urlMap.put(InternetMenu.BOARD_URL_3_KEY, boardURL3Input.getText().toString());
+		urlMap.put(InternetMenu.BOARD_URL_4_KEY, boardURL4Input.getText().toString());
 
-		final Button sendButton = (Button) layout.findViewById(R.id.sendButton);
-		sendButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				mWaitDialog = new TimeoutProgressDialog(Uploads.this, "Waiting for response", TAG, false);
-				HashMap<String, String> sendList = new HashMap<String, String>();
+		for (String key : urlMap.keySet()) {
+			String value = urlMap.get(key);
+			sendList.put(key, value);
+		}
+		
+		if (phpOperation == InternetMenu.PHP_OPERATION_EDIT) {
+			sendList.put(InternetMenu.BOARD_ID_KEY, Long.toString(board.getBoardId()));
+		}
 
-				HashMap<String, String> urlMap = new HashMap<String, String>();
-				urlMap.put(InternetMenu.BOARD_URL_0_KEY, boardURL0Input.getText().toString());
-				urlMap.put(InternetMenu.BOARD_URL_1_KEY, boardURL1Input.getText().toString());
-				urlMap.put(InternetMenu.BOARD_URL_2_KEY, boardURL2Input.getText().toString());
-				urlMap.put(InternetMenu.BOARD_URL_3_KEY, boardURL3Input.getText().toString());
-				urlMap.put(InternetMenu.BOARD_URL_4_KEY, boardURL4Input.getText().toString());
-
-				for (String key : urlMap.keySet()) {
-					String value = urlMap.get(key);
-
-					if (!value.equals("")) {
-						sendList.put(key, value);
-					}
-				}
-				
-				if (phpOperation == InternetMenu.PHP_OPERATION_EDIT) {
-					sendList.put(InternetMenu.BOARD_ID_KEY, Long.toString(board.getBoardId()));
-				}
-
-				sendList.put(InternetMenu.USER_ID_KEY, mUserId);
-				sendList.put(InternetMenu.SESSION_TOKEN_KEY, mSessionToken);
-				sendList.put(InternetMenu.BOARD_NAME_KEY, boardNameInput.getText().toString());
-				sendList.put(InternetMenu.BOARD_VERSION_KEY, boardVersionInput.getText().toString());
-				sendList.put(InternetMenu.BOARD_DESCRIPTION_KEY, boardDescriptionInput.getText().toString());
-				sendList.put(InternetMenu.BOARD_SCREENSHOT_0_URL_KEY, boardScreenshotURL0Input.getText().toString());
-				sendList.put(InternetMenu.PHP_OPERATION_KEY, Integer.toString(phpOperation));
-				new ConnectionManager(Uploads.this, InternetMenu.mUploadBoardURL, sendList);
-			}
-		});
-
-		builder.show();
+		sendList.put(InternetMenu.USER_ID_KEY, mUserId);
+		sendList.put(InternetMenu.SESSION_TOKEN_KEY, mSessionToken);
+		sendList.put(InternetMenu.BOARD_NAME_KEY, boardNameInput.getText().toString());
+		sendList.put(InternetMenu.BOARD_VERSION_KEY, boardVersionInput.getText().toString());
+		sendList.put(InternetMenu.BOARD_DESCRIPTION_KEY, boardDescriptionInput.getText().toString());
+		sendList.put(InternetMenu.BOARD_SCREENSHOT_0_URL_KEY, boardScreenshotURL0Input.getText().toString());
+		sendList.put(InternetMenu.PHP_OPERATION_KEY, Integer.toString(phpOperation));
+		
+		return sendList;
 	}
     
     private void populateList() {

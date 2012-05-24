@@ -216,6 +216,7 @@ public class DownloadBoardList extends Activity {
     	    			InternetBoard board = ((BoardListAdapter)mListView.getAdapter()).getItem(position);
     	    			if (!board.getUploaderUsername().equals("")) {
     	    				Intent i = new Intent(DownloadBoardList.this, DownloadBoard.class);
+    	    				i.putExtra(DownloadBoard.SHOW_KEY, DownloadBoard.SHOW_INTERNET_BOARD);
     	    		    	i.putExtra(InternetMenu.BOARD_ID_KEY, board.getBoardId());
     	    		    	i.putExtra(LOGGED_IN_KEY, mLoggedIn);
     	    		    	

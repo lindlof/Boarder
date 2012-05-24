@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -41,6 +42,7 @@ import fi.mikuz.boarder.connection.ConnectionListener;
 import fi.mikuz.boarder.connection.ConnectionManager;
 import fi.mikuz.boarder.connection.ConnectionSuccessfulResponse;
 import fi.mikuz.boarder.connection.ConnectionUtils;
+import fi.mikuz.boarder.gui.SoundboardMenu;
 import fi.mikuz.boarder.util.TimeoutProgressDialog;
 
 /**
@@ -50,13 +52,20 @@ import fi.mikuz.boarder.util.TimeoutProgressDialog;
 public class DownloadBoard extends Activity implements ConnectionListener {
 	private static final String TAG = "InternetDownloadBoard";
 	
+	public static final int SHOW_INTERNET_BOARD = 0;
+	public static final int SHOW_PREVIEW_BOARD = 1;
+	public static final String SHOW_KEY = "showKey";
+	private int mAction;
+	
 	final Handler mHandler = new Handler();
 	TimeoutProgressDialog mWaitDialog;
 	private String mResponse = "";
 	
 	InternetFullBoard mBoard;
-	public static final String BOARD_KEY = "board";
-	private int boardId;
+	public static final String BOARD_KEY = "boardKey";
+	private int mBoardId;
+	
+	public static final String JSON_KEY = "jsonKey";
 	
 	private boolean mLoggedIn;
 	private String mUserId;
@@ -77,15 +86,37 @@ public class DownloadBoard extends Activity implements ConnectionListener {
 		mWaitDialog = new TimeoutProgressDialog(DownloadBoard.this, "Waiting for response", TAG, true);
 		
 		Bundle extras = getIntent().getExtras();
-		boardId = extras.getInt(InternetMenu.BOARD_ID_KEY);
-		mLoggedIn = extras.getBoolean(DownloadBoardList.LOGGED_IN_KEY);
+		mAction = extras.getInt(DownloadBoard.SHOW_KEY);
 		
-		if (mLoggedIn) {
-			mUserId = extras.getString(InternetMenu.USER_ID_KEY);
-			mSessionToken = extras.getString(InternetMenu.SESSION_TOKEN_KEY);
+		if (mAction == SHOW_INTERNET_BOARD) {
+			mBoardId = extras.getInt(InternetMenu.BOARD_ID_KEY);
+			mLoggedIn = extras.getBoolean(DownloadBoardList.LOGGED_IN_KEY);
+			
+			if (mLoggedIn) {
+				mUserId = extras.getString(InternetMenu.USER_ID_KEY);
+				mSessionToken = extras.getString(InternetMenu.SESSION_TOKEN_KEY);
+			}
+			
+			getBoard();
+		} else if (mAction == SHOW_PREVIEW_BOARD) {
+			mBoardId = -1;
+			mLoggedIn = false;
+			
+			XStream xstream = new XStream();
+			JSONObject fakeMessage = (JSONObject) xstream.fromXML(extras.getString(DownloadBoard.JSON_KEY));
+			String fakeMessageString = fakeMessage.toString();
+			
+			try {
+				
+				if (SoundboardMenu.mGlobalSettings.getSensitiveLogging()) Log.v(TAG, "Got a preview: "+fakeMessageString);
+				ConnectionSuccessfulResponse fakeResponse = new ConnectionSuccessfulResponse(new JSONObject(fakeMessageString), InternetMenu.mGetBoardURL);
+				onConnectionSuccessful(fakeResponse);
+			} catch (JSONException e) {
+				Log.e(TAG, "Error reading fake json message", e);
+			}
+		} else {
+			throw new IllegalArgumentException("No proper action defined, action: " + mAction);
 		}
-		
-		getBoard();
 		
 	}
 
@@ -186,7 +217,7 @@ public class DownloadBoard extends Activity implements ConnectionListener {
 	private void getBoard() {
 		setProgressBarIndeterminateVisibility(true);
 		HashMap<String, String> sendList = new HashMap<String, String>();
-		sendList.put(InternetMenu.BOARD_ID_KEY, Integer.toString(boardId));
+		sendList.put(InternetMenu.BOARD_ID_KEY, Integer.toString(mBoardId));
 		if (mLoggedIn) {
 			sendList.put(InternetMenu.USER_ID_KEY, mUserId);
 			sendList.put(InternetMenu.SESSION_TOKEN_KEY, mSessionToken);
@@ -280,7 +311,8 @@ public class DownloadBoard extends Activity implements ConnectionListener {
 			URL screenshotUrl = new URL(mBoard.getScreenshot0Url());
 			new DownloadScreenshot().execute(screenshotUrl);
 		} catch (MalformedURLException e) {
-			Log.e(TAG, "Error", e);
+			Log.e(TAG, "Error downloading screenshot " + e.getMessage());
+			setProgressBarIndeterminateVisibility(false);
 		}
 
 		mThumbUpImage = (ImageView) findViewById(R.id.thumbUp);
@@ -338,6 +370,7 @@ public class DownloadBoard extends Activity implements ConnectionListener {
 		mWaitDialog.dismiss();
 		
 		if (ConnectionUtils.checkConnectionId(connectionSuccessfulResponse, InternetMenu.mGetBoardURL)) {
+			Log.e(TAG, connectionSuccessfulResponse.getJSONObject().toString());
 			JSONArray jBoards = connectionSuccessfulResponse.getJSONObject().getJSONArray(ConnectionUtils.returnData);
 			mBoard = new InternetFullBoard(jBoards.getJSONObject(0));
 			String favoriteText = null;

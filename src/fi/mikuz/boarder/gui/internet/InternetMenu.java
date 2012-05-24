@@ -435,14 +435,7 @@ public class InternetMenu extends Activity implements ConnectionListener {
 		final ImageView rateImage = (ImageView) layout.findViewById(R.id.rateImage);
 		final TextView lastWords = (TextView) layout.findViewById(R.id.lastWords);
 		
-		String username = "";
-		try {
-			Cursor loginCursor = mDbHelper.fetchLogin(InternetMenu.USERNAME_KEY);
-			startManagingCursor(loginCursor);
-			username = loginCursor.getString(loginCursor.getColumnIndexOrThrow(LoginDbAdapter.KEY_DATA));
-		} catch (SQLException e) {Log.d(TAG, "Couldn't get database login info", e);}
-		
-		donationText.setText("Hey there " + username + "!\n\n" +
+		donationText.setText("Hey there " + getUsername() + "!\n\n" +
 				"You seem to like downloading soundboards.\n\n" +
 				"This service is not free to upkeep so I'd like to ask you to consider making a small donation.\n\n" +
 				"Your donation would also help me improve Boarders. " +
@@ -473,6 +466,16 @@ public class InternetMenu extends Activity implements ConnectionListener {
 				"These options are also available in 'Soundboard Menu'.\n");
 		
 		if (this.hasWindowFocus()) builder.show();
+	}
+	
+	protected String getUsername() {
+		String username = null;
+		try {
+			Cursor loginCursor = mDbHelper.fetchLogin(InternetMenu.USERNAME_KEY);
+			startManagingCursor(loginCursor);
+			username = loginCursor.getString(loginCursor.getColumnIndexOrThrow(LoginDbAdapter.KEY_DATA));
+		} catch (SQLException e) {Log.d(TAG, "Couldn't get database login info", e);}
+		return username;
 	}
 	
 	static void updateAaccountMessage(String accountMessage) {

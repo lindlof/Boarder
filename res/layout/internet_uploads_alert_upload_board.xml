@@ -110,6 +110,12 @@
             android:text="http://www." />
 
         <Button
+            android:id="@+id/previewButton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Preview" />
+        
+        <Button
             android:id="@+id/sendButton"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"

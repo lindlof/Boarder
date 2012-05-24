@@ -93,6 +93,7 @@ public class Favorites extends ListActivity implements ConnectionListener, OnScr
 		InternetBoard board = ((BoardListAdapter)mListView.getAdapter()).getItem(position);
 		if (!board.getUploaderUsername().equals("")) {
 			Intent i = new Intent(Favorites.this, DownloadBoard.class);
+			i.putExtra(DownloadBoard.SHOW_KEY, DownloadBoard.SHOW_INTERNET_BOARD);
 	    	i.putExtra(InternetMenu.BOARD_ID_KEY, board.getBoardId());
 	    	i.putExtra(DownloadBoardList.LOGGED_IN_KEY, true);
 	    	i.putExtra(InternetMenu.USER_ID_KEY, mUserId);
