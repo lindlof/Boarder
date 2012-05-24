@@ -370,7 +370,6 @@ public class DownloadBoard extends Activity implements ConnectionListener {
 		mWaitDialog.dismiss();
 		
 		if (ConnectionUtils.checkConnectionId(connectionSuccessfulResponse, InternetMenu.mGetBoardURL)) {
-			Log.e(TAG, connectionSuccessfulResponse.getJSONObject().toString());
 			JSONArray jBoards = connectionSuccessfulResponse.getJSONObject().getJSONArray(ConnectionUtils.returnData);
 			mBoard = new InternetFullBoard(jBoards.getJSONObject(0));
 			String favoriteText = null;
