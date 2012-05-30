@@ -11,9 +11,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.bugsense.trace.BugSenseHandler;
 import com.thoughtworks.xstream.XStream;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
@@ -297,8 +299,13 @@ public class DownloadBoard extends Activity implements ConnectionListener {
 				boardUrlBtn.setText(boardUrl);
 				boardUrlBtn.setOnClickListener(new OnClickListener() {
 					public void onClick(View v) {
-						Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(boardUrl));
-						startActivity(browserIntent);
+						try {
+							Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(boardUrl));
+							startActivity(browserIntent);
+						} catch (ActivityNotFoundException e) {
+							Log.e(TAG, "Unable to open board url", e);
+							BugSenseHandler.log(TAG, e);
+						}
 					}
 				});
 				buttonLayout.addView(boardUrlBtn);
