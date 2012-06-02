@@ -102,7 +102,7 @@ public class Uploads extends ListActivity implements ConnectionListener, OnScrol
 		final InternetFullBoard board = ((BoardListAdapter)mListView.getAdapter()).getItem(position);
 		
 		if (!board.getUploaderUsername().equals("")) {
-			final CharSequence[] items = {"Edit", "Delete"}; //TODO list of links?
+			final CharSequence[] items = {"Edit", "Delete"};
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(board.getBoardName());
@@ -111,14 +111,26 @@ public class Uploads extends ListActivity implements ConnectionListener, OnScrol
 	    	    	if (item == 0) {
 	    	    		boardUploader(board, InternetMenu.PHP_OPERATION_EDIT);
 	    	    	} else if (item == 1) {
-	    	    		HashMap<String, String> sendList = new HashMap<String, String>();
-	                	sendList.put(InternetMenu.UPLOADER_ID_KEY, mUserId);
-	                	sendList.put(InternetMenu.SESSION_TOKEN_KEY, mSessionToken);
-	                	sendList.put(InternetMenu.BOARD_ID_KEY, Integer.toString(board.getBoardId()));
-	    	    		new ConnectionManager(Uploads.this, InternetMenu.mDeleteUploadedBoardURL, sendList);
-	    	    	} else {
-	    	    		Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(""));
-	    	    		startActivity(browserIntent);
+	    	    		AlertDialog.Builder deleteBuilder = new AlertDialog.Builder(Uploads.this);
+	    	    		deleteBuilder.setTitle("Deleting upload");
+	    	    		deleteBuilder.setMessage("Are you sure you want to permanently delete upload '" + board.getBoardName() + "'?");
+	    	    		
+	    	    		deleteBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+	    			  		public void onClick(DialogInterface dialog, int whichButton) {
+	    			  			HashMap<String, String> sendList = new HashMap<String, String>();
+	    	                	sendList.put(InternetMenu.UPLOADER_ID_KEY, mUserId);
+	    	                	sendList.put(InternetMenu.SESSION_TOKEN_KEY, mSessionToken);
+	    	                	sendList.put(InternetMenu.BOARD_ID_KEY, Integer.toString(board.getBoardId()));
+	    	    	    		new ConnectionManager(Uploads.this, InternetMenu.mDeleteUploadedBoardURL, sendList);
+	    			  		}
+	    	    		});
+	    	    		deleteBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+	    			  		public void onClick(DialogInterface dialog, int whichButton) {
+	    			  			dialog.dismiss();
+	    			  		}
+	    	    		});
+	    	    		AlertDialog deleteAlert = deleteBuilder.create();
+	    	    		deleteAlert.show();
 	    	    	}
 	    	    }
 	    	});
