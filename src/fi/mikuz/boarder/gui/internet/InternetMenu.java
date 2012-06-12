@@ -79,6 +79,7 @@ public class InternetMenu extends Activity implements ConnectionListener {
     public static final String USERNAME_KEY = "username";
     public static final String USER_ID_KEY = "user_id";
     public static final String PASSWORD_KEY = "password";
+    public static final String ENTRANCE_PASSWORD_KEY = "entrance_password";
     public static final String OLD_PASSWORD_KEY = "old_password";
     public static final String EMAIL_KEY = "email";
     public static final String SESSION_VALID_KEY = "session_valid";

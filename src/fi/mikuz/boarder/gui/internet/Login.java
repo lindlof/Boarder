@@ -93,7 +93,7 @@ public class Login extends Activity implements ConnectionListener {
 		mPassword = (EditText)findViewById(R.id.userPassword);
 		
 		boolean usernameInDb = false;
-		boolean passwordInDb = false;
+		String dbPassword = null;
 		
 		try {
 			Cursor loginCursor = mDbHelper.fetchLogin(InternetMenu.USERNAME_KEY);
@@ -103,22 +103,20 @@ public class Login extends Activity implements ConnectionListener {
 			usernameInDb = true;
 		} catch (SQLException e) {Log.d(TAG, "Couldn't get database login info", e);
 		} catch (CursorIndexOutOfBoundsException e) {Log.d(TAG, "Couldn't get database login info", e);}
-		try {
-			Cursor loginCursor = mDbHelper.fetchLogin(InternetMenu.PASSWORD_KEY);
-			startManagingCursor(loginCursor);
-			mPassword.setText(loginCursor.getString(
-					loginCursor.getColumnIndexOrThrow(LoginDbAdapter.KEY_DATA)));
-			passwordInDb = true;
-		} catch (SQLException e) {Log.d(TAG, "Couldn't get database login info", e);
-		} catch (CursorIndexOutOfBoundsException e) {Log.d(TAG, "Couldn't get database login info", e);}
 		
-		final CheckBox rememberUsername = 
-      	  		(CheckBox)findViewById(R.id.rememberUsername);
+		dbPassword = getDbPassword();
+		
+		final CheckBox rememberPassword = (CheckBox)findViewById(R.id.rememberPassword);
+		
+		if (dbPassword == null) {
+			rememberPassword.setChecked(false);
+		} else {
+			rememberPassword.setChecked(true);
+			mPassword.setText(dbPassword);
+		}
+		
+		final CheckBox rememberUsername = (CheckBox)findViewById(R.id.rememberUsername);
 		rememberUsername.setChecked(usernameInDb);
-		
-		final CheckBox rememberPassword = 
-      	  		(CheckBox)findViewById(R.id.rememberPassword);
-		rememberPassword.setChecked(passwordInDb);
 		
 		mLogin.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -126,14 +124,23 @@ public class Login extends Activity implements ConnectionListener {
             	
             	String username = mUsername.getText().toString();
             	String password = mPassword.getText().toString();
-            	Boolean passwordInDbFormat = true;
+            	Boolean entrancePassword = true;
+            	String dbPassword = getDbPassword();
             	
-            	if (password.length() < 31) {
-            		passwordInDbFormat = false;
+            	// Password in the Android database is always the same as in the server database
+            	// Being an entrance password means that the password is not the same as in the server database
+            	if (dbPassword != null) {
+            		if (dbPassword.equals(password)) {
+            			entrancePassword = false;
+            		}
+            	}
+            	
+            	// If the password is now an entrance password then it's plain text and wants to be hashed
+            	if (entrancePassword) {
             		try {
-						password = Security.md5(password);
+						password = Security.passwordHash(password);
 					} catch (NoSuchAlgorithmException e) {
-						String msg = "Couldn't make md5 hash";
+						String msg = "Couldn't make a password hash";
 						Toast.makeText(Login.this, msg, Toast.LENGTH_LONG).show();
 						Log.e(TAG, msg, e);
 					}
@@ -146,7 +153,7 @@ public class Login extends Activity implements ConnectionListener {
             	}
             	
             	if (rememberPassword.isChecked()) {
-            		if (passwordInDbFormat) {
+            		if (!entrancePassword) {
             			mPasswordOperation = PASSWORD_OPERATION_NONE;
             			mDbHelper.putLogin(InternetMenu.PASSWORD_KEY, password);
             		} else {
@@ -166,6 +173,7 @@ public class Login extends Activity implements ConnectionListener {
             	HashMap<String, String> sendList = new HashMap<String, String>();
             	sendList.put(InternetMenu.USERNAME_KEY, username);
             	sendList.put(InternetMenu.PASSWORD_KEY, password);
+            	sendList.put(InternetMenu.ENTRANCE_PASSWORD_KEY, entrancePassword ? "1" : "0");
             	new ConnectionManager(Login.this, InternetMenu.mLoginURL, sendList);
             }
         });
@@ -200,6 +208,17 @@ public class Login extends Activity implements ConnectionListener {
             }
 		});
 		
+	}
+	
+	private String getDbPassword() {
+		String dbPassword = null;
+		try {
+			Cursor loginCursor = mDbHelper.fetchLogin(InternetMenu.PASSWORD_KEY);
+			startManagingCursor(loginCursor);
+			dbPassword = loginCursor.getString(loginCursor.getColumnIndexOrThrow(LoginDbAdapter.KEY_DATA));
+		} catch (SQLException e) {Log.d(TAG, "Couldn't get database login info", e);
+		} catch (CursorIndexOutOfBoundsException e) {Log.d(TAG, "Couldn't get database login info", e);}
+		return dbPassword;
 	}
 	
 	private void logout() {

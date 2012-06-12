@@ -57,19 +57,19 @@ public class Register extends Activity implements ConnectionListener {
             	
             	if (!mUserPassword.getText().toString().equals(mUserPassword2.getText().toString())) {
             		Toast.makeText(Register.this, "The passwords don't match", Toast.LENGTH_LONG).show();
-            	} else if (mUserPassword.length() < 6 || mUserPassword.length() > 30) {
-            		Toast.makeText(Register.this, "Password lenght must be from 6 to 30 characters", Toast.LENGTH_LONG).show();
+            	} else if (mUserPassword.length() < 6) {
+            		Toast.makeText(Register.this, "Password length must be at least 6 characters", Toast.LENGTH_LONG).show();
             	} else {
             		try {
                 		mWaitDialog = new TimeoutProgressDialog(Register.this, "Waiting for response", TAG, false);
                     	HashMap<String, String> sendList = new HashMap<String, String>();
                     	sendList.put(InternetMenu.USERNAME_KEY, mUserName.getText().toString());
-    					sendList.put(InternetMenu.PASSWORD_KEY, Security.md5(mUserPassword.getText().toString()));
+    					sendList.put(InternetMenu.PASSWORD_KEY, Security.passwordHash(mUserPassword.getText().toString()));
     					sendList.put(InternetMenu.EMAIL_KEY, mUserEmail.getText().toString());
     	            	new ConnectionManager(Register.this, InternetMenu.mRegistrationURL, sendList);
     				} catch (NoSuchAlgorithmException e) {
     					mWaitDialog.dismiss();
-    					String msg = "Couldn't make md5 hash";
+    					String msg = "Couldn't hash the password";
     					Toast.makeText(Register.this, msg, Toast.LENGTH_LONG).show();
     					Log.e(TAG, msg, e);
     				}

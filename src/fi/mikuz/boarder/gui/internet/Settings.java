@@ -84,14 +84,14 @@ public class Settings extends Activity implements ConnectionListener {
                     	
                     	if (!newPassword1Text.equals(newPassword2Text)) {
                     		Toast.makeText(Settings.this, "New passwords don't match", Toast.LENGTH_LONG).show();
-                    	} else if (newPassword1Text.length() < 6 || newPassword1Text.length() > 30) {
-                    		Toast.makeText(Settings.this, "Password lenght must be from 6 to 30 characters", Toast.LENGTH_LONG).show();
+                    	} else if (newPassword1Text.length() < 6) {
+                    		Toast.makeText(Settings.this, "Password length must be at least 6 characters", Toast.LENGTH_LONG).show();
                     	} else {
                     		try {
 	                    		mWaitDialog = new TimeoutProgressDialog(Settings.this, "Waiting for response", TAG, false);
 	                    		HashMap<String, String> sendList = new HashMap<String, String>();
-	                        	sendList.put(InternetMenu.PASSWORD_KEY, Security.md5(newPassword1Text));
-	                        	sendList.put(InternetMenu.OLD_PASSWORD_KEY, Security.md5(oldPasswordText));
+	                        	sendList.put(InternetMenu.PASSWORD_KEY, Security.passwordHash(newPassword1Text));
+	                        	sendList.put(InternetMenu.OLD_PASSWORD_KEY, Security.passwordHash(oldPasswordText));
 	                        	sendList.put(InternetMenu.USER_ID_KEY, mUserId);
 	                        	sendList.put(InternetMenu.SESSION_TOKEN_KEY, mSessionToken);
 	                        	new ConnectionManager(Settings.this, InternetMenu.mChangePasswordURL, sendList);
@@ -133,7 +133,7 @@ public class Settings extends Activity implements ConnectionListener {
             			try {
             				mWaitDialog = new TimeoutProgressDialog(Settings.this, "Waiting for response", TAG, false);
             				HashMap<String, String> sendList = new HashMap<String, String>();
-            				sendList.put(InternetMenu.PASSWORD_KEY, Security.md5(passwordText));
+            				sendList.put(InternetMenu.PASSWORD_KEY, Security.passwordHash(passwordText));
             				sendList.put(InternetMenu.EMAIL_KEY, newEmailText);
             				sendList.put(InternetMenu.USER_ID_KEY, mUserId);
             				sendList.put(InternetMenu.SESSION_TOKEN_KEY, mSessionToken);
