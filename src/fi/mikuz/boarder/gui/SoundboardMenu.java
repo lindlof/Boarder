@@ -69,6 +69,7 @@ import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.dbadapter.BoardsDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.GlobalVariablesDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
+import fi.mikuz.boarder.util.editor.ImageDrawing;
 
 /**
  * 
@@ -222,7 +223,7 @@ public class SoundboardMenu extends ListActivity {
     	
     	File icon = new File(mSbDir, boardToLaunch + "/icon.png");
     	if (icon.exists()) {
-    		Bitmap bitmap = BitmapFactory.decodeFile(icon.getAbsolutePath());
+    		Bitmap bitmap = ImageDrawing.decodeFile(icon);
     		views.setImageViewBitmap(R.id.icon, bitmap);
     	} else {
     		views.setImageViewResource(R.id.icon, R.drawable.board_icon);
@@ -426,7 +427,7 @@ public class SoundboardMenu extends ListActivity {
             File icon = new File(mSbDir, title + "/icon.png");
             if (icon.exists()) {
 	            final ImageView title_icon = (ImageView) v.findViewById(R.id.soundboardIcon);
-				Bitmap bitmap = BitmapFactory.decodeFile(icon.getAbsolutePath());
+				Bitmap bitmap = ImageDrawing.decodeFile(icon);
 				int viewSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, (float) 48, getResources().getDisplayMetrics());
             	
             	title_icon.setAdjustViewBounds(true);
@@ -825,7 +826,7 @@ public class SoundboardMenu extends ListActivity {
             
             File icon = new File(mSbDir, boardName + "/icon.png");
             if (icon.exists()) {
-				Bitmap bitmap = BitmapFactory.decodeFile(icon.getAbsolutePath());
+				Bitmap bitmap = ImageDrawing.decodeFile(icon);
 				intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, IconUtils.resizeIcon(this, bitmap, (40/12)));
             } else {
 	            Parcelable iconResource = Intent.ShortcutIconResource.fromContext(this,  R.drawable.board_icon);

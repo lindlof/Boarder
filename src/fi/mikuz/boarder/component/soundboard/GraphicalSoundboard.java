@@ -5,6 +5,8 @@ import java.util.ArrayList;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
+import fi.mikuz.boarder.util.editor.ImageDrawing;
+
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -113,8 +115,8 @@ public class GraphicalSoundboard {
 	}
 	
 	static public void loadImages(GraphicalSoundboard gsb) {
-		if (gsb.getBackgroundImagePath() != null) {
-			gsb.setBackgroundImage(BitmapFactory.decodeFile(gsb.getBackgroundImagePath().getAbsolutePath()));
+		if (gsb.getBackgroundImage() == null && gsb.getBackgroundImagePath() != null) {
+			gsb.setBackgroundImage(ImageDrawing.decodeFile(gsb.getBackgroundImagePath()));
 		}
 		for (GraphicalSound sound : gsb.getSoundList()) {
 			GraphicalSound.loadImages(sound);

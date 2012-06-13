@@ -10,6 +10,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.gui.SoundboardMenu;
+import fi.mikuz.boarder.util.editor.ImageDrawing;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
 /**
@@ -79,13 +80,15 @@ public class GraphicalSound implements Cloneable {
 	}
 	
 	static public void loadImages(GraphicalSound sound) {
-		if (sound.getImagePath() == null) {
-			sound.setImage(BitmapFactory.decodeResource(SoundboardMenu.context.getResources(), R.drawable.sound));
-		} else {
-			sound.setImage(BitmapFactory.decodeFile(sound.getImagePath().getAbsolutePath()));
+		if (sound.getImage() == null) {
+			if (sound.getImagePath() == null) {
+				sound.setImage(BitmapFactory.decodeResource(SoundboardMenu.context.getResources(), R.drawable.sound));
+			} else {
+				sound.setImage(ImageDrawing.decodeFile(sound.getImagePath()));
+			}
 		}
-		if (sound.getActiveImagePath() != null) {
-			sound.setActiveImage(BitmapFactory.decodeFile(sound.getActiveImagePath().getAbsolutePath()));
+		if (sound.getActiveImage() == null && sound.getActiveImagePath() != null) {
+			sound.setActiveImage(ImageDrawing.decodeFile(sound.getActiveImagePath()));
 		}
 	}
 	

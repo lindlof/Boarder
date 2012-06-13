@@ -67,6 +67,7 @@ import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.XStreamUtil;
 import fi.mikuz.boarder.util.dbadapter.BoardsDbAdapter;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
+import fi.mikuz.boarder.util.editor.ImageDrawing;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
 /**
@@ -213,7 +214,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
         
         File icon = new File(mSbDir, mBoardName + "/icon.png");
         if (icon.exists()) {
-			Bitmap bitmap = BitmapFactory.decodeFile(icon.getAbsolutePath());
+			Bitmap bitmap = ImageDrawing.decodeFile(icon);
             Drawable drawable = new BitmapDrawable(getResources(), IconUtils.resizeIcon(this, bitmap, (40/6)));
         	this.getActionBar().setLogo(drawable);
         }
@@ -229,12 +230,6 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
             }
         });
 	}
-	
-    @Override
-    protected void onResume() {
-    	super.onResume();
-    	setContentView(mPanel);
-    }
 	
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -741,7 +736,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		        	Bundle extras = intent.getExtras();
 		        	File background = new File(extras.getString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE));
 		        	mGsb.setBackgroundImagePath(background);
-		        	mGsb.setBackgroundImage(BitmapFactory.decodeFile(mGsb.getBackgroundImagePath().getAbsolutePath()));
+		        	mGsb.setBackgroundImage(ImageDrawing.decodeFile(mGsb.getBackgroundImagePath()));
 		        	mGsb.setBackgroundWidth(mGsb.getBackgroundImage().getWidth());
 		        	mGsb.setBackgroundHeight(mGsb.getBackgroundImage().getHeight());
 		        	mGsb.setBackgroundX(0);
@@ -760,7 +755,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE));
 		        	mDragSound.setImagePath(image);
-		        	mDragSound.setImage(BitmapFactory.decodeFile(mDragSound.getImagePath().getAbsolutePath()));
+		        	mDragSound.setImage(ImageDrawing.decodeFile(mDragSound.getImagePath()));
 	        	}
 	        	soundImageWidthText.setText("Width (" + mDragSound.getImage().getWidth() + ")");
 				soundImageHeightText.setText("Height (" + mDragSound.getImage().getHeight() + ")");
@@ -772,7 +767,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE));
 		        	mDragSound.setActiveImagePath(image);
-		        	mDragSound.setActiveImage(BitmapFactory.decodeFile(mDragSound.getActiveImagePath().getAbsolutePath()));
+		        	mDragSound.setActiveImage(ImageDrawing.decodeFile(mDragSound.getActiveImagePath()));
 	        	}
 	        	break;
 	        	
@@ -936,6 +931,12 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
         	mWaitDialog.dismiss();
         }
     };
+    
+    @Override
+    protected void onResume() {
+    	super.onResume();
+    	setContentView(mPanel);
+    }
 	
 	@Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -946,6 +947,18 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
     protected void onPause() {
     	save();
     	super.onPause();
+    }
+    
+    @Override
+    protected void onDestroy() {
+    	if (mThread != null) {
+    		// Emergency thread shutdown if it isn't down yet
+    		Log.w(TAG, "SurfaceView didn't destroy surface properly");
+    		mThread.setRunning(false);
+            mThread = null;
+    	}
+    	GraphicalSoundboard.unloadImages(mGsb);
+    	super.onDestroy();
     }
     
     private void save() {
@@ -2028,7 +2041,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 						canvas.drawBitmap(mGsb.getBackgroundImage(), null, bitmapRect, bgImage);
 					} catch(NullPointerException npe) {
 						Log.e(TAG, "Unable to draw image " + mGsb.getBackgroundImagePath().getAbsolutePath());
-						mGsb.setUseBackgroundImage(false);
+						mGsb.setBackgroundImage(BitmapFactory.decodeResource(getResources(), R.drawable.sound));
 					}
 				}
 				
@@ -2150,11 +2163,13 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 				mThread.setRunning(true);
 				mThread.start();
 			}
+			Log.d(TAG, "Surface created");
 		}
 		
 		public void surfaceDestroyed(SurfaceHolder holder) {
             mThread.setRunning(false);
             mThread = null;
+            Log.d(TAG, "Surface destroyed");
 		}
 		
 	}

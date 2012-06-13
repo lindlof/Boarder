@@ -32,6 +32,7 @@ import com.thoughtworks.xstream.XStream;
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.util.XStreamUtil;
+import fi.mikuz.boarder.util.editor.ImageDrawing;
 
 /**
  * 
@@ -164,7 +165,7 @@ public class FileExplorer extends ListActivity {
     		
     		if (action.equals(FileExplorer.ACTION_SELECT_BACKGROUND_FILE)) {
     			try {
-    				new Canvas().drawBitmap(BitmapFactory.decodeFile(selectedFile.getAbsolutePath()), 0, 0, null);
+    				new Canvas().drawBitmap(ImageDrawing.decodeFile(selectedFile), 0, 0, null);
     				
         			Bundle bundle = new Bundle();
         			bundle.putString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE, selectedFile.getAbsoluteFile().toString());
@@ -181,7 +182,7 @@ public class FileExplorer extends ListActivity {
 				
     		} else if (action.equals(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE)) {
     			try {
-    				new Canvas().drawBitmap(BitmapFactory.decodeFile(selectedFile.getAbsolutePath()), 0, 0, null);
+    				new Canvas().drawBitmap(ImageDrawing.decodeFile(selectedFile), 0, 0, null);
     				
 	    			Bundle bundle = new Bundle();
 	    			bundle.putString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE, selectedFile.getAbsoluteFile().toString());
