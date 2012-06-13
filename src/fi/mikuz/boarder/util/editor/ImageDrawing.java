@@ -21,7 +21,7 @@ public class ImageDrawing {
 	static final int IMAGE_MAX_SIZE = 4000;
 
 	/**
-	 * Custom bitmap decoder to avoid memory errors with enormous images and large amount of huge images.
+	 * Custom bitmap decoder to avoid and improve memory errors with enormous images and large amount of huge images.
 	 * 
 	 * @param image file
 	 * @return image bitmap
@@ -42,7 +42,7 @@ public class ImageDrawing {
 	    	try {
 		    	b = BitmapFactory.decodeFile(f.getAbsolutePath());
 		    } catch (OutOfMemoryError ome) {
-		    	Log.w(TAG, "Image " + f.getAbsolutePath() + " is enormous! It has to be decoded smaller.");
+		    	Log.w(TAG, "Image " + f.getAbsolutePath() + " is enormous! It has to be decoded to smaller resolution.");
 		    	try {
 			        //Decode image size
 			        BitmapFactory.Options o = new BitmapFactory.Options();
