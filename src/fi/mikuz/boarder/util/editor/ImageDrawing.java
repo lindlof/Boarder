@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import fi.mikuz.boarder.gui.SoundboardMenu;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -26,7 +27,7 @@ public class ImageDrawing {
 	 * @param image file
 	 * @return image bitmap
 	 */
-	public static Bitmap decodeFile(File f) { // TODO Could a same bitmap in memory be reused elegantly here?
+	public static Bitmap decodeFile(Context context, File f) { // TODO Could a same bitmap in memory be reused elegantly here?
 	    Bitmap b = null;
 	    
 	    // Bitmaps can take large amounts of memory.
@@ -34,7 +35,7 @@ public class ImageDrawing {
 	    if (underFivePercentOfMemoryLeft()) {
 	    	String errorMessage = "Memory is running very low, won't decode image " + f.getAbsolutePath();
 	    	Log.e(TAG, errorMessage);
-	    	Toast.makeText(SoundboardMenu.context, errorMessage, Toast.LENGTH_SHORT).show();
+	    	Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show();
 	    	return null;
 	    }
 	    
@@ -70,7 +71,7 @@ public class ImageDrawing {
 	    } catch (OutOfMemoryError ome2) {
 	    	String errorMessage = "Unable to decode image, out of memory";
 	    	Log.e(TAG, errorMessage, ome2);
-	    	Toast.makeText(SoundboardMenu.context, errorMessage, Toast.LENGTH_SHORT).show();
+	    	Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show();
 	    }
 	    
 	    return b;

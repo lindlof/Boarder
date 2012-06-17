@@ -18,7 +18,6 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.database.StaleDataException;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -80,8 +79,6 @@ public class SoundboardMenu extends ListActivity {
 	
 	public static final boolean mDevelopmentMode = true; //FIXME for release
 	
-	public static Context context;
-	
 	public static final String EXTRA_LAUNCH_BAORD_KEY = "SoundboardMenu.boardToLaunch";
 	public static final String EXTRA_HIDE_SOUNDBOARDMENU = "SoundboardMenu.hideSoundboardmenu";
 	
@@ -97,7 +94,7 @@ public class SoundboardMenu extends ListActivity {
     String mAction;
 	
 	public static List<SoundPlayer> mSoundPlayerList = new ArrayList<SoundPlayer>();
-	public static GlobalSettings mGlobalSettings;
+	public static GlobalSettings mGlobalSettings; //TODO causes crashes, setting should not be stored this way in Android
 	
 	public static final File mBoarderDir = new File(Environment.getExternalStorageDirectory(), "boarder");
 	public static final File mSbDir = new File(mBoarderDir, "boards");
@@ -203,7 +200,6 @@ public class SoundboardMenu extends ListActivity {
         
         setContentView(layout);
         registerForContextMenu(getListView());
-        context = this.getBaseContext();
         
         firstStartIntroduction();
     }
@@ -223,7 +219,7 @@ public class SoundboardMenu extends ListActivity {
     	
     	File icon = new File(mSbDir, boardToLaunch + "/icon.png");
     	if (icon.exists()) {
-    		Bitmap bitmap = ImageDrawing.decodeFile(icon);
+    		Bitmap bitmap = ImageDrawing.decodeFile(context, icon);
     		views.setImageViewBitmap(R.id.icon, bitmap);
     	} else {
     		views.setImageViewResource(R.id.icon, R.drawable.board_icon);
@@ -427,7 +423,7 @@ public class SoundboardMenu extends ListActivity {
             File icon = new File(mSbDir, title + "/icon.png");
             if (icon.exists()) {
 	            final ImageView title_icon = (ImageView) v.findViewById(R.id.soundboardIcon);
-				Bitmap bitmap = ImageDrawing.decodeFile(icon);
+				Bitmap bitmap = ImageDrawing.decodeFile(context, icon);
 				int viewSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, (float) 48, getResources().getDisplayMetrics());
             	
             	title_icon.setAdjustViewBounds(true);
@@ -826,7 +822,7 @@ public class SoundboardMenu extends ListActivity {
             
             File icon = new File(mSbDir, boardName + "/icon.png");
             if (icon.exists()) {
-				Bitmap bitmap = ImageDrawing.decodeFile(icon);
+				Bitmap bitmap = ImageDrawing.decodeFile(this.getApplicationContext(), icon);
 				intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, IconUtils.resizeIcon(this, bitmap, (40/12)));
             } else {
 	            Parcelable iconResource = Intent.ShortcutIconResource.fromContext(this,  R.drawable.board_icon);

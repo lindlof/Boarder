@@ -214,7 +214,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
         
         File icon = new File(mSbDir, mBoardName + "/icon.png");
         if (icon.exists()) {
-			Bitmap bitmap = ImageDrawing.decodeFile(icon);
+			Bitmap bitmap = ImageDrawing.decodeFile(this.getApplicationContext(), icon);
             Drawable drawable = new BitmapDrawable(getResources(), IconUtils.resizeIcon(this, bitmap, (40/6)));
         	this.getActionBar().setLogo(drawable);
         }
@@ -643,7 +643,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
     }
 	
 	public void loadBoard(GraphicalSoundboard gsb) {
-		GraphicalSoundboard.loadImages(gsb);
+		GraphicalSoundboard.loadImages(this.getApplicationContext(), gsb);
 		mGsb = gsb;
 	}
 	
@@ -745,7 +745,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		        	Bundle extras = intent.getExtras();
 		        	File background = new File(extras.getString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE));
 		        	mGsb.setBackgroundImagePath(background);
-		        	mGsb.setBackgroundImage(ImageDrawing.decodeFile(mGsb.getBackgroundImagePath()));
+		        	mGsb.setBackgroundImage(ImageDrawing.decodeFile(this.getApplicationContext(), mGsb.getBackgroundImagePath()));
 		        	mGsb.setBackgroundWidth(mGsb.getBackgroundImage().getWidth());
 		        	mGsb.setBackgroundHeight(mGsb.getBackgroundImage().getHeight());
 		        	mGsb.setBackgroundX(0);
@@ -764,7 +764,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE));
 		        	mDragSound.setImagePath(image);
-		        	mDragSound.setImage(ImageDrawing.decodeFile(mDragSound.getImagePath()));
+		        	mDragSound.setImage(ImageDrawing.decodeFile(this.getApplicationContext(), mDragSound.getImagePath()));
 	        	}
 	        	soundImageWidthText.setText("Width (" + mDragSound.getImage().getWidth() + ")");
 				soundImageHeightText.setText("Height (" + mDragSound.getImage().getHeight() + ")");
@@ -776,7 +776,7 @@ public class GraphicalSoundboardEditor extends Activity { //TODO destroy god obj
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE));
 		        	mDragSound.setActiveImagePath(image);
-		        	mDragSound.setActiveImage(ImageDrawing.decodeFile(mDragSound.getActiveImagePath()));
+		        	mDragSound.setActiveImage(ImageDrawing.decodeFile(this.getApplicationContext(), mDragSound.getActiveImagePath()));
 	        	}
 	        	break;
 	        	

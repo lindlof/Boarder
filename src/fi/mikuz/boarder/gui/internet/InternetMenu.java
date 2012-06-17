@@ -41,7 +41,7 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 public class InternetMenu extends Activity implements ConnectionListener {
     private static final String TAG = "InternetMenu";
     
-    private static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://mikuz-main.no-ip.org/boarder_test/" : "http://www.mikuz.org/php/boarder/";
+    private static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://www.mikuz.org/php/boarder_test/" : "http://www.mikuz.org/php/boarder/";
     static final String mGetSessionValidURL = InternetMenu.phpRepURL + "getSessionInfo.php";
     static final String mGetBoardsURL = InternetMenu.phpRepURL + "getBoards.php";
     static final String mGetBoardURL = InternetMenu.phpRepURL + "getBoard.php";

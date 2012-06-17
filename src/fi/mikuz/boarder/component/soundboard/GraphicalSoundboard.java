@@ -3,14 +3,14 @@ package fi.mikuz.boarder.component.soundboard;
 import java.io.File;
 import java.util.ArrayList;
 
+import android.content.Context;
+import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 import fi.mikuz.boarder.util.editor.ImageDrawing;
-
-import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 
 /**
  * 
@@ -114,12 +114,12 @@ public class GraphicalSoundboard {
 		return gsb;
 	}
 	
-	static public void loadImages(GraphicalSoundboard gsb) {
+	static public void loadImages(Context context, GraphicalSoundboard gsb) {
 		if (gsb.getBackgroundImage() == null && gsb.getBackgroundImagePath() != null) {
-			gsb.setBackgroundImage(ImageDrawing.decodeFile(gsb.getBackgroundImagePath()));
+			gsb.setBackgroundImage(ImageDrawing.decodeFile(context, gsb.getBackgroundImagePath()));
 		}
 		for (GraphicalSound sound : gsb.getSoundList()) {
-			GraphicalSound.loadImages(sound);
+			GraphicalSound.loadImages(context, sound);
 		}
 	}
 	
