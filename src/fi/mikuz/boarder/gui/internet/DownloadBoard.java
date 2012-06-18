@@ -11,10 +11,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.bugsense.trace.BugSenseHandler;
-import com.thoughtworks.xstream.XStream;
-
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -28,8 +24,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -37,21 +33,26 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bugsense.trace.BugSenseHandler;
+import com.thoughtworks.xstream.XStream;
+
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderActivity;
 import fi.mikuz.boarder.component.internet.InternetFullBoard;
 import fi.mikuz.boarder.connection.ConnectionErrorResponse;
 import fi.mikuz.boarder.connection.ConnectionListener;
 import fi.mikuz.boarder.connection.ConnectionManager;
 import fi.mikuz.boarder.connection.ConnectionSuccessfulResponse;
 import fi.mikuz.boarder.connection.ConnectionUtils;
-import fi.mikuz.boarder.gui.SoundboardMenu;
+import fi.mikuz.boarder.util.GlobalSettings;
 import fi.mikuz.boarder.util.TimeoutProgressDialog;
 
 /**
  * 
  * @author Jan Mikael Lindlöf
  */
-public class DownloadBoard extends Activity implements ConnectionListener {
+public class DownloadBoard extends BoarderActivity implements ConnectionListener {
 	private static final String TAG = "InternetDownloadBoard";
 	
 	public static final int SHOW_INTERNET_BOARD = 0;
@@ -110,7 +111,7 @@ public class DownloadBoard extends Activity implements ConnectionListener {
 			
 			try {
 				
-				if (SoundboardMenu.mGlobalSettings.getSensitiveLogging()) Log.v(TAG, "Got a preview: "+fakeMessageString);
+				if (GlobalSettings.getSensitiveLogging()) Log.v(TAG, "Got a preview: "+fakeMessageString);
 				ConnectionSuccessfulResponse fakeResponse = new ConnectionSuccessfulResponse(new JSONObject(fakeMessageString), InternetMenu.mGetBoardURL);
 				onConnectionSuccessful(fakeResponse);
 			} catch (JSONException e) {

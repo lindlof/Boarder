@@ -15,7 +15,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -48,6 +47,7 @@ import com.dropbox.client2.session.Session.AccessType;
 import com.dropbox.client2.session.TokenPair;
 
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderListActivity;
 import fi.mikuz.boarder.component.DropboxCache;
 import fi.mikuz.boarder.component.DropboxCacheFile;
 import fi.mikuz.boarder.gui.checkboxList.ExtendedCheckBox;
@@ -60,7 +60,7 @@ import fi.mikuz.boarder.util.DropboxCacheUtils;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class DropboxMenu extends ListActivity {
+public class DropboxMenu extends BoarderListActivity {
 	private static final String TAG = "Dropbox Menu";
 
 	private static String APP_KEY;

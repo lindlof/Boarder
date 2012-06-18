@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 import org.json.JSONException;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -24,6 +23,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderActivity;
 import fi.mikuz.boarder.connection.ConnectionErrorResponse;
 import fi.mikuz.boarder.connection.ConnectionListener;
 import fi.mikuz.boarder.connection.ConnectionManager;
@@ -38,7 +38,7 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class InternetMenu extends Activity implements ConnectionListener {
+public class InternetMenu extends BoarderActivity implements ConnectionListener {
     private static final String TAG = "InternetMenu";
     
     private static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://www.mikuz.org/php/boarder_test/" : "http://www.mikuz.org/php/boarder/";

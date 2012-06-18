@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import fi.mikuz.boarder.gui.SoundboardMenu;
+import fi.mikuz.boarder.util.GlobalSettings;
 
 import android.os.Handler;
 import android.util.Log;
@@ -64,7 +65,7 @@ public class ConnectionManager {
 					String result = convertStreamToString(in);
 					
 					try {
-						if (SoundboardMenu.mGlobalSettings.getSensitiveLogging()) Log.v(TAG, "Got from "+url+": "+result);
+						if (GlobalSettings.getSensitiveLogging()) Log.v(TAG, "Got from "+url+": "+result);
 						else Log.v(TAG, "Got answer from "+url);
 						connectionSuccessfulResponse = new ConnectionSuccessfulResponse(new JSONObject(result), 
 								ConnectionUtils.getUrlConnectionId(url));

@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -30,6 +29,7 @@ import android.widget.Toast;
 import com.thoughtworks.xstream.XStream;
 
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderListActivity;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.util.XStreamUtil;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
@@ -38,7 +38,7 @@ import fi.mikuz.boarder.util.editor.ImageDrawing;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class FileExplorer extends ListActivity {
+public class FileExplorer extends BoarderListActivity {
 	
 	public static final String ACTION_SELECT_BACKGROUND_FILE = "selectBackgroundFile";
 	public static final String ACTION_SELECT_SOUND_IMAGE_FILE = "selectSoundImageFile";

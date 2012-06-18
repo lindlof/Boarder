@@ -7,7 +7,6 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import android.app.ListActivity;
 import android.content.Context;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -30,6 +29,7 @@ import android.widget.Toast;
 import com.thoughtworks.xstream.XStream;
 
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderListActivity;
 import fi.mikuz.boarder.component.internet.Comment;
 import fi.mikuz.boarder.component.internet.InternetFullBoard;
 import fi.mikuz.boarder.connection.ConnectionErrorResponse;
@@ -43,7 +43,7 @@ import fi.mikuz.boarder.util.TimeoutProgressDialog;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class DownloadBoardComments extends ListActivity implements ConnectionListener, OnScrollListener {
+public class DownloadBoardComments extends BoarderListActivity implements ConnectionListener, OnScrollListener {
 	private static final String TAG = "InternetDownloadBoardComments";
 	
 	private ListView mListView;

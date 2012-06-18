@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -56,13 +55,14 @@ import android.widget.Toast;
 import com.bugsense.trace.BugSenseHandler;
 
 import fi.mikuz.boarder.R;
-import fi.mikuz.boarder.component.GlobalSettings;
+import fi.mikuz.boarder.app.BoarderListActivity;
 import fi.mikuz.boarder.component.SoundPlayer;
 import fi.mikuz.boarder.gui.internet.InternetMenu;
 import fi.mikuz.boarder.service.TogglePlayPauseService;
 import fi.mikuz.boarder.util.ApiKeyLoader;
 import fi.mikuz.boarder.util.BoardLocal;
 import fi.mikuz.boarder.util.FileProcessor;
+import fi.mikuz.boarder.util.GlobalSettings;
 import fi.mikuz.boarder.util.IconUtils;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.dbadapter.BoardsDbAdapter;
@@ -74,14 +74,13 @@ import fi.mikuz.boarder.util.editor.ImageDrawing;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class SoundboardMenu extends ListActivity {
+public class SoundboardMenu extends BoarderListActivity {
 	public static final String TAG = "SoundboardMenu";
 	
 	public static final boolean mDevelopmentMode = true; //FIXME for release
 	
 	public static final String EXTRA_LAUNCH_BAORD_KEY = "SoundboardMenu.boardToLaunch";
 	public static final String EXTRA_HIDE_SOUNDBOARDMENU = "SoundboardMenu.hideSoundboardmenu";
-	
 
 	private static final int ACTIVITY_ADD = 0;
 	private static final int ACTIVITY_EDIT = 1;
@@ -94,7 +93,6 @@ public class SoundboardMenu extends ListActivity {
     String mAction;
 	
 	public static List<SoundPlayer> mSoundPlayerList = new ArrayList<SoundPlayer>();
-	public static GlobalSettings mGlobalSettings; //TODO causes crashes, setting should not be stored this way in Android
 	
 	public static final File mBoarderDir = new File(Environment.getExternalStorageDirectory(), "boarder");
 	public static final File mSbDir = new File(mBoarderDir, "boards");
@@ -118,6 +116,7 @@ public class SoundboardMenu extends ListActivity {
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	GlobalSettings.init(this);
     	requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
     	
     	String versionName = null;
@@ -173,7 +172,8 @@ public class SoundboardMenu extends ListActivity {
 	    
 	    mGlobalVariableDbHelper = new GlobalVariablesDbAdapter(this);
         mGlobalVariableDbHelper.open();
-        mGlobalSettings = loadGlobalSettings();
+        
+        loadGlobalSettings();
 	    
 	    if (!mSbDir.exists()) {
 			mSbDir.mkdirs();
@@ -547,13 +547,13 @@ public class SoundboardMenu extends ListActivity {
             	View layout = inflater.inflate(R.layout.soundboard_menu_alert_global_settings, (ViewGroup) findViewById(R.id.alert_settings_root));
 
             	final EditText fadeInInput = (EditText) layout.findViewById(R.id.fadeInInput);
-            	fadeInInput.setText(Integer.toString(mGlobalSettings.getFadeInDuration()));
+            	fadeInInput.setText(Integer.toString(GlobalSettings.getFadeInDuration()));
             	
             	final EditText fadeOutInput = (EditText) layout.findViewById(R.id.fadeOutInput);
-            	fadeOutInput.setText(Integer.toString(mGlobalSettings.getFadeOutDuration()));
+            	fadeOutInput.setText(Integer.toString(GlobalSettings.getFadeOutDuration()));
             	
             	final CheckBox sensitiveLoggingCheckbox = (CheckBox) layout.findViewById(R.id.sensitiveLoggingCheckbox);
-            	sensitiveLoggingCheckbox.setChecked(mGlobalSettings.getSensitiveLogging());
+            	sensitiveLoggingCheckbox.setChecked(GlobalSettings.getSensitiveLogging());
 
             	AlertDialog.Builder builder = new AlertDialog.Builder(SoundboardMenu.this);
             	builder.setView(layout);
@@ -570,7 +570,7 @@ public class SoundboardMenu extends ListActivity {
             				
             				mGlobalVariableDbHelper.updateBooleanVariable(GlobalVariablesDbAdapter.SENSITIVE_LOGGING, sensitiveLoggingCheckbox.isChecked());
             				
-            				mGlobalSettings = loadGlobalSettings();
+            				loadGlobalSettings();
             			} catch(NumberFormatException nfe) {
             				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
             			}
@@ -621,8 +621,8 @@ public class SoundboardMenu extends ListActivity {
         return super.onMenuItemSelected(featureId, item);
     }
     
-    private GlobalSettings loadGlobalSettings() {
-    	GlobalSettings globalSettings = new GlobalSettings();
+    private void loadGlobalSettings() {
+    	
     	int fadeIn = 0;
     	try {
     		Cursor variableCursor = mGlobalVariableDbHelper.fetchVariable(GlobalVariablesDbAdapter.FADE_IN_DURATION_KEY);
@@ -632,7 +632,7 @@ public class SoundboardMenu extends ListActivity {
         	mGlobalVariableDbHelper.createIntVariable(GlobalVariablesDbAdapter.FADE_IN_DURATION_KEY, 0);
         	Log.d(TAG, "Couldn't get fade-in", e);
 		}
-    	globalSettings.setFadeInDuration(fadeIn);
+    	GlobalSettings.setFadeInDuration(fadeIn);
     	int fadeOut = 0;
     	try {
     		Cursor variableCursor = mGlobalVariableDbHelper.fetchVariable(GlobalVariablesDbAdapter.FADE_OUT_DURATION_KEY);
@@ -642,7 +642,7 @@ public class SoundboardMenu extends ListActivity {
         	mGlobalVariableDbHelper.createIntVariable(GlobalVariablesDbAdapter.FADE_OUT_DURATION_KEY, 0);
         	Log.d(TAG, "Couldn't get fadeOut", e);
 		}
-    	globalSettings.setFadeOutDuration(fadeOut);
+    	GlobalSettings.setFadeOutDuration(fadeOut);
     	boolean sensitiveLogging = false;
     	try {
     		Cursor variableCursor = mGlobalVariableDbHelper.fetchVariable(GlobalVariablesDbAdapter.SENSITIVE_LOGGING);
@@ -652,8 +652,7 @@ public class SoundboardMenu extends ListActivity {
         	mGlobalVariableDbHelper.createBooleanVariable(GlobalVariablesDbAdapter.SENSITIVE_LOGGING, false);
         	Log.d(TAG, "Couldn't get sensitiveLogging", e);
 		}
-    	globalSettings.setSensitiveLogging(sensitiveLogging);
-    	return globalSettings;
+    	GlobalSettings.setSensitiveLogging(sensitiveLogging);
     }
     
     @Override

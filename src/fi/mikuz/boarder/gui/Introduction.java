@@ -1,6 +1,5 @@
 package fi.mikuz.boarder.gui;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -15,12 +14,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderActivity;
 
 /**
  * 
  * @author Jan Mikael Lindlöf
  */
-public class Introduction extends Activity {
+public class Introduction extends BoarderActivity {
 	public static final String TAG = "Guide";
 	
 	LinearLayout mBody;

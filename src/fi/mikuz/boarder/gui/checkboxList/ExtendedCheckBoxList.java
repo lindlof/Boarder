@@ -15,13 +15,13 @@
  */
 package fi.mikuz.boarder.gui.checkboxList;
 
-import android.app.ListActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ListView;
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderListActivity;
 
-public class ExtendedCheckBoxList extends ListActivity {
+public class ExtendedCheckBoxList extends BoarderListActivity {
 	
 	private ExtendedCheckBoxListAdapter mListAdapter;
 	

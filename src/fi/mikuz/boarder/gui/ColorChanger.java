@@ -1,6 +1,5 @@
 package fi.mikuz.boarder.gui;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -23,13 +22,14 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.SeekBar;
-import android.widget.Toast;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.thoughtworks.xstream.XStream;
 
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderActivity;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.util.XStreamUtil;
@@ -39,7 +39,7 @@ import fi.mikuz.boarder.util.editor.SoundNameDrawing;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class ColorChanger extends Activity implements OnSeekBarChangeListener, ColorPickerDialog.OnColorChangedListener {
+public class ColorChanger extends BoarderActivity implements OnSeekBarChangeListener, ColorPickerDialog.OnColorChangedListener {
 	private String TAG = "ColorChanger";
 	
 	private String mParent;

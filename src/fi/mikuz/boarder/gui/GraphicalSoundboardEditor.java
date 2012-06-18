@@ -7,7 +7,6 @@ import java.util.Calendar;
 import java.util.ConcurrentModificationException;
 import java.util.ListIterator;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
@@ -56,6 +55,7 @@ import android.widget.Toast;
 import com.thoughtworks.xstream.XStream;
 
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderActivity;
 import fi.mikuz.boarder.component.Slot;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
@@ -74,7 +74,7 @@ import fi.mikuz.boarder.util.editor.SoundNameDrawing;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class GraphicalSoundboardEditor extends Activity { //TODO destroy god object
+public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy god object
 	private String TAG = "GraphicalSoundboardEditor";
 	
 	public GraphicalSoundboard mGsb;

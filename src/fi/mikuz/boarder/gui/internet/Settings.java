@@ -5,7 +5,6 @@ import java.util.HashMap;
 
 import org.json.JSONException;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -19,6 +18,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderActivity;
 import fi.mikuz.boarder.connection.ConnectionErrorResponse;
 import fi.mikuz.boarder.connection.ConnectionListener;
 import fi.mikuz.boarder.connection.ConnectionManager;
@@ -32,7 +32,7 @@ import fi.mikuz.boarder.util.TimeoutProgressDialog;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class Settings extends Activity implements ConnectionListener {
+public class Settings extends BoarderActivity implements ConnectionListener {
 	private static final String TAG = "InternetLogin";
 	
 	final Handler mHandler = new Handler();

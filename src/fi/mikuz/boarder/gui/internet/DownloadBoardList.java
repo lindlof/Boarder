@@ -7,7 +7,6 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -33,6 +32,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderActivity;
 import fi.mikuz.boarder.component.internet.InternetBoard;
 import fi.mikuz.boarder.connection.ConnectionErrorResponse;
 import fi.mikuz.boarder.connection.ConnectionListener;
@@ -44,7 +44,7 @@ import fi.mikuz.boarder.connection.ConnectionUtils;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class DownloadBoardList extends Activity {
+public class DownloadBoardList extends BoarderActivity {
 	private static final String TAG = "InternetDownloadBoardList";
 	
 	private static final int LAST_PAGE_COUNT_MAX = 10000;

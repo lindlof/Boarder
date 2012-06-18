@@ -12,7 +12,6 @@ import java.util.zip.ZipFile;
 
 import org.apache.commons.io.IOUtils;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,12 +22,13 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.BoarderActivity;
 
 /**
  * 
  * @author Jan Mikael Lindlöf
  */
-public class ZipImporter extends Activity {
+public class ZipImporter extends BoarderActivity {
 	private static final String TAG = "ZipImporter";
 	
 	private TextView mInfoText;

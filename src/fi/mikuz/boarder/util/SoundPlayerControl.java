@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
 
-import fi.mikuz.boarder.component.GlobalSettings;
 import fi.mikuz.boarder.component.SoundPlayer;
 import fi.mikuz.boarder.gui.SoundboardMenu;
 
@@ -60,7 +59,6 @@ public class SoundPlayerControl {
 
 	public static void togglePlayPause() {
 		
-		final GlobalSettings globalSettings = SoundboardMenu.mGlobalSettings;
 		final List<SoundPlayer> soundPlayerList = SoundboardMenu.mSoundPlayerList;
     	boolean playing = false;
 		
@@ -83,7 +81,7 @@ public class SoundPlayerControl {
 			}
         }
 		
-		if (playing == true && globalSettings.getFadeOutDuration() > 0) {
+		if (playing == true && GlobalSettings.getFadeOutDuration() > 0) {
 			
 			Thread t = new Thread() {
 				public void run() {
@@ -99,7 +97,7 @@ public class SoundPlayerControl {
 						}
 						
 						try {
-							long realSleepTime = globalSettings.getFadeOutDuration()/10 - 
+							long realSleepTime = GlobalSettings.getFadeOutDuration()/10 - 
 								(System.currentTimeMillis() - currentTime);
 							long sleepTime = realSleepTime > 0 ? realSleepTime : 0;
 							Thread.sleep(sleepTime);
@@ -120,7 +118,7 @@ public class SoundPlayerControl {
 					soundPlayer.pause();
 		    	}
 			}
-		} else if (playing == false && globalSettings.getFadeInDuration() > 0) {
+		} else if (playing == false && GlobalSettings.getFadeInDuration() > 0) {
 			Thread t = new Thread() {
 				public void run() {
 					float volumeMultiplier = (float) 0.1;
@@ -135,7 +133,7 @@ public class SoundPlayerControl {
 					
 					while(volumeMultiplier < 1) {
 						try {
-							long realSleepTime = globalSettings.getFadeInDuration()/10 - 
+							long realSleepTime = GlobalSettings.getFadeInDuration()/10 - 
 								(System.currentTimeMillis() - currentTime);
 							long sleepTime = realSleepTime > 0 ? realSleepTime : 0;
 							Thread.sleep(sleepTime);
