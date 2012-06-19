@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
 
+import android.util.Log;
+
 import fi.mikuz.boarder.component.SoundPlayer;
 import fi.mikuz.boarder.gui.SoundboardMenu;
 
@@ -12,7 +14,98 @@ import fi.mikuz.boarder.gui.SoundboardMenu;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class SoundPlayerControl {
+public abstract class SoundPlayerControl {
+	private static final String TAG = SoundPlayerControl.class.getSimpleName();
+	
+	private static FadeThread fadeThread; // Null if not running. Only run one at once, change action using fadingIn.
+	
+	private enum FadeState {INACTIVE, FADING_IN, FADING_OUT}
+	private static FadeState fadeState = FadeState.INACTIVE;
+	
+	/**
+	 * Fade in or out in ten steps.
+	 * 
+	 * @author Jan Mikael Lindlöf
+	 */
+	private static class FadeThread extends Thread {
+		
+		public void run() {
+			
+			float volumeMultiplier;
+			if (fadeState == FadeState.FADING_IN) volumeMultiplier = 0.1f;
+			else if (fadeState == FadeState.FADING_OUT) volumeMultiplier = 1f;
+			else throw new IllegalArgumentException("Illegal fade state " + fadeState.name());
+			
+			long operationStartTime;
+			
+			if (fadeState == FadeState.FADING_IN) {
+				operationStartTime = System.currentTimeMillis();
+				for (SoundPlayer soundPlayer : SoundboardMenu.mSoundPlayerList) {
+					soundPlayer.setFadeVolume(soundPlayer.getLeftVolume()*volumeMultiplier, 
+							soundPlayer.getRightVolume()*volumeMultiplier);
+					soundPlayer.start();
+				}
+				sleepTenthOfFadedDuration(operationStartTime);
+			}
+
+			while((volumeMultiplier > 0.1f && fadeState == FadeState.FADING_OUT) || (volumeMultiplier < 1f && fadeState == FadeState.FADING_IN)) {
+				operationStartTime = System.currentTimeMillis();
+				
+				if (fadeState == FadeState.FADING_IN) volumeMultiplier += 0.1f;
+				else if (fadeState == FadeState.FADING_OUT) volumeMultiplier -= 0.1f;
+				else throw new IllegalArgumentException("Illegal fade state " + fadeState.name());
+				
+				// If fade duration is zero then just set volumes and break.
+				boolean die = false;
+				if (fadeState == FadeState.FADING_IN && GlobalSettings.getFadeInDuration() == 0f) {
+					volumeMultiplier = 1f;
+					die = true;
+				} else if (fadeState == FadeState.FADING_OUT && GlobalSettings.getFadeOutDuration() == 0f) {
+					volumeMultiplier = 1f;
+					die = true;
+				}
+				
+				for (SoundPlayer soundPlayer : SoundboardMenu.mSoundPlayerList) {
+					soundPlayer.setFadeVolume(soundPlayer.getLeftVolume()*volumeMultiplier, 
+							soundPlayer.getRightVolume()*volumeMultiplier);
+				}
+				
+				if (die) break;
+				
+				sleepTenthOfFadedDuration(operationStartTime);
+			}
+			
+			if (fadeState == FadeState.FADING_OUT) {
+				for (SoundPlayer soundPlayer : SoundboardMenu.mSoundPlayerList) {
+					soundPlayer.pause();
+				}
+			}
+			
+			fadeThread = null;
+			fadeState = FadeState.INACTIVE;
+		}
+		
+		/**
+		 * Accurate enough.
+		 * 
+		 * @param operationStartTime
+		 */
+		private void sleepTenthOfFadedDuration(long operationStartTime) {
+			long realSleepTime = 0;
+			if (fadeState == FadeState.FADING_IN) {
+				realSleepTime = GlobalSettings.getFadeInDuration()/10 - (System.currentTimeMillis() - operationStartTime);
+			} else if (fadeState == FadeState.FADING_OUT) {
+				realSleepTime = GlobalSettings.getFadeOutDuration()/10 - (System.currentTimeMillis() - operationStartTime);
+			}
+			
+			try {
+				long sleepTime = realSleepTime > 0 ? realSleepTime : 0;
+				Thread.sleep(sleepTime);
+			} catch (InterruptedException e) {
+				Log.e(TAG, "Thread failed to sleep for fading effect");
+			}
+		}
+	}
 	
 	public static void playSound(boolean playSimultaneously, File soundPath, Float volumeLeft, Float volumeRight, 
 			Float boardVolume) {
@@ -81,82 +174,15 @@ public class SoundPlayerControl {
 			}
         }
 		
-		if (playing == true && GlobalSettings.getFadeOutDuration() > 0) {
-			
-			Thread t = new Thread() {
-				public void run() {
-					float volumeMultiplier = 1;
-
-					while(volumeMultiplier > 0.1) {
-						long currentTime = System.currentTimeMillis();
-						volumeMultiplier -= 0.1;
-						
-						for (SoundPlayer soundPlayer : soundPlayerList) {
-							soundPlayer.setFadeVolume(soundPlayer.getLeftVolume()*volumeMultiplier, 
-									soundPlayer.getRightVolume()*volumeMultiplier);
-						}
-						
-						try {
-							long realSleepTime = GlobalSettings.getFadeOutDuration()/10 - 
-								(System.currentTimeMillis() - currentTime);
-							long sleepTime = realSleepTime > 0 ? realSleepTime : 0;
-							Thread.sleep(sleepTime);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-					
-					for (SoundPlayer soundPlayer : soundPlayerList) {
-						soundPlayer.pause();
-					}
-				}
-			};
-			t.start();
-		} else if (playing == true) {
-			for (SoundPlayer soundPlayer : soundPlayerList) {
-				if (soundPlayer.isPlaying()) {
-					soundPlayer.pause();
-		    	}
-			}
-		} else if (playing == false && GlobalSettings.getFadeInDuration() > 0) {
-			Thread t = new Thread() {
-				public void run() {
-					float volumeMultiplier = (float) 0.1;
-					
-					for (SoundPlayer soundPlayer : soundPlayerList) {
-						soundPlayer.setFadeVolume(soundPlayer.getLeftVolume()*volumeMultiplier, 
-								soundPlayer.getRightVolume()*volumeMultiplier);
-						soundPlayer.start();
-					}
-					
-					long currentTime = System.currentTimeMillis();
-					
-					while(volumeMultiplier < 1) {
-						try {
-							long realSleepTime = GlobalSettings.getFadeInDuration()/10 - 
-								(System.currentTimeMillis() - currentTime);
-							long sleepTime = realSleepTime > 0 ? realSleepTime : 0;
-							Thread.sleep(sleepTime);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						currentTime = System.currentTimeMillis();
-						
-						volumeMultiplier += 0.1;
-						
-						for (SoundPlayer soundPlayer : soundPlayerList) {
-							soundPlayer.setFadeVolume(soundPlayer.getLeftVolume()*volumeMultiplier, 
-									soundPlayer.getRightVolume()*volumeMultiplier);
-						}
-					}
-				}
-			};
-			t.start();
+		if (playing == true && (fadeState == FadeState.FADING_IN || fadeState == FadeState.INACTIVE)) {
+			fadeState = FadeState.FADING_OUT;
 		} else {
-			for (SoundPlayer soundPlayer : soundPlayerList) {
-				soundPlayer.setFadeVolume(soundPlayer.getLeftVolume(), soundPlayer.getRightVolume());
-				soundPlayer.start();
-			}
+			fadeState = FadeState.FADING_IN;
+		}
+		
+		if (fadeThread == null) {
+			fadeThread = new FadeThread();
+			fadeThread.start();
 		}
     }
 	
