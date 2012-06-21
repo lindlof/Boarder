@@ -102,7 +102,6 @@ public class DownloadBoard extends BoarderActivity implements ConnectionListener
 			
 			getBoard();
 		} else if (mAction == SHOW_PREVIEW_BOARD) {
-			mBoardId = -1;
 			mLoggedIn = false;
 			
 			XStream xstream = new XStream();
@@ -125,63 +124,68 @@ public class DownloadBoard extends BoarderActivity implements ConnectionListener
 
 	private class DownloadScreenshot extends AsyncTask<URL, Integer, Void> {
 		protected Void doInBackground(URL... urls) {
+			
+			mScreenshotImage = null;
+			
 			try {
 				InputStream is = (InputStream) urls[0].getContent();
 				mScreenshotImage = Drawable.createFromStream(is, "src");
-				
-				runOnUiThread(new Runnable() {
-					public void run() {
+			} catch (IOException e) {
+				Log.e(TAG, "Error loading image", e);
+			}
+
+			runOnUiThread(new Runnable() {
+				public void run() {
+
+					if (!(mScreenshotImage == null)) {
 						mScreenshot.setImageDrawable(mScreenshotImage);
-						
+
 						Animation myFadeInAnimation = AnimationUtils.loadAnimation(
 								DownloadBoard.this.getApplicationContext(), R.anim.fadein);
 						mScreenshot.startAnimation(myFadeInAnimation);
-						
+
 						mScreenshot.setOnClickListener(new OnClickListener() {
 							public void onClick(View v) {
-								
+
 								LinearLayout fullscreenImageLayout = (LinearLayout) findViewById(R.id.fullscreenImageLayout);
 								LinearLayout normalLayout = (LinearLayout) findViewById(R.id.normalLayout);
-								
+
 								if (normalLayout.getVisibility() == View.GONE) {
 									normalLayout.setVisibility(View.VISIBLE);
 									fullscreenImageLayout.setVisibility(View.GONE);
-									
+
 									mScreenshot = (ImageView) findViewById(R.id.screenshot);
 									mScreenshot.setOnClickListener(this);
 								} else {
 									normalLayout.setVisibility(View.GONE);
 									fullscreenImageLayout.setVisibility(View.VISIBLE);
-									
+
 									mScreenshot = (ImageView) findViewById(R.id.fullImage);
 									mScreenshot.setOnClickListener(this);
-									
+
 									if (mScreenshotImage.getIntrinsicWidth() > mScreenshotImage.getIntrinsicHeight()) {
 										Bitmap bmpOriginal = ((BitmapDrawable)mScreenshotImage).getBitmap();
 										Matrix matrix = new Matrix();
-								        matrix.postRotate(90);
+										matrix.postRotate(90);
 										Bitmap bmLandscape = Bitmap.createBitmap(bmpOriginal, 0, 0, bmpOriginal.getWidth(), bmpOriginal.getHeight(), matrix, true);
 										mScreenshot.setImageBitmap(bmLandscape);
 									} else {
 										mScreenshot.setImageDrawable(mScreenshotImage);
 									}
-							        
+
 									Animation myFadeInAnimation = AnimationUtils.loadAnimation(
 											DownloadBoard.this.getApplicationContext(), R.anim.fadein);
 									mScreenshot.startAnimation(myFadeInAnimation);
 								}
-								
+
 							}
 						});
-						
-						setProgressBarIndeterminateVisibility(false);
 					}
-				});
-		        return null;
-			} catch (IOException e) {
-				Log.e(TAG, "Error", e);
-				return null;
-			}
+
+					setProgressBarIndeterminateVisibility(false);
+				}
+			});
+			return null;
 		}
 	}
 

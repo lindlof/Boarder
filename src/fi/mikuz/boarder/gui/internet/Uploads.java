@@ -196,8 +196,8 @@ public class Uploads extends BoarderListActivity implements ConnectionListener, 
 				HashMap<String, String> sendList = getSendList(layout, board, phpOperation);
 				
 				// Simulate a board from web
+				sendList.put(InternetMenu.BOARD_ID_KEY, "-1");
 				sendList.put(InternetMenu.RATING_KEY, "0");
-				sendList.put(InternetMenu.BOARD_VERSION_KEY, "0");
 				sendList.put(InternetMenu.USERNAME_KEY, "Preview");
 				
 				JSONObject databaseValues = new JSONObject();
