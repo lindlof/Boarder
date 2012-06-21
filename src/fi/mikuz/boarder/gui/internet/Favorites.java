@@ -42,7 +42,7 @@ import fi.mikuz.boarder.util.TimeoutProgressDialog;
  * @author Jan Mikael Lindlöf
  */
 public class Favorites extends BoarderListActivity implements ConnectionListener, OnScrollListener {
-	private static final String TAG = "InternetFavorites";
+	private static final String TAG = Favorites.class.getSimpleName();
 	
 	private ArrayList<InternetVersionBoard> mList;
 	private ListView mListView;
@@ -60,7 +60,7 @@ public class Favorites extends BoarderListActivity implements ConnectionListener
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setTitle("Internet Uploads");
+		setTitle("Favorite Uploads");
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		setContentView(R.layout.internet_uploads_list);
 		

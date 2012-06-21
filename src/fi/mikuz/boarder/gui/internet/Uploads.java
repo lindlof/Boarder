@@ -51,7 +51,7 @@ import fi.mikuz.boarder.util.TimeoutProgressDialog;
  * @author Jan Mikael Lindlöf
  */
 public class Uploads extends BoarderListActivity implements ConnectionListener, OnScrollListener {
-	private static final String TAG = "InternetUploads";
+	private static final String TAG = Uploads.class.getSimpleName();
 	
 	private ArrayList<InternetFullBoard> mList;
 	private ListView mListView;
@@ -165,12 +165,12 @@ public class Uploads extends BoarderListActivity implements ConnectionListener, 
 		
 		
 		TextView wikiLink = (TextView) layout.findViewById(R.id.wikiLink);
-		wikiLink.setText("\n  Instructions here!\n\n");
+		wikiLink.setText("\n  Guide here!\n\n");
 		
 		wikiLink.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
             	Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
-						Uri.parse("https://github.com/Mikuz/Boarder/wiki/Uploading-tutorial"));
+						Uri.parse("https://github.com/Mikuz/Boarder/wiki/Uploading-guide"));
 				startActivity(browserIntent);
             }
         });
@@ -430,7 +430,7 @@ public class Uploads extends BoarderListActivity implements ConnectionListener, 
 	private void setListEmpty() {
 		InternetFullBoard board = new InternetFullBoard();
 		
-		board.setBoardName("Nothing here!");
+		board.setBoardName("Use the menu to upload");
 		board.setUploaderUsername("");
 		board.setRating("");
 		
