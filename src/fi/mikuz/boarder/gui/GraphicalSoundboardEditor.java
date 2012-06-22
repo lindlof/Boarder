@@ -139,6 +139,8 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 	EditText backgroundHeightInput;
 	float widthHeightScale;
 	
+	int mNullCanvasCount = 0;
+	
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -210,8 +212,6 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
         mGsbh = new GraphicalSoundboardHistory(GraphicalSoundboardEditor.this);
         mGsbh.createHistoryCheckpoint();
         
-        setContentView(new DrawingPanel(this));
-        
         File icon = new File(mSbDir, mBoardName + "/icon.png");
         if (icon.exists()) {
 			Bitmap bitmap = ImageDrawing.decodeFile(this.getApplicationContext(), icon);
@@ -219,6 +219,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
         	this.getActionBar().setLogo(drawable);
         }
         
+        mPanel = new DrawingPanel(this);
         ViewTreeObserver vto = mPanel.getViewTreeObserver();
         vto.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
             @Override
@@ -960,12 +961,6 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
     
     @Override
     protected void onDestroy() {
-    	if (mThread != null) {
-    		// Emergency thread shutdown if it isn't down yet
-    		Log.w(TAG, "SurfaceView didn't destroy surface properly");
-    		mThread.setRunning(false);
-            mThread = null;
-    	}
     	GraphicalSoundboard.unloadImages(mGsb);
     	super.onDestroy();
     }
@@ -2043,7 +2038,18 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
         public void onDraw(Canvas canvas) {
 			if (canvas == null) {
 				Log.w(TAG, "Got null canvas");
+				mNullCanvasCount++;
+				
+				// Drawing thread is still running while the activity is destroyed (surfaceCreated was probably called after surfaceDestroyed).
+				// Reproduce by killing the editor immediately after it is created.
+				// It's difficult to kill the thread properly while supporting different orientations and closing of screen.
+				if (mNullCanvasCount > 5) {
+			    	Log.e(TAG, "Drawing thread was not destroyed properly");
+			    	mThread.setRunning(false);
+			    	mThread = null;
+				}
 			} else {
+				mNullCanvasCount = 0;
 				super.dispatchDraw(canvas);
 				
 				canvas.drawColor(mGsb.getBackgroundColor());
