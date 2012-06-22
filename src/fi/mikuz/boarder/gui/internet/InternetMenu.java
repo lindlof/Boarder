@@ -359,11 +359,11 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 			if (mDbVersion < dbVersion) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(InternetMenu.this);
 				builder.setTitle("Old version");
-				builder.setMessage("You have an old version of the Boarder and it's not compatible with the Boarder database.\n\n" +
-						"Please upgrade.");
+				builder.setMessage("You have an old version of Boarder. Your version is not compatible with Boarder web interface.\n\n" +
+						"Please update.");
 				builder.setCancelable(false);
 				
-				builder.setPositiveButton("Upgrade", new DialogInterface.OnClickListener() {
+				builder.setPositiveButton("Update", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
 	    						Uri.parse(SoundboardMenu.mExtLinkMarket));
