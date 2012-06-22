@@ -264,55 +264,71 @@ public class FileProcessor {
 		});
 	}
 	
+	public static void renameBoard(String originalBoardName, String newBoardName) {
+		File oldLocation = new File(SoundboardMenu.mSbDir, originalBoardName);
+		File newLocation = new File(SoundboardMenu.mSbDir, newBoardName);
+		
+		oldLocation.renameTo(newLocation);
+		
+		try {
+			GraphicalSoundboardHolder holder = loadGraphicalSoundboardHolder(newBoardName);
+			changeBoardDirectoryReferences(holder, newBoardName, oldLocation, newLocation);
+		} catch (IOException e) {
+			throw new IllegalArgumentException("New board directory does not exist", e);
+		}
+	}
+	
 	public static void duplicateBoard(String originalBoardName) {
 		
 		String duplicateBoardName = null;
-		File targetLocation = null;
+		File newLocation = null;
 		
 		int i = 1;
 		while (true) {
 			StringBuffer duplicateBoardNameBuffer = new StringBuffer();
 			duplicateBoardNameBuffer.append("duplicate").append(i).append("-").append(originalBoardName);
-			targetLocation = new File(SoundboardMenu.mSbDir + "/" + duplicateBoardNameBuffer);
-			if (!targetLocation.exists()) {
+			newLocation = new File(SoundboardMenu.mSbDir + "/" + duplicateBoardNameBuffer);
+			if (!newLocation.exists()) {
 				duplicateBoardName = duplicateBoardNameBuffer.toString();
 				break;
 			}
 			i++;
 		}
 		
-		File sourceLocation = new File(SoundboardMenu.mSbDir + "/" + originalBoardName);
+		File oldLocation = new File(SoundboardMenu.mSbDir + "/" + originalBoardName);
 		
 		try {
-			copyDirectory(sourceLocation, targetLocation);
+			copyDirectory(oldLocation, newLocation);
 		} catch (IOException e) {
 			Log.v(TAG, "Unable to duplicate", e);
 		}
 		
-		// Convert all paths to point to the new directory
 		try {
 			GraphicalSoundboardHolder holder = loadGraphicalSoundboardHolder(duplicateBoardName);
-			List<GraphicalSoundboard> boardList = new ArrayList<GraphicalSoundboard>();
-			
-			for (GraphicalSoundboard board : holder.getBoardList()) {
-				board.setBackgroundImagePath(replaceBoardPath(board.getBackgroundImagePath(), sourceLocation, targetLocation));
-				List<GraphicalSound> soundList = new ArrayList<GraphicalSound>();
-				
-				for (GraphicalSound sound : board.getSoundList()) {
-					sound.setPath(replaceBoardPath(sound.getPath(), sourceLocation, targetLocation));
-					sound.setImagePath(replaceBoardPath(sound.getImagePath(), sourceLocation, targetLocation));
-					sound.setActiveImagePath(replaceBoardPath(sound.getActiveImagePath(), sourceLocation, targetLocation));
-					soundList.add(sound);
-				}
-				
-				boardList.add(board);
-			}
-			holder.setBoardList(boardList);
-			saveGraphicalSoundboardHolder(duplicateBoardName, holder);
-			
+			changeBoardDirectoryReferences(holder, duplicateBoardName, oldLocation, newLocation);
 		} catch (IOException e) {
-			Log.v(TAG, "Duplicate directory does not exist", e);
+			throw new IllegalArgumentException("Duplicate board directory does not exist", e);
 		}
+	}
+	
+	private static void changeBoardDirectoryReferences(GraphicalSoundboardHolder holder, String newBoardName, File oldLocation, File newLocation) throws IOException {
+		List<GraphicalSoundboard> boardList = new ArrayList<GraphicalSoundboard>();
+		
+		for (GraphicalSoundboard board : holder.getBoardList()) {
+			board.setBackgroundImagePath(replaceBoardPath(board.getBackgroundImagePath(), oldLocation, newLocation));
+			List<GraphicalSound> soundList = new ArrayList<GraphicalSound>();
+			
+			for (GraphicalSound sound : board.getSoundList()) {
+				sound.setPath(replaceBoardPath(sound.getPath(), oldLocation, newLocation));
+				sound.setImagePath(replaceBoardPath(sound.getImagePath(), oldLocation, newLocation));
+				sound.setActiveImagePath(replaceBoardPath(sound.getActiveImagePath(), oldLocation, newLocation));
+				soundList.add(sound);
+			}
+			
+			boardList.add(board);
+		}
+		holder.setBoardList(boardList);
+		saveGraphicalSoundboardHolder(newBoardName, holder);
 	}
 	
 	private static File replaceBoardPath(File file, File originalBoard, File newBoard) {

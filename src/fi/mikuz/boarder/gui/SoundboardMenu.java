@@ -692,11 +692,9 @@ public class SoundboardMenu extends BoarderListActivity {
     		  				inputText = inputText.substring(0, inputText.indexOf("\n"));
 		  				}
     		  			
-    		  			new File(mSbDir, selectionTitle).renameTo(
-    		  					new File(mSbDir, inputText));
+    		  			FileProcessor.renameBoard(selectionTitle, inputText);
     		  			
-    		  			mDbHelper.updateBoard(info.id, inputText, 
-    		  					selection.getInt(selection.getColumnIndexOrThrow(BoardsDbAdapter.KEY_ROWID)));
+    		  			mDbHelper.updateBoard(info.id, inputText, selection.getInt(selection.getColumnIndexOrThrow(BoardsDbAdapter.KEY_ROWID)));
     		  			initializeBoardUpdateThread();
     		  		}
     		  	});
