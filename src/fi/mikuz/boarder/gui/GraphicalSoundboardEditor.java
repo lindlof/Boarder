@@ -131,13 +131,15 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 	private File mSbDir = SoundboardMenu.mSbDir;
 	private String mBoardName = null;
 	
-	TextView soundImageWidthText;
-	TextView soundImageHeightText;
-	TextView backgroundWidthText;
-	TextView backgroundHeightText;
-	EditText backgroundWidthInput;
-	EditText backgroundHeightInput;
-	float widthHeightScale;
+	private TextView mSoundImageWidthText;
+	private TextView mSoundImageHeightText;
+	private EditText mSoundImageWidthInput;
+	private EditText mSoundImageHeightInput;
+	private TextView mBackgroundWidthText;
+	private TextView mBackgroundHeightText;
+	private EditText mBackgroundWidthInput;
+	private EditText mBackgroundHeightInput;
+	private float mWidthHeightScale;
 	
 	int mNullCanvasCount = 0;
 	
@@ -436,19 +438,19 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
             					}
                       	  	});
                       	  	
-                      	  	backgroundWidthText = (TextView) layout.findViewById(R.id.backgroundWidthText);
-                      	  	backgroundHeightText = (TextView) layout.findViewById(R.id.backgroundHeightText);
+                      	  	mBackgroundWidthText = (TextView) layout.findViewById(R.id.backgroundWidthText);
+                      	  	mBackgroundHeightText = (TextView) layout.findViewById(R.id.backgroundHeightText);
                       	  	
                       	  	if (mGsb.getBackgroundImage() != null) {
-	                      	  	backgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
-	            				backgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
+	                      	  	mBackgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
+	            				mBackgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
                       	  	}
                       	  	
-                      	  	backgroundWidthInput = (EditText) layout.findViewById(R.id.backgroundWidthInput);
-                      	  	backgroundWidthInput.setText(Float.toString(mGsb.getBackgroundWidth()));
+                      	  	mBackgroundWidthInput = (EditText) layout.findViewById(R.id.backgroundWidthInput);
+                      	  	mBackgroundWidthInput.setText(Float.toString(mGsb.getBackgroundWidth()));
                       	  	
-                      	  	backgroundHeightInput = (EditText) layout.findViewById(R.id.backgroundHeightInput);
-                    	  	backgroundHeightInput.setText(Float.toString(mGsb.getBackgroundHeight()));
+                      	  	mBackgroundHeightInput = (EditText) layout.findViewById(R.id.backgroundHeightInput);
+                    	  	mBackgroundHeightInput.setText(Float.toString(mGsb.getBackgroundHeight()));
 
                     	  	final CheckBox scaleWidthHeight = 
                     	  			(CheckBox) layout.findViewById(R.id.scaleWidthHeightCheckBox);
@@ -458,35 +460,35 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
                     	  		public void onClick(View v) {
                     	  			try {
                     	  				// Calculate a new scale
-		              	  				widthHeightScale = Float.valueOf(backgroundWidthInput.getText().toString()).floatValue() 
-		              	  									/ Float.valueOf(backgroundHeightInput.getText().toString()).floatValue();
+		              	  				mWidthHeightScale = Float.valueOf(mBackgroundWidthInput.getText().toString()).floatValue() 
+		              	  									/ Float.valueOf(mBackgroundHeightInput.getText().toString()).floatValue();
 		              	  			} catch(NumberFormatException nfe) {Log.e(TAG, "Unable to calculate width and height scale", nfe);}
                     	  		}
                     	  	});
-                    	  	widthHeightScale = mGsb.getBackgroundWidth() / mGsb.getBackgroundHeight();
+                    	  	mWidthHeightScale = mGsb.getBackgroundWidth() / mGsb.getBackgroundHeight();
 
-                      	  	backgroundWidthInput.setOnKeyListener(new OnKeyListener() {
+                      	  	mBackgroundWidthInput.setOnKeyListener(new OnKeyListener() {
             					public boolean onKey(View v, int keyCode, KeyEvent event) {
             						if (scaleWidthHeight.isChecked()) {
             							try {
             								float value = Float.valueOf(
-            										backgroundWidthInput.getText().toString()).floatValue();
-            								backgroundHeightInput.setText(
-            										Float.valueOf(value/widthHeightScale).toString());
+            										mBackgroundWidthInput.getText().toString()).floatValue();
+            								mBackgroundHeightInput.setText(
+            										Float.valueOf(value/mWidthHeightScale).toString());
             							} catch(NumberFormatException nfe) {}
             						}
             						return false;
             					}
                       	  	});
                       	  	
-                      	 	backgroundHeightInput.setOnKeyListener(new OnKeyListener() {
+                      	 	mBackgroundHeightInput.setOnKeyListener(new OnKeyListener() {
             					public boolean onKey(View v, int keyCode, KeyEvent event) {
             						if (scaleWidthHeight.isChecked()) {
             							try {
             								float value = Float.valueOf(
-            										backgroundHeightInput.getText().toString()).floatValue();
-            								backgroundWidthInput.setText(
-            										Float.valueOf(value*widthHeightScale).toString());
+            										mBackgroundHeightInput.getText().toString()).floatValue();
+            								mBackgroundWidthInput.setText(
+            										Float.valueOf(value*mWidthHeightScale).toString());
             							} catch(NumberFormatException nfe) {}
             						}
             						return false;
@@ -504,8 +506,8 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
             	          			mGsb.setUseBackgroundImage(checkUseBackgroundImage.isChecked());
             	          			
             	          			try {
-            	          				mGsb.setBackgroundWidth(Float.valueOf(backgroundWidthInput.getText().toString()).floatValue());
-            	          				mGsb.setBackgroundHeight(Float.valueOf(backgroundHeightInput.getText().toString()).floatValue());
+            	          				mGsb.setBackgroundWidth(Float.valueOf(mBackgroundWidthInput.getText().toString()).floatValue());
+            	          				mGsb.setBackgroundHeight(Float.valueOf(mBackgroundHeightInput.getText().toString()).floatValue());
             	          			} catch(NumberFormatException nfe) {
             	          				notifyIncorrectValue = true;
             	          			}
@@ -753,10 +755,10 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 					mGsb.setBackgroundY(0);
 					mGsbh.createHistoryCheckpoint();
 	        	}
-	        	backgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
-				backgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
-				backgroundWidthInput.setText(Float.toString(mGsb.getBackgroundWidth()));
-				backgroundHeightInput.setText(Float.toString(mGsb.getBackgroundHeight()));
+	        	mBackgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
+				mBackgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
+				mBackgroundWidthInput.setText(Float.toString(mGsb.getBackgroundWidth()));
+				mBackgroundHeightInput.setText(Float.toString(mGsb.getBackgroundHeight()));
 	        	break;
 	        
 	        case EXPLORE_SOUND_IMAGE:
@@ -767,8 +769,10 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 		        	mDragSound.setImagePath(image);
 		        	mDragSound.setImage(ImageDrawing.decodeFile(this.getApplicationContext(), mDragSound.getImagePath()));
 	        	}
-	        	soundImageWidthText.setText("Width (" + mDragSound.getImage().getWidth() + ")");
-				soundImageHeightText.setText("Height (" + mDragSound.getImage().getHeight() + ")");
+	        	mSoundImageWidthText.setText("Width (" + mDragSound.getImage().getWidth() + ")");
+				mSoundImageHeightText.setText("Height (" + mDragSound.getImage().getHeight() + ")");
+				mSoundImageWidthInput.setText(Float.toString(mDragSound.getImage().getWidth()));
+				mSoundImageHeightInput.setText(Float.toString(mDragSound.getImage().getHeight()));
 	        	break;
 	        	
 	        case EXPLORE_SOUND_ACTIVE_IMAGE:
@@ -1621,19 +1625,17 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				              	  		(CheckBox) layout.findViewById(R.id.showSoundImageCheckBox);
 				              	  	checkShowSoundImage.setChecked(mDragSound.getHideImageOrText() != GraphicalSound.HIDE_IMAGE);
 				              	  	
-				              	  	soundImageWidthText = (TextView) layout.findViewById(R.id.soundImageWidthText);
-				              	  	soundImageWidthText.setText("Width (" + mDragSound.getImage().getWidth() + ")");
+				              	  	mSoundImageWidthText = (TextView) layout.findViewById(R.id.soundImageWidthText);
+				              	  	mSoundImageWidthText.setText("Width (" + mDragSound.getImage().getWidth() + ")");
 				            	  	
-				            	  	soundImageHeightText = (TextView) layout.findViewById(R.id.soundImageHeightText);
-				            	  	soundImageHeightText.setText("Height (" + mDragSound.getImage().getHeight() + ")");
+				            	  	mSoundImageHeightText = (TextView) layout.findViewById(R.id.soundImageHeightText);
+				            	  	mSoundImageHeightText.setText("Height (" + mDragSound.getImage().getHeight() + ")");
 				              	  	
-				              	  	final EditText soundImageWidthInput = 
-				              	  		(EditText) layout.findViewById(R.id.soundImageWidthInput);
-				              	  	soundImageWidthInput.setText(Float.toString(mDragSound.getImageWidth()));  	
+				              	  	mSoundImageWidthInput = (EditText) layout.findViewById(R.id.soundImageWidthInput);
+				              	  	mSoundImageWidthInput.setText(Float.toString(mDragSound.getImageWidth()));  	
 				              	  	
-				              	  	final EditText soundImageHeightInput = 
-				              	  		(EditText) layout.findViewById(R.id.soundImageHeightInput);
-				              	  	soundImageHeightInput.setText(Float.toString(mDragSound.getImageHeight()));
+				              	  	mSoundImageHeightInput = (EditText) layout.findViewById(R.id.soundImageHeightInput);
+				              	  	mSoundImageHeightInput.setText(Float.toString(mDragSound.getImageHeight()));
 				              	  	
 
 				              	  	final CheckBox scaleWidthHeight = 
@@ -1644,31 +1646,31 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				              	  		public void onClick(View v) {
 				              	  			try {
 				              	  			// Calculate a new scale
-				              	  				widthHeightScale = Float.valueOf(soundImageWidthInput.getText().toString()).floatValue() 
-				              	  									/ Float.valueOf(soundImageHeightInput.getText().toString()).floatValue();
+				              	  				mWidthHeightScale = Float.valueOf(mSoundImageWidthInput.getText().toString()).floatValue() 
+				              	  									/ Float.valueOf(mSoundImageHeightInput.getText().toString()).floatValue();
 				              	  			} catch(NumberFormatException nfe) {Log.e(TAG, "Unable to calculate width and height scale", nfe);}
 				              	  		}
 				              	  	});
-				              	  	widthHeightScale = mDragSound.getImageWidth() / mDragSound.getImageHeight();
+				              	  	mWidthHeightScale = mDragSound.getImageWidth() / mDragSound.getImageHeight();
 
-				              	  	soundImageWidthInput.setOnKeyListener(new OnKeyListener() {
+				              	  	mSoundImageWidthInput.setOnKeyListener(new OnKeyListener() {
 				              	  		public boolean onKey(View v, int keyCode, KeyEvent event) {
 				              	  			if (scaleWidthHeight.isChecked()) {
 				              	  				try {
-				              	  					float value = Float.valueOf(soundImageWidthInput.getText().toString()).floatValue();
-				              	  					soundImageHeightInput.setText(Float.valueOf(value/widthHeightScale).toString());
+				              	  					float value = Float.valueOf(mSoundImageWidthInput.getText().toString()).floatValue();
+				              	  					mSoundImageHeightInput.setText(Float.valueOf(value/mWidthHeightScale).toString());
 				              	  				} catch(NumberFormatException nfe) {}
 				              	  			}
 				              	  			return false;
 				              	  		}
 				              	  	});
 				              	  	
-				              	  	soundImageHeightInput.setOnKeyListener(new OnKeyListener() {
+				              	  	mSoundImageHeightInput.setOnKeyListener(new OnKeyListener() {
 										public boolean onKey(View v, int keyCode, KeyEvent event) {
 											if (scaleWidthHeight.isChecked()) {
 												try {
-													float value = Float.valueOf(soundImageHeightInput.getText().toString()).floatValue();
-													soundImageWidthInput.setText(Float.valueOf(value*widthHeightScale).toString());
+													float value = Float.valueOf(mSoundImageHeightInput.getText().toString()).floatValue();
+													mSoundImageWidthInput.setText(Float.valueOf(value*mWidthHeightScale).toString());
 												} catch(NumberFormatException nfe) {}
 											}
 											return false;
@@ -1678,9 +1680,9 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				              	  	final Button revertSizeButton = (Button) layout.findViewById(R.id.revertImageSizeButton);
 				              	  	revertSizeButton.setOnClickListener(new OnClickListener() {
 				              	  		public void onClick(View v) {
-				              	  			soundImageWidthInput.setText(Float.valueOf(mDragSound.getImageWidth()).toString());
-				              	  			soundImageHeightInput.setText(Float.valueOf(mDragSound.getImageHeight()).toString());
-				              	  			widthHeightScale = mDragSound.getImageWidth() / mDragSound.getImageHeight();
+				              	  			mSoundImageWidthInput.setText(Float.valueOf(mDragSound.getImageWidth()).toString());
+				              	  			mSoundImageHeightInput.setText(Float.valueOf(mDragSound.getImageHeight()).toString());
+				              	  			mWidthHeightScale = mDragSound.getImageWidth() / mDragSound.getImageHeight();
 				              	  		}
 				              	  	});
 				              	  	
@@ -1694,8 +1696,15 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				              	  	final Button resetSoundImageButton = (Button) layout.findViewById(R.id.resetSoundImageButton);
 				              	  	resetSoundImageButton.setOnClickListener(new OnClickListener() {
 				    					public void onClick(View v) {
-				    						mDragSound.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.sound));
+				    						Bitmap defaultSound = BitmapFactory.decodeResource(getResources(), R.drawable.sound);
+				    						String soundWidth = Integer.toString(defaultSound.getWidth());
+				    						String soundHeight = Integer.toString(defaultSound.getHeight());
+				    						mDragSound.setImage(defaultSound);
 				    						mDragSound.setImagePath(null);
+				    						mSoundImageWidthInput.setText(soundWidth);
+				              	  			mSoundImageHeightInput.setText(soundHeight);
+				              	  			mSoundImageWidthText.setText("Width (" + soundWidth + ")");
+				              	  			mSoundImageHeightText.setText("Height (" + soundHeight + ")");
 				    					}
 				              	  	});
 				              	  	
@@ -1731,9 +1740,9 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				    	          			
 				    	          			try {
 				    	          				mDragSound.setImageWidth(Float.valueOf(
-				    	          						soundImageWidthInput.getText().toString()).floatValue());
+				    	          						mSoundImageWidthInput.getText().toString()).floatValue());
 				    	          				mDragSound.setImageHeight(Float.valueOf(
-				    	          						soundImageHeightInput.getText().toString()).floatValue());	
+				    	          						mSoundImageHeightInput.getText().toString()).floatValue());	
 				    	          			} catch(NumberFormatException nfe) {
 				    	          				notifyIncorrectValue = true;
 				    	          			}
