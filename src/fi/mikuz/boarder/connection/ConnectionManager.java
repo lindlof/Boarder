@@ -23,6 +23,8 @@ import fi.mikuz.boarder.gui.SoundboardMenu;
 import fi.mikuz.boarder.util.GlobalSettings;
 
 import android.os.Handler;
+import android.text.Html;
+import android.text.Spanned;
 import android.util.Log;
 
 /**
@@ -72,7 +74,7 @@ public class ConnectionManager {
 						mHandler.post(connectionSuccessful);
 					} catch(JSONException e) {
 						Log.e(TAG, "Couldn't convert to JSON object", e);
-						connectionErrorResponse = new ConnectionErrorResponse(result, url);
+						connectionErrorResponse = new ConnectionErrorResponse(Html.fromHtml(result).toString(), url);
 						mHandler.post(connectionError);
 					}
 
