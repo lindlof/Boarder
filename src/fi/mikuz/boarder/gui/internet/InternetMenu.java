@@ -41,7 +41,7 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 public class InternetMenu extends BoarderActivity implements ConnectionListener {
     private static final String TAG = "InternetMenu";
     
-    private static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://www.mikuz.org/php/boarder_test/" : "http://www.mikuz.org/php/boarder/";
+    private static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://www.mikuz.org/php/boarder_test/" : "http://boarder.mikuz.org/";
     static final String mGetSessionValidURL = InternetMenu.phpRepURL + "getSessionInfo.php";
     static final String mGetBoardsURL = InternetMenu.phpRepURL + "getBoards.php";
     static final String mGetBoardURL = InternetMenu.phpRepURL + "getBoard.php";
@@ -62,7 +62,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
     static final String mGetCommentsURL = InternetMenu.phpRepURL + "getComments.php";
     static final String mDeleteUploadedBoardURL = InternetMenu.phpRepURL + "deleteUploadedBoard.php";
     static final String mDonationNotificationURL = InternetMenu.phpRepURL + "donationNotification.php";
-    static final String mGetDatabaseVersionURL = InternetMenu.phpRepURL + "getDatabaseVersion.php";
+    static final String mGetServiceVersionURL = InternetMenu.phpRepURL + "getServiceVersion.php";
     
     public static final String BOARD_ID_KEY = "board_id";
     public static final String BOARD_VERSION_KEY = "board_version";
@@ -112,7 +112,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
     private boolean mSessionValidityChecked = false;
     private boolean mDatabaseVersionChecked = false;
     
-    private static final int mDbVersion = 3;
+    private static final int mServiceVersion = 3; // TODO version control variables probably don't belong here
     private static final int mTosVersion = 2;
     
     private final Handler mHandler = new Handler();
@@ -341,7 +341,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
     }
     
     private void getVersionInfo() {
-    	new ConnectionManager(this, mGetDatabaseVersionURL, null);
+    	new ConnectionManager(this, mGetServiceVersionURL, null);
     }
     
     private void checkSessionValidity() {
@@ -352,14 +352,26 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 	public void onConnectionSuccessful(ConnectionSuccessfulResponse connectionSuccessfulResponse) throws JSONException {
 		ConnectionUtils.connectionSuccessful(InternetMenu.this, connectionSuccessfulResponse);
 		
-		if (ConnectionUtils.checkConnectionId(connectionSuccessfulResponse, InternetMenu.mGetDatabaseVersionURL)) {
+		if (ConnectionUtils.checkConnectionId(connectionSuccessfulResponse, InternetMenu.mGetServiceVersionURL)) {
 			mDatabaseVersionChecked = true;
 			
-			int dbVersion = connectionSuccessfulResponse.getJSONObject().getInt(ConnectionUtils.returnData);
-			if (mDbVersion < dbVersion) {
+			int serviceVersion = connectionSuccessfulResponse.getJSONObject().getInt(ConnectionUtils.returnData);
+			if (serviceVersion == -1) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(InternetMenu.this);
+				builder.setTitle("Maintenance");
+				builder.setMessage("Boarder web service is under maintenance. Please try again later.");
+				builder.setCancelable(false);
+				builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+	        		public void onClick(DialogInterface dialog, int whichButton) {
+	        			InternetMenu.this.finish();
+	        		}
+	        	});
+	        	
+	        	builder.show();
+			} else if (mServiceVersion < serviceVersion) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(InternetMenu.this);
 				builder.setTitle("Old version");
-				builder.setMessage("You have an old version of Boarder. Your version is not compatible with Boarder web interface.\n\n" +
+				builder.setMessage("You have an old version of Boarder. Your version is not compatible with Boarder web service.\n\n" +
 						"Please update.");
 				builder.setCancelable(false);
 				
@@ -399,7 +411,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 	public void onConnectionError(ConnectionErrorResponse connectionErrorResponse) {
 		ConnectionUtils.connectionError(this, connectionErrorResponse, TAG);
 		
-		if (ConnectionUtils.checkConnectionId(connectionErrorResponse, InternetMenu.mGetDatabaseVersionURL)) {
+		if (ConnectionUtils.checkConnectionId(connectionErrorResponse, InternetMenu.mGetServiceVersionURL)) {
 			mHandler.postDelayed(new Runnable() {           
 				public void run() {
 					if (mInternetAlive) {
