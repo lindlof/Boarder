@@ -112,7 +112,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
     private boolean mSessionValidityChecked = false;
     private boolean mDatabaseVersionChecked = false;
     
-    private static final int mServiceVersion = 3; // TODO version control variables probably don't belong here
+    private static final int mServiceVersion = 4; // TODO version control variables probably don't belong here
     private static final int mTosVersion = 2;
     
     private final Handler mHandler = new Handler();
@@ -491,7 +491,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 		return username;
 	}
 	
-	static void updateAaccountMessage(String accountMessage) {
+	static void updateAaccountMessage(String accountMessage) { // TODO crashes when statically called from another activity if this activity is killed by Android
 		mAccountMessage.setText(accountMessage);
 	}
 }
