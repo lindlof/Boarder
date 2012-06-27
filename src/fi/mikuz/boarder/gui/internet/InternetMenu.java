@@ -113,7 +113,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
     private boolean mDatabaseVersionChecked = false;
     
     private static final int mServiceVersion = 4; // TODO version control variables probably don't belong here
-    private static final int mTosVersion = 2;
+    private static final int mTosVersion = 3;
     
     private final Handler mHandler = new Handler();
 
@@ -172,10 +172,11 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
         			"There are some terms you must agree to and follow to get things rolling smoothly;\n\n" +
         			"You agree to always follow applicable laws when using Boarder.\n\n" +
         			"Pornographic and other adult only material is not allowed.\n\n" +
+        			"You must be at least 13 years old to register to the Boarder Internet service.\n\n" +
         			"You may never transmit anything or communicate a way that can be deemed offensive.\n\n" +
-        			"Don't make cheap copies of boards.\n\n" +
+        			"Don't make cheap copies of another users boards.\n\n" +
         			"We can use material(s) publicly shared by you as promotional material.\n\n" +
-        			"We will suspend your Boarder releated accounts and/or remove your material from the Boarder services if you behave badly.");
+        			"We will suspend your Boarder releated accounts and/or remove your material from the Boarder service if you behave badly.");
         	
         	builder.setPositiveButton("Agree", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int whichButton) {
