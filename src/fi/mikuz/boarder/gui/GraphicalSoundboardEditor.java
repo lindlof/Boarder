@@ -131,10 +131,13 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 	private File mSbDir = SoundboardMenu.mSbDir;
 	private String mBoardName = null;
 	
+	private AlertDialog mSoundImageDialog;
 	private TextView mSoundImageWidthText;
 	private TextView mSoundImageHeightText;
 	private EditText mSoundImageWidthInput;
 	private EditText mSoundImageHeightInput;
+	
+	private AlertDialog mBackgroundDialog;
 	private TextView mBackgroundWidthText;
 	private TextView mBackgroundHeightText;
 	private EditText mBackgroundWidthInput;
@@ -525,7 +528,14 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
             	          	    }
             	          	});
             	          	
-            	          	builder.show();
+            	          	builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+								public void onCancel(DialogInterface dialog) {
+									mBackgroundDialog = null;
+								}
+							});
+            	          	
+            	          	mBackgroundDialog = builder.create();
+            	          	mBackgroundDialog.show();
             	    	} else if (item == 2) {
             	    		AlertDialog.Builder resetBuilder = new AlertDialog.Builder(
 		                			GraphicalSoundboardEditor.this);
@@ -755,10 +765,12 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 					mGsb.setBackgroundY(0);
 					mGsbh.createHistoryCheckpoint();
 	        	}
-	        	mBackgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
-				mBackgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
-				mBackgroundWidthInput.setText(Float.toString(mGsb.getBackgroundWidth()));
-				mBackgroundHeightInput.setText(Float.toString(mGsb.getBackgroundHeight()));
+	        	if (mBackgroundDialog != null) {
+	        		mBackgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
+					mBackgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
+					mBackgroundWidthInput.setText(Float.toString(mGsb.getBackgroundWidth()));
+					mBackgroundHeightInput.setText(Float.toString(mGsb.getBackgroundHeight()));
+	        	}
 	        	break;
 	        
 	        case EXPLORE_SOUND_IMAGE:
@@ -769,10 +781,12 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 		        	mDragSound.setImagePath(image);
 		        	mDragSound.setImage(ImageDrawing.decodeFile(this.getApplicationContext(), mDragSound.getImagePath()));
 	        	}
-	        	mSoundImageWidthText.setText("Width (" + mDragSound.getImage().getWidth() + ")");
-				mSoundImageHeightText.setText("Height (" + mDragSound.getImage().getHeight() + ")");
-				mSoundImageWidthInput.setText(Float.toString(mDragSound.getImage().getWidth()));
-				mSoundImageHeightInput.setText(Float.toString(mDragSound.getImage().getHeight()));
+	        	if (mSoundImageDialog != null) {
+	        		mSoundImageWidthText.setText("Width (" + mDragSound.getImage().getWidth() + ")");
+					mSoundImageHeightText.setText("Height (" + mDragSound.getImage().getHeight() + ")");
+					mSoundImageWidthInput.setText(Float.toString(mDragSound.getImage().getWidth()));
+					mSoundImageHeightInput.setText(Float.toString(mDragSound.getImage().getHeight()));
+	        	}
 	        	break;
 	        	
 	        case EXPLORE_SOUND_ACTIVE_IMAGE:
@@ -973,7 +987,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
     	if (mBoardName != null) {
     		try {
     			GraphicalSoundboard gsb = GraphicalSoundboard.copy(mGsb);
-    			if (mDragSound != null && mDrawDragSound == true) gsb.getSoundList().add(mDragSound);
+    			if (mDragSound != null && mDrawDragSound == true) gsb.getSoundList().add(mDragSound); // Sound is being dragged
         		GraphicalSoundboardProvider.saveBoard(mBoardName, gsb);
         		Log.v(TAG, "Board " + mBoardName + " saved");
     		} catch (IOException e) {
@@ -1760,8 +1774,15 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				    	          	    }
 				    	          	});
 				    	          	
-				    	          	builder.show();
+				    	          	builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+										@Override
+										public void onCancel(DialogInterface dialog) {
+											mSoundImageDialog = null;
+										}
+									});
 				    	          	
+				    	          	mSoundImageDialog = builder.create();
+				    	          	mSoundImageDialog.show();
 				    	    	} else if (item == 3) {
 				    	    		
 				    	    		LayoutInflater inflater = (LayoutInflater) GraphicalSoundboardEditor.this.
