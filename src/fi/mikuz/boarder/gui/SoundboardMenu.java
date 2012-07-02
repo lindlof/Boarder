@@ -61,6 +61,7 @@ import fi.mikuz.boarder.gui.internet.InternetMenu;
 import fi.mikuz.boarder.service.TogglePlayPauseService;
 import fi.mikuz.boarder.util.ApiKeyLoader;
 import fi.mikuz.boarder.util.BoardLocal;
+import fi.mikuz.boarder.util.ExternalIntent;
 import fi.mikuz.boarder.util.FileProcessor;
 import fi.mikuz.boarder.util.GlobalSettings;
 import fi.mikuz.boarder.util.IconUtils;
@@ -75,7 +76,7 @@ import fi.mikuz.boarder.util.editor.ImageDrawing;
  * @author Jan Mikael Lindlöf
  */
 public class SoundboardMenu extends BoarderListActivity {
-	public static final String TAG = "SoundboardMenu";
+	public static final String TAG = SoundboardMenu.class.getSimpleName();
 	
 	public static final boolean mDevelopmentMode = false; //FIXME for release
 	
@@ -107,10 +108,6 @@ public class SoundboardMenu extends BoarderListActivity {
 	public static final String mBottomBlackBarSoundFilePath = "/Boarder/functions/bottomBlackBar";
 	public static final String mLeftBlackBarSoundFilePath = "/Boarder/functions/leftBlackBar";
 	public static final String mRightBlackBarSoundFilePath = "/Boarder/functions/rightBlackBar";
-	
-	public static final String mExtLinkDonate = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8S2QXHLP2G6YS";
-	public static final String mExtLinkXDA = "http://forum.xda-developers.com/showthread.php?p=23224859#post23224859";
-	public static final String mExtLinkMarket = "market://details?id=fi.mikuz.boarder";
 	
     private final static int mNotificationId = 0; 
 	
@@ -586,9 +583,7 @@ public class SoundboardMenu extends BoarderListActivity {
             	return true;
             	
             case R.id.xda:
-            	Intent browserXdaIntent = new Intent(Intent.ACTION_VIEW, 
-            			Uri.parse(mExtLinkXDA));
-            	startActivity(browserXdaIntent);
+            	ExternalIntent.openXdaForums(this);
             	return true;
             	
             case R.id.menu_email:
@@ -606,15 +601,11 @@ public class SoundboardMenu extends BoarderListActivity {
             	return true;
             	
             case R.id.menu_donate:
-            	Intent browserDonateIntent = new Intent(Intent.ACTION_VIEW, 
-            			Uri.parse(mExtLinkDonate));
-            	startActivity(browserDonateIntent);
+            	ExternalIntent.openDonate(this);
             	return true;
             	
             case R.id.menu_rate:
-            	Intent browserRateIntent = new Intent(Intent.ACTION_VIEW, 
-            			Uri.parse(mExtLinkMarket));
-            	startActivity(browserRateIntent);
+            	ExternalIntent.openGooglePlay(this);
             	return true;
         }
 

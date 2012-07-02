@@ -54,6 +54,7 @@ import fi.mikuz.boarder.gui.checkboxList.ExtendedCheckBox;
 import fi.mikuz.boarder.gui.checkboxList.ExtendedCheckBoxListAdapter;
 import fi.mikuz.boarder.util.ApiKeyLoader;
 import fi.mikuz.boarder.util.DropboxCacheUtils;
+import fi.mikuz.boarder.util.ExternalIntent;
 
 
 /**
@@ -579,7 +580,7 @@ public class DropboxMenu extends BoarderListActivity {
             					String shareString = 
             							"I want to share some cool soundboards to you!\n\n" +
             							"To use the boards you need to have Boarder for Android:\n" +
-            							SoundboardMenu.mExtLinkMarket + "\n\n" +
+            							ExternalIntent.mExtLinkMarket + "\n\n" +
             							"Here are the boards:\n";
 
             					for (String board : boards) {

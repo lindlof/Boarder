@@ -30,6 +30,7 @@ import fi.mikuz.boarder.connection.ConnectionManager;
 import fi.mikuz.boarder.connection.ConnectionSuccessfulResponse;
 import fi.mikuz.boarder.connection.ConnectionUtils;
 import fi.mikuz.boarder.gui.SoundboardMenu;
+import fi.mikuz.boarder.util.ExternalIntent;
 import fi.mikuz.boarder.util.TimeoutProgressDialog;
 import fi.mikuz.boarder.util.dbadapter.GlobalVariablesDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
@@ -378,9 +379,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 				
 				builder.setPositiveButton("Update", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
-						Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
-	    						Uri.parse(SoundboardMenu.mExtLinkMarket));
-	    				startActivity(browserIntent);
+						ExternalIntent.openGooglePlay(InternetMenu.this);
 	    				InternetMenu.this.finish();
 					}
 	        	});
@@ -458,9 +457,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 		
 		donationImage.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-            	Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
-						Uri.parse(SoundboardMenu.mExtLinkDonate));
-				startActivity(browserIntent);
+            	ExternalIntent.openDonate(InternetMenu.this);
             }
         });
 		
@@ -470,9 +467,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 		
 		rateImage.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-            	Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
-						Uri.parse(SoundboardMenu.mExtLinkMarket));
-				startActivity(browserIntent);
+            	ExternalIntent.openGooglePlay(InternetMenu.this);
             }
         });
 		
