@@ -10,7 +10,7 @@ import android.widget.Toast;
 public abstract class ExternalIntent {
 	private static final String TAG = ExternalIntent.class.getSimpleName();
 	
-	private static final String mExtLinkDonate = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8S2QXHLP2G6YS";
+	private static final String mExtLinkDonate = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=ZY98RYEQTS7TY";
 	private static final String mExtLinkXDA = "http://forum.xda-developers.com/showthread.php?p=23224859#post23224859";
 	public static final String mExtLinkMarket = "market://details?id=fi.mikuz.boarder";
 	
