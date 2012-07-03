@@ -228,7 +228,7 @@ public class Login extends BoarderActivity implements ConnectionListener {
 		Intent intent = new Intent();
 		intent.putExtras(bundle);
 		
-		InternetMenu.updateAaccountMessage("");
+		bundle.putString(InternetMenu.ACCOUNT_MESSAGE_KEY, "");
 		setResult(RESULT_OK, intent);
 		try {
 			finish();
@@ -259,8 +259,6 @@ public class Login extends BoarderActivity implements ConnectionListener {
 			String userId = connectionSuccessfulResponse.getJSONObject().getString(InternetMenu.USER_ID_KEY);
 			String accountMessage = connectionSuccessfulResponse.getJSONObject().getString(InternetMenu.ACCOUNT_MESSAGE_KEY);
 			
-			InternetMenu.updateAaccountMessage(accountMessage);
-			
 			if (mRememberSession) {
 				mDbHelper.createLogin(InternetMenu.USER_ID_KEY, userId);
 				mDbHelper.createLogin(InternetMenu.SESSION_TOKEN_KEY, sessionToken);
@@ -276,6 +274,7 @@ public class Login extends BoarderActivity implements ConnectionListener {
 			
 			Bundle bundle = new Bundle();
 			bundle.putSerializable(InternetMenu.LOGIN_KEY, mReturnSession);
+			bundle.putString(InternetMenu.ACCOUNT_MESSAGE_KEY, accountMessage);
 			
 			Intent intent = new Intent();
 			intent.putExtras(bundle);

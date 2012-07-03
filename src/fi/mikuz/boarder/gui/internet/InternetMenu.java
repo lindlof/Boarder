@@ -305,6 +305,9 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 		        	} else {
 		        		setLoggedInView();
 		        	}
+		        	
+		        	String accountMessage = extras.getString(ACCOUNT_MESSAGE_KEY);
+		        	updateAccountMessage(accountMessage);
 	        	}
 	        	break;
         }
@@ -400,7 +403,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 				startLogin();
 			} else {
 				String accountMessage = connectionSuccessfulResponse.getJSONObject().getString(InternetMenu.ACCOUNT_MESSAGE_KEY);
-				InternetMenu.updateAaccountMessage(accountMessage);
+				updateAccountMessage(accountMessage);
 			}
 		}
 		
@@ -487,7 +490,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 		return username;
 	}
 	
-	static void updateAaccountMessage(String accountMessage) { // TODO crashes when statically called from another activity if this activity is killed by Android
+	private void updateAccountMessage(String accountMessage) {
 		mAccountMessage.setText(accountMessage);
 	}
 }
