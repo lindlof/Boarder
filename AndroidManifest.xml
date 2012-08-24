@@ -45,7 +45,8 @@
         
 		<activity android:name=".gui.SoundboardEditor" />
 		<activity android:name=".gui.Introduction" />
-		<activity android:name=".gui.GraphicalSoundboardEditor" />
+		<activity android:name=".gui.BoardEditor" 
+		    android:configChanges="orientation|keyboardHidden|screenSize" />
 		<activity android:name=".gui.FileExplorer" />
 		<activity android:name=".gui.ColorChanger" />
 		<activity android:name=".gui.internet.InternetMenu"

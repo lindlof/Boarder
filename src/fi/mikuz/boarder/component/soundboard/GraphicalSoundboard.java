@@ -8,8 +8,10 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 
+import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
+import fi.mikuz.boarder.util.XStreamUtil;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
 
 /**
@@ -24,7 +26,7 @@ public class GraphicalSoundboard {
 	
 	private ArrayList<GraphicalSound> soundList;
 	
-	public static final int SCREEN_ORIENTATION_PORTAIT = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+	public static final int SCREEN_ORIENTATION_PORTRAIT = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 	public static final int SCREEN_ORIENTATION_LANDSCAPE = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
 	private int screenOrientation;
 	
@@ -46,8 +48,17 @@ public class GraphicalSoundboard {
 	
 	private int screenHeight;
 	private int screenWidth;
+	
+	public GraphicalSoundboard(int orientation) {
+		init();
+		screenOrientation = orientation;
+	}
 
 	public GraphicalSoundboard() {
+		init();
+	}
+	
+	private void init() {
 		id = 0;
 		version = 1;
 		soundList = new ArrayList<GraphicalSound>();
@@ -64,7 +75,7 @@ public class GraphicalSoundboard {
 		autoArrange = false;
 		autoArrangeColumns = 3;
 		autoArrangeRows = 5;
-		screenOrientation = SCREEN_ORIENTATION_PORTAIT;
+		screenOrientation = SCREEN_ORIENTATION_PORTRAIT;
 		screenHeight = 0;
 		screenWidth = 0;
 	}
@@ -93,6 +104,8 @@ public class GraphicalSoundboard {
 			gsbSoundList.add((GraphicalSound)sound.clone());
 		}
 		
+		gsb.setId(tempGsb.getId());
+		gsb.setVersion(tempGsb.getVersion());
 		gsb.setSoundList(gsbSoundList);
 		gsb.setPlaySimultaneously(tempGsb.getPlaySimultaneously());
 		gsb.setBoardVolume(tempGsb.getBoardVolume());
@@ -110,6 +123,11 @@ public class GraphicalSoundboard {
 		gsb.setScreenOrientation(tempGsb.getScreenOrientation());
 		gsb.setScreenHeight(tempGsb.getScreenHeight());
 		gsb.setScreenWidth(tempGsb.getScreenWidth());
+		
+//		GraphicalSoundboard.unloadImages(tempGsb);
+//		XStream xstream = XStreamUtil.graphicalBoardXStream();
+//		String serializedGsb = xstream.toXML(tempGsb);
+//		GraphicalSoundboard gsb = (GraphicalSoundboard) xstream.fromXML(serializedGsb);
 		
 		return gsb;
 	}
@@ -150,6 +168,29 @@ public class GraphicalSoundboard {
 	}
 	
 	
+	public static String getOrientationName(int screenOrientation) {
+		String orientationName = null;
+		if (screenOrientation == GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT) {
+			orientationName = "portrait";
+		} else if (screenOrientation == GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE) {
+			orientationName = "landscape";
+		}
+		return orientationName;
+	}
+	public static int getOppositeOrientation(int screenOrientation) {
+		int oppositeOrientation = -1;
+		if (screenOrientation == GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT) {
+			oppositeOrientation = GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE;
+		} else if (screenOrientation == GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE) {
+			oppositeOrientation = GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT;
+		}
+		return oppositeOrientation;
+	}
+	public static String getOppositeOrientationName(int screenOrientation) {
+		int oppositeOrientation = getOppositeOrientation(screenOrientation);
+		String oppositeOrientationName = getOrientationName(oppositeOrientation);
+		return oppositeOrientationName;
+	}
 	
 	public int getScreenOrientation() {
 		return screenOrientation;

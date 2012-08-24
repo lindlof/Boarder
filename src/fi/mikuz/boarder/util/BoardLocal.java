@@ -23,13 +23,13 @@ public class BoardLocal {
 	public static int testIfBoardIsLocal(String boardName) throws IOException {
 		
 		File boardDir = new File(SoundboardMenu.mSbDir, boardName);
+		int soundlistSizes = 0;
 		
 		try {
 			// No failsafes, return red if error occurs
 			XStream xstream = XStreamUtil.graphicalBoardXStream();
 			GraphicalSoundboardHolder boardHolder = (GraphicalSoundboardHolder) xstream.fromXML(new File(boardDir + "/graphicalBoard"));
 			
-			// TODO fails for multiple boards
 			for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
 				
 				if (gsb.getBackgroundImagePath() != null) {
@@ -37,7 +37,7 @@ public class BoardLocal {
 					else if (!gsb.getBackgroundImagePath().getAbsolutePath().contains(boardDir.getAbsolutePath())) return BoardsDbAdapter.LOCAL_YELLOW;
 				}
 				
-				if (gsb.getSoundList().size() == 0) return BoardsDbAdapter.LOCAL_WHITE;
+				soundlistSizes = soundlistSizes + gsb.getSoundList().size();
 				
 				for (GraphicalSound sound : gsb.getSoundList()) {
 					if (sound.getPath() != null) {
@@ -59,6 +59,7 @@ public class BoardLocal {
 				
 			}
 			
+			if (soundlistSizes < 1) return BoardsDbAdapter.LOCAL_WHITE;
 			return BoardsDbAdapter.LOCAL_GREEN;
 		} catch (Exception e) {
 			// Do not crash here, just return red

@@ -14,6 +14,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -37,6 +39,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -52,6 +55,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bugsense.trace.BugSenseHandler;
 import com.thoughtworks.xstream.XStream;
 
 import fi.mikuz.boarder.R;
@@ -60,12 +64,14 @@ import fi.mikuz.boarder.component.Slot;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHistory;
+import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
 import fi.mikuz.boarder.util.AutoArrange;
 import fi.mikuz.boarder.util.FileProcessor;
 import fi.mikuz.boarder.util.IconUtils;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.XStreamUtil;
 import fi.mikuz.boarder.util.dbadapter.BoardsDbAdapter;
+import fi.mikuz.boarder.util.editor.EditorOrientation;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
@@ -74,11 +80,13 @@ import fi.mikuz.boarder.util.editor.SoundNameDrawing;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy god object
+public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private String TAG = "GraphicalSoundboardEditor";
 	
-	public GraphicalSoundboard mGsb;
+	private static EditorOrientation editorOrientation;
 	
+	public GraphicalSoundboard mGsb;
+	GraphicalSoundboardProvider mGsbp;
 	private GraphicalSoundboardHistory mGsbh;
 	
 	private static final int LISTEN_BOARD = 0;
@@ -118,7 +126,9 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 	private Menu mMenu;
 	private DrawingPanel mPanel;
 	boolean mCanvasInvalidated = false;
+	
 	boolean mPanelInitialized = false;
+	AlertDialog mResolutionAlert;
 	
 	private boolean mMoveBackground = false;
 	private float mBackgroundLeftDistance = 0;
@@ -153,11 +163,11 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
         
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
-			
 			mBoardName = extras.getString(BoardsDbAdapter.KEY_TITLE);
 			setTitle(mBoardName);
 			
-			loadBoard(GraphicalSoundboardProvider.getBoard(mBoardName, GraphicalSoundboard.SCREEN_ORIENTATION_PORTAIT));
+			mGsbp = new GraphicalSoundboardProvider(mBoardName);
+			initEditorBoard();
 			
 			if (mGsb.getSoundList().isEmpty()) {
 				mMode = EDIT_BOARD;
@@ -186,6 +196,9 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 		  					mBoardName = inputText;
 		  				}
 		  				
+		  				mGsbp = new GraphicalSoundboardProvider(mBoardName);
+		  				initEditorBoard();
+		  				
 		  				setTitle(mBoardName);
 		  				save();
 		  		}
@@ -212,9 +225,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
         mSoundImagePaint.setAntiAlias(true);
         mSoundImagePaint.setTextAlign(Align.LEFT);
         
-        setRequestedOrientation(mGsb.getScreenOrientation());
-        
-        mGsbh = new GraphicalSoundboardHistory(GraphicalSoundboardEditor.this);
+        mGsbh = new GraphicalSoundboardHistory(BoardEditor.this);
         mGsbh.createHistoryCheckpoint();
         
         File icon = new File(mSbDir, mBoardName + "/icon.png");
@@ -235,6 +246,25 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
             	}
             }
         });
+	}
+	
+	public void initEditorBoard() {
+		int rotation = getWindowManager().getDefaultDisplay().getRotation();
+		GraphicalSoundboard newGsb = mGsbp.getBoardForRotation(rotation);
+		editorOrientation = new EditorOrientation();
+		editorOrientation.setCurrentOrientation(rotation);
+		
+		if (!mGsbp.orientationChangeAllowed()) {
+			if (newGsb.getScreenOrientation() == GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT) {
+				this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+			} else if (newGsb.getScreenOrientation() == GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE) {
+				this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+			} else {
+				Log.wtf(TAG, "Unknown screen orientation");
+			}
+		}
+			
+		loadBoard(newGsb);
 	}
 	
 	@Override
@@ -332,12 +362,12 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
             	
             	final CharSequence[] items = {"Sound", "Background", "Icon", "Screen orientation", "Auto-arrange", "Reset position"};
 
-            	AlertDialog.Builder setAsBuilder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+            	AlertDialog.Builder setAsBuilder = new AlertDialog.Builder(BoardEditor.this);
             	setAsBuilder.setTitle("Board settings");
             	setAsBuilder.setItems(items, new DialogInterface.OnClickListener() {
             	    public void onClick(DialogInterface dialog, int item) {
             	    	if (item == 0) {
-            	    		LayoutInflater inflater = (LayoutInflater) GraphicalSoundboardEditor.this.
+            	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
             	    			getSystemService(LAYOUT_INFLATER_SERVICE);
                         	View layout = inflater.inflate(R.layout.graphical_soundboard_editor_alert_board_sound_settings,
                         	    (ViewGroup) findViewById(R.id.alert_settings_root));
@@ -349,7 +379,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
                       	  	final EditText boardVolumeInput = (EditText) layout.findViewById(R.id.boardVolumeInput);
                   	  			boardVolumeInput.setText(mGsb.getBoardVolume()*100 + "%");
                   	  			
-                  	  		AlertDialog.Builder builder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+                  	  		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
                       	  	builder.setView(layout);
                       	  	builder.setTitle("Board settings");
                   	  	
@@ -394,7 +424,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
             	          	builder.show();
                         	
             	    	} else if (item == 1) {
-            	    		LayoutInflater inflater = (LayoutInflater) GraphicalSoundboardEditor.this.
+            	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
         	    				getSystemService(LAYOUT_INFLATER_SERVICE);
             	    		View layout = inflater.inflate(R.layout.
             	    			graphical_soundboard_editor_alert_board_background_settings,
@@ -408,7 +438,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
                       			(Button) layout.findViewById(R.id.backgroundColorButton);
                       		backgroundColorButton.setOnClickListener(new OnClickListener() {
                 				public void onClick(View v) {
-                					Intent i = new Intent(GraphicalSoundboardEditor.this, ColorChanger.class);
+                					Intent i = new Intent(BoardEditor.this, ColorChanger.class);
                 			    	i.putExtra("parentKey", "changeBackgroundColor");
                 			    	i.putExtras(XStreamUtil.getSoundboardBundle(mGsb));
                 			    	startActivityForResult(i, CHANGE_BACKGROUND_COLOR);
@@ -498,7 +528,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
             					}
                     	  	});
                       	 	
-                      	 	AlertDialog.Builder builder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+                      	 	AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
                       	  	builder.setView(layout);
                       	  	builder.setTitle("Board settings");
                   	  	
@@ -538,7 +568,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
             	          	mBackgroundDialog.show();
             	    	} else if (item == 2) {
             	    		AlertDialog.Builder resetBuilder = new AlertDialog.Builder(
-		                			GraphicalSoundboardEditor.this);
+		                			BoardEditor.this);
 		                	resetBuilder.setTitle("Change board icon");
 		                	resetBuilder.setMessage("You can change icon for this board.\n\n" +
 		                			"You need a png image:\n " + mSbDir + "/" + mBoardName + "/" + "icon.png\n\n" +
@@ -546,26 +576,43 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 		                	AlertDialog resetAlert = resetBuilder.create();
 		                	resetAlert.show();
             	    	} else if (item == 3) {
-            	    		final CharSequence[] items = {"Portait", "Landscape"};
+            	    		final CharSequence[] items = {"Portrait", "Landscape", "Hybrid (beta)"};
 
-		                	AlertDialog.Builder orientationBuilder = new AlertDialog.Builder(
-		                			GraphicalSoundboardEditor.this);
+		                	AlertDialog.Builder orientationBuilder = new AlertDialog.Builder(BoardEditor.this);
 		                	orientationBuilder.setTitle("Select orientation");
 		                	orientationBuilder.setItems(items, new DialogInterface.OnClickListener() {
-		                	    public void onClick(DialogInterface dialog, int item) {
-		                	    	if (item == 0 && mGsb.getScreenOrientation() != GraphicalSoundboard.SCREEN_ORIENTATION_PORTAIT) {
-				                	    screenOrientationWarning(GraphicalSoundboard.SCREEN_ORIENTATION_PORTAIT);
-		                	    	} else if (item == 1 && mGsb.getScreenOrientation() != GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE) {
-		                	          	screenOrientationWarning(GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE);
-		                	    	}
-		                	    }
+		                		public void onClick(DialogInterface dialog, int item) {
+		                			if (item == 0 && mGsbp.getOrientationMode() != GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_PORTRAIT) {
+		                				if (mGsbp.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_HYBRID) {
+		                					useOrientationAndAskToRemoveUnusedAlert(GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT);
+		                				} else {
+		                					if (mGsbp.boardWithOrientationExists(GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT)) {
+		                						orientationTurningConflictActionAlert(GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT);
+		                					} else {
+		                						orientationTurningAlert(GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT);
+		                					}
+		                				}
+		                			} else if (item == 1 && mGsbp.getOrientationMode() != GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_LANDSCAPE) {
+		                				if (mGsbp.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_HYBRID) {
+		                					useOrientationAndAskToRemoveUnusedAlert(GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE);
+		                				} else {
+		                					if (mGsbp.boardWithOrientationExists(GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE)) {
+		                						orientationTurningConflictActionAlert(GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE);
+		                					} else {
+		                						orientationTurningAlert(GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE);
+		                					}
+		                				}
+		                			} else if (item == 2 && mGsbp.getOrientationMode() != GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_HYBRID) {
+		                				hybridAlert();
+		                			}
+		                		}
 		                	});
 		                	
 		                	AlertDialog orientationAlert = orientationBuilder.create();
 		                	orientationAlert.show();
             	    	} else if (item == 4) {
             	    	//Auto-arrange
-            	    	LayoutInflater inflater = (LayoutInflater) GraphicalSoundboardEditor.this.
+            	    	LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
     	    				getSystemService(LAYOUT_INFLATER_SERVICE);
         	    		View layout = inflater.inflate(R.layout.
         	    			graphical_soundboard_editor_alert_auto_arrange,
@@ -581,7 +628,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
         	    		final EditText rowsInput = (EditText) layout.findViewById(R.id.rowsInput);
         	    		rowsInput.setText(Integer.toString(mGsb.getAutoArrangeRows()));
                   	 	
-                  	 	AlertDialog.Builder builder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+                  	 	AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
                   	  	builder.setView(layout);
                   	  	builder.setTitle("Board settings");
               	  	
@@ -628,7 +675,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 		    	    		CharSequence[] items = itemArray.toArray(new CharSequence[itemArray.size()]);
 		    	    		
 		    	    		AlertDialog.Builder resetBuilder = new AlertDialog.Builder(
-		                			GraphicalSoundboardEditor.this);
+		                			BoardEditor.this);
 		                	resetBuilder.setTitle("Reset sound position");
 		                	resetBuilder.setItems(items, new DialogInterface.OnClickListener() {
 		                	    public void onClick(DialogInterface dialog, int item) {
@@ -660,10 +707,35 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 		mGsb = gsb;
 	}
 	
-	private void screenOrientationWarning(final int orientation) {
+	private void orientationTurningConflictActionAlert(final int screenOrientation) {
+		String orientationName = GraphicalSoundboard.getOrientationName(screenOrientation);
+		String oppositeOrientationName = GraphicalSoundboard.getOppositeOrientationName(screenOrientation);
+		
+		AlertDialog.Builder orientationWarningBuilder = new AlertDialog.Builder(BoardEditor.this);
+		orientationWarningBuilder.setTitle("Conflicting board");
+			orientationWarningBuilder.setMessage(
+		  			"A board for " + orientationName + " orientation already exists. You can either use it or remove it.\n\n" +
+		  			"By removing it you can turn " + oppositeOrientationName + " board to " + orientationName + " orientation.\n\n");
+	  	orientationWarningBuilder.setPositiveButton("Remove board", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				mGsbp.deleteBoardWithOrientation(screenOrientation);
+				orientationTurningAlert(screenOrientation);
+			}
+	  	});
+	  	orientationWarningBuilder.setNegativeButton("Use board", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				mGsbp.setOrientationMode(screenOrientation);
+				useOrientationAndAskToRemoveUnusedAlert(screenOrientation);
+			}
+	  	});
+	  	AlertDialog orientationWarningAlert = orientationWarningBuilder.create();
+    	orientationWarningAlert.show();
+	}
+	
+	private void orientationTurningAlert(final int screenOrientation) {
 		AlertDialog.Builder orientationWarningBuilder = new AlertDialog.Builder(
-			GraphicalSoundboardEditor.this);
-		orientationWarningBuilder.setTitle("Select orientation");
+			BoardEditor.this);
+		orientationWarningBuilder.setTitle("Changing orientation");
 			orientationWarningBuilder.setMessage(
 		  			"Changing screen orientation will delete all position data if you don't " +
 		  			"select deny.\n\n" +
@@ -677,7 +749,8 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 	    			sound.setNameFrameY(50);
 	    			sound.generateImageXYFromNameFrameLocation();
 	    		}
-	    		mGsb.setScreenOrientation(orientation);
+	    		mGsbp.setOrientationMode(screenOrientation);
+	    		mGsb.setScreenOrientation(screenOrientation);
 	    		finishBoard();
 			}
 	  	});
@@ -688,8 +761,59 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 	  	});
 	  	orientationWarningBuilder.setNeutralButton("Deny", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				mGsb.setScreenOrientation(orientation);
+				mGsbp.setOrientationMode(screenOrientation);
+				mGsb.setScreenOrientation(screenOrientation);
 				finishBoard();
+			}
+	  	});
+	  	AlertDialog orientationWarningAlert = orientationWarningBuilder.create();
+    	orientationWarningAlert.show();
+	}
+	
+	private void hybridAlert() {
+		AlertDialog.Builder orientationWarningBuilder = new AlertDialog.Builder(
+			BoardEditor.this);
+		orientationWarningBuilder.setTitle("Hybrid mode");
+			orientationWarningBuilder.setMessage(
+		  			"Hybrid mode allows you to switch between portrait and landscape by turning the screen.\n\n" +
+		  			"However both orientations must be created and maintained separately.\n\n" +
+		  			"Proceed?");
+	  	orientationWarningBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				mGsbp.setOrientationMode(GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_HYBRID);
+	          	finishBoard();
+			}
+	  	});
+	  	orientationWarningBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.cancel();
+			}
+	  	});
+	  	AlertDialog orientationWarningAlert = orientationWarningBuilder.create();
+    	orientationWarningAlert.show();
+	}
+	
+	private void useOrientationAndAskToRemoveUnusedAlert(final int screenOrientation) {
+		final int oppositeOrientation = GraphicalSoundboard.getOppositeOrientation(screenOrientation);
+		
+		AlertDialog.Builder orientationWarningBuilder = new AlertDialog.Builder(
+			BoardEditor.this);
+		orientationWarningBuilder.setTitle("Unused board");
+			orientationWarningBuilder.setMessage(
+		  			"Do you want to delete unused board in " +  GraphicalSoundboard.getOrientationName(oppositeOrientation) + " orientation?\n\n");
+	  	orientationWarningBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				//mThread.setRunning(false); // TODO handle board deleting better
+				mGsb = mGsbp.getBoard(screenOrientation);
+				mGsbp.deleteBoardWithOrientation(oppositeOrientation);
+				mGsbp.setOrientationMode(screenOrientation);
+	    		finishBoard();
+			}
+	  	});
+	  	orientationWarningBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				mGsbp.setOrientationMode(screenOrientation);
+	    		finishBoard();
 			}
 	  	});
 	  	AlertDialog orientationWarningAlert = orientationWarningBuilder.create();
@@ -698,7 +822,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 	
 	private void finishBoard() {
 		try {
-			GraphicalSoundboardEditor.this.finish();
+			BoardEditor.this.finish();
 		} catch (Throwable e) {
 			Log.e(TAG, "Error closing board", e);
 		}
@@ -848,7 +972,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 	        	if (resultCode == RESULT_OK) {
                 	
                 	LayoutInflater removeInflater = (LayoutInflater) 
-                			GraphicalSoundboardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
+                			BoardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
                 	View removeLayout = removeInflater.inflate(
                 			R.layout.graphical_soundboard_editor_alert_remove_sound,
                 	        (ViewGroup) findViewById(R.id.alert_remove_sound_root));
@@ -858,7 +982,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
               	  	removeFileCheckBox.setText(" DELETE " + mDragSound.getPath().getAbsolutePath());
               	  	
               	  	AlertDialog.Builder removeBuilder = new AlertDialog.Builder(
-              	  		GraphicalSoundboardEditor.this);
+              	  		BoardEditor.this);
               	  	removeBuilder.setView(removeLayout);
               	  	removeBuilder.setTitle("Changing sound");
           	  	
@@ -888,7 +1012,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
     }
 	
 	private void initializeConvert() {
-		mWaitDialog = ProgressDialog.show(GraphicalSoundboardEditor.this, "", "Please wait", true);
+		mWaitDialog = ProgressDialog.show(BoardEditor.this, "", "Please wait", true);
 		
 		Thread t = new Thread() {
 			public void run() {
@@ -898,7 +1022,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 						cleanDirectory(new File(mSbDir, mBoardName).listFiles());
 					}
 					
-					FileProcessor.convertGraphicalBoard(GraphicalSoundboardEditor.this, mBoardName, mGsb);
+					FileProcessor.convertGraphicalBoard(BoardEditor.this, mBoardName, mGsb);
 					save();
 				} catch (IOException e) {
 					Log.e(TAG, "Error converting board", e);
@@ -959,6 +1083,37 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
         	mWaitDialog.dismiss();
         }
     };
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+    	int originalOrientation = editorOrientation.getCurrentOrientation();
+    	
+    	int rotation = -1;
+    	if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+    		rotation = Surface.ROTATION_0;
+		} else if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+			rotation = Surface.ROTATION_90;
+		}
+    	
+    	editorOrientation.setCurrentOrientation(rotation);
+    	int currentOrientation = editorOrientation.getCurrentOrientation();
+
+    	if (!(originalOrientation == currentOrientation)) {
+    		GraphicalSoundboard.unloadImages(mGsb);
+    		mGsbp.overrideBoard(mGsb);
+    		GraphicalSoundboard newOrientationGsb = mGsbp.getBoardForRotation(rotation);
+    		GraphicalSoundboard.loadImages(getApplicationContext(), newOrientationGsb);
+    		mGsb = newOrientationGsb;
+    		
+    		// Set resolution handling stuff for the new orientation
+    		if (mResolutionAlert != null) {
+    			mResolutionAlert.dismiss();
+    		}
+    		mPanelInitialized = false;
+    	}
+    	
+    	super.onConfigurationChanged(newConfig);
+    }
     
     @Override
     protected void onResume() {
@@ -988,7 +1143,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
     		try {
     			GraphicalSoundboard gsb = GraphicalSoundboard.copy(mGsb);
     			if (mDragSound != null && mDrawDragSound == true) gsb.getSoundList().add(mDragSound); // Sound is being dragged
-        		GraphicalSoundboardProvider.saveBoard(mBoardName, gsb);
+        		mGsbp.saveBoard(mBoardName, gsb);
         		Log.v(TAG, "Board " + mBoardName + " saved");
     		} catch (IOException e) {
     			Log.e(TAG, "Unable to save " + mBoardName, e);
@@ -1223,9 +1378,9 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 					mGsb.setScreenWidth(windowWidth);
 					mGsb.setScreenHeight(windowHeight);
 				} else if (mGsb.getScreenWidth() != windowWidth || mGsb.getScreenHeight() != windowHeight) {
-					Log.v(TAG, "Soundoard resolution has been changed");
+					Log.v(TAG, "Soundoard resolution has changed. X: " + mGsb.getScreenWidth() + " -> " + windowWidth + " - Y: " + mGsb.getScreenHeight() + " -> " + windowHeight);
 
-					AlertDialog.Builder builder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+					AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
 					builder.setTitle("Display size");
 					builder.setMessage("Display size used to make this board differs from your display size.\n\n" +
 							"You can resize this board to fill your display or " +
@@ -1364,14 +1519,15 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 						}
 					});
 					
-					AlertDialog alert = builder.create();
-					alert.setOnDismissListener(new OnDismissListener() {
+					mResolutionAlert = builder.create();
+					mResolutionAlert.setOnDismissListener(new OnDismissListener() {
 						public void onDismiss(DialogInterface dialog) {
+							mResolutionAlert = null;
 							mGsbh.createHistoryCheckpoint();
 						}
 					});
 
-					alert.show();
+					mResolutionAlert.show();
 				}
 				Looper.loop();
 				Looper.myLooper().quit();
@@ -1473,14 +1629,14 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 						final CharSequence[] items = {"Info", "Name settings", "Image settings", "Sound settings",
 								"Duplicate sound", "Remove sound", "Set as..."};
 
-				    	AlertDialog.Builder optionsBuilder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+				    	AlertDialog.Builder optionsBuilder = new AlertDialog.Builder(BoardEditor.this);
 				    	optionsBuilder.setTitle("Options");
 				    	optionsBuilder.setItems(items, new DialogInterface.OnClickListener() {
 				    	    public void onClick(DialogInterface dialog, int item) {
 				    	    	
 				    	    	if (item == 0) {
 				    	    		SoundNameDrawing soundNameDrawing = new SoundNameDrawing(mDragSound);
-				    	    		AlertDialog.Builder builder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+				    	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
 				    	    		builder.setTitle("Sound info");
 				                	builder.setMessage("Name:\n"+mDragSound.getName()+
 				                					"\n\nSound path:\n"+mDragSound.getPath()+
@@ -1511,7 +1667,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				                	builder.show();
 				    	    	} else if (item == 1) {
 				    	    		
-					    	    	LayoutInflater inflater = (LayoutInflater) GraphicalSoundboardEditor.this.
+					    	    	LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
 				    	    			getSystemService(LAYOUT_INFLATER_SERVICE);
 				                	View layout = inflater.inflate(
 				                			R.layout.graphical_soundboard_editor_alert_sound_name_settings, 
@@ -1544,7 +1700,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				    						mDragSound.setName(soundNameInput.getText().toString());
 				    			  			mDragSound.generateImageXYFromNameFrameLocation();
 				    			  			
-				    			  			Intent i = new Intent(GraphicalSoundboardEditor.this, ColorChanger.class);
+				    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 				    		        		i.putExtra("parentKey", "changeNameColor");
 				    		        		i.putExtras(XStreamUtil.getSoundBundle(mDragSound, mGsb));
 				    		            	startActivityForResult(i, CHANGE_NAME_COLOR);
@@ -1558,7 +1714,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				    						mDragSound.setName(soundNameInput.getText().toString());
 				    			  			mDragSound.generateImageXYFromNameFrameLocation();
 				    			  			
-				    			  			Intent i = new Intent(GraphicalSoundboardEditor.this, ColorChanger.class);
+				    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 				    		        		i.putExtra("parentKey", "changeinnerPaintColor");
 				    		        		i.putExtras(XStreamUtil.getSoundBundle(mDragSound, mGsb));
 				    		            	startActivityForResult(i, CHANGE_INNER_PAINT_COLOR);
@@ -1572,14 +1728,14 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				    						mDragSound.setName(soundNameInput.getText().toString());
 				    			  			mDragSound.generateImageXYFromNameFrameLocation();
 				    			  			
-				    			  			Intent i = new Intent(GraphicalSoundboardEditor.this, ColorChanger.class);
+				    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 				    		        		i.putExtra("parentKey", "changeBorderPaintColor");
 				    		        		i.putExtras(XStreamUtil.getSoundBundle(mDragSound, mGsb));
 				    		            	startActivityForResult(i, CHANGE_BORDER_PAINT_COLOR);
 				    					}
 				              	  	});
 				              	  	
-				              	  	AlertDialog.Builder builder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+				              	  	AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
 				              	  	builder.setView(layout);
 				              	  	builder.setTitle("Name settings");
 				          	  	
@@ -1628,7 +1784,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 		    						
 				    	    	} else if (item == 2) {
 				    	    		
-				    	    		LayoutInflater inflater = (LayoutInflater) GraphicalSoundboardEditor.this.
+				    	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
 				    	    			getSystemService(LAYOUT_INFLATER_SERVICE);
 				                	View layout = inflater.inflate(
 				                			R.layout.graphical_soundboard_editor_alert_sound_image_settings, 
@@ -1737,7 +1893,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				    					}
 				              	  	});
 				              	  	
-				              	  	AlertDialog.Builder builder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+				              	  	AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
 				              	  	builder.setView(layout);
 				              	  	builder.setTitle("Image settings");
 				          	  	
@@ -1785,7 +1941,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				    	          	mSoundImageDialog.show();
 				    	    	} else if (item == 3) {
 				    	    		
-				    	    		LayoutInflater inflater = (LayoutInflater) GraphicalSoundboardEditor.this.
+				    	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
 			    	    				getSystemService(LAYOUT_INFLATER_SERVICE);
 				    	    		View layout = inflater.inflate(
 			                			R.layout.graphical_soundboard_editor_alert_sound_settings, 
@@ -1799,7 +1955,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				              	  		(Button) layout.findViewById(R.id.changeSoundPathButton);
 				    	    		changeSoundPathButton.setOnClickListener(new OnClickListener() {
 				    					public void onClick(View v) {
-				    						Intent i = new Intent(GraphicalSoundboardEditor.this, FileExplorer.class);
+				    						Intent i = new Intent(BoardEditor.this, FileExplorer.class);
 				    						i.putExtra(FileExplorer.EXTRA_ACTION_KEY, FileExplorer.ACTION_CHANGE_SOUND_PATH);
 				    						i.putExtra(FileExplorer.EXTRA_BOARD_NAME_KEY, mBoardName);
 				    						startActivityForResult(i, CHANGE_SOUND_PATH);
@@ -1812,7 +1968,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				    					public void onClick(View v) {
 				    						final CharSequence[] items = {"Play new", "Pause", "Stop"};
 						                	AlertDialog.Builder secondClickBuilder = new AlertDialog.Builder(
-						                			GraphicalSoundboardEditor.this);
+						                			BoardEditor.this);
 						                	secondClickBuilder.setTitle("Action");
 						                	secondClickBuilder.setItems(items, new DialogInterface.OnClickListener() {
 						                	    public void onClick(DialogInterface dialog, int item) {
@@ -1835,7 +1991,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				            	  	final EditText rightVolumeInput = (EditText) layout.findViewById(R.id.rightVolumeInput);
 				            	  	rightVolumeInput.setText(Float.toString(mDragSound.getVolumeRight()*100) + "%");
 				    	    		
-				    	    		AlertDialog.Builder builder = new AlertDialog.Builder(GraphicalSoundboardEditor.this);
+				    	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
 				              	  	builder.setView(layout);
 				              	  	builder.setTitle("Sound settings");
 				          	  	
@@ -1914,7 +2070,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				    	    	} else if (item == 5) {
 				                	
 				                	LayoutInflater removeInflater = (LayoutInflater) 
-				                			GraphicalSoundboardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
+				                			BoardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
 				                	View removeLayout = removeInflater.inflate(
 				                			R.layout.graphical_soundboard_editor_alert_remove_sound,
 				                	        (ViewGroup) findViewById(R.id.alert_remove_sound_root));
@@ -1924,7 +2080,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				              	  	removeFileCheckBox.setText(" DELETE " + mDragSound.getPath().getAbsolutePath());
 				              	  	
 				              	  	AlertDialog.Builder removeBuilder = new AlertDialog.Builder(
-				              	  		GraphicalSoundboardEditor.this);
+				              	  		BoardEditor.this);
 				              	  	removeBuilder.setView(removeLayout);
 				              	  	removeBuilder.setTitle("Removing " + mDragSound.getName());
 				          	  	
@@ -1948,7 +2104,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				    	    		final CharSequence[] items = {"Ringtone", "Notification", "Alerts"};
 
 				                	AlertDialog.Builder setAsBuilder = new AlertDialog.Builder(
-				                			GraphicalSoundboardEditor.this);
+				                			BoardEditor.this);
 				                	setAsBuilder.setTitle("Set as...");
 				                	setAsBuilder.setItems(items, new DialogInterface.OnClickListener() {
 				                	    public void onClick(DialogInterface dialog, int item) {
@@ -1985,9 +2141,9 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 				                        	
 				                        	Uri uri = MediaStore.Audio.Media.getContentUriForPath(filePath);
 				                        	getContentResolver().delete(uri, MediaStore.MediaColumns.DATA + "=\"" + filePath + "\"", null);
-				                        	Uri newUri = GraphicalSoundboardEditor.this.getContentResolver().insert(uri, values);
+				                        	Uri newUri = BoardEditor.this.getContentResolver().insert(uri, values);
 				                        	
-				                        	RingtoneManager.setActualDefaultRingtoneUri(GraphicalSoundboardEditor.this, selectedAction, newUri);
+				                        	RingtoneManager.setActualDefaultRingtoneUri(BoardEditor.this, selectedAction, newUri);
 				                        	
 				                	    }
 				                	});
@@ -2160,7 +2316,7 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 							    		try {
 							    			canvas.drawBitmap(sound.getActiveImage(), null, imageRect, mSoundImagePaint);
 							    		} catch(NullPointerException npe) {
-							    			Log.e(TAG, "Unable to draw active image " + sound.getActiveImagePath().getAbsolutePath());
+							    			Log.e(TAG, "Unable to draw active image for sound " + sound.getName());
 											sound.setActiveImage(null);
 							    			canvas.drawBitmap(sound.getImage(), null, imageRect, mSoundImagePaint);
 							    		}
@@ -2169,7 +2325,8 @@ public class GraphicalSoundboardEditor extends BoarderActivity { //TODO destroy 
 							    		canvas.drawBitmap(sound.getImage(), null, imageRect, mSoundImagePaint);
 							    	}
 								} catch(NullPointerException npe) {
-									Log.e(TAG, "Unable to draw image " + sound.getImagePath().getAbsolutePath());
+									Log.e(TAG, "Unable to draw image for sound " + sound.getName());
+									BugSenseHandler.log(TAG, npe);
 									sound.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.sound));
 								}
 						    }

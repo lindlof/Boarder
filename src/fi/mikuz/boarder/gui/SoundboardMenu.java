@@ -78,7 +78,7 @@ import fi.mikuz.boarder.util.editor.ImageDrawing;
 public class SoundboardMenu extends BoarderListActivity {
 	public static final String TAG = SoundboardMenu.class.getSimpleName();
 	
-	public static final boolean mDevelopmentMode = false; //FIXME for release
+	public static final boolean mDevelopmentMode = true; //FIXME for release
 	
 	public static final String EXTRA_LAUNCH_BAORD_KEY = "SoundboardMenu.boardToLaunch";
 	public static final String EXTRA_HIDE_SOUNDBOARDMENU = "SoundboardMenu.hideSoundboardmenu";
@@ -143,7 +143,7 @@ public class SoundboardMenu extends BoarderListActivity {
 
         		for (File boardDirContent : new File(mSbDir, launchExtra).listFiles()) {
         			if (boardDirContent.getName().equals("graphicalBoard")) {
-        				i = new Intent(this, GraphicalSoundboardEditor.class);
+        				i = new Intent(this, BoardEditor.class);
         				break;
         			}
         		}
@@ -472,7 +472,7 @@ public class SoundboardMenu extends BoarderListActivity {
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         switch(item.getItemId()) {
             case R.id.menu_add_board:
-            	Intent addBoardIntent = new Intent(this, GraphicalSoundboardEditor.class);
+            	Intent addBoardIntent = new Intent(this, BoardEditor.class);
         		startActivityForResult(addBoardIntent, ACTIVITY_ADD);
                 return true;
             
@@ -843,7 +843,7 @@ public class SoundboardMenu extends BoarderListActivity {
         		boolean boardFileFound = false;
         		for (File boardDirContent : boardDir.listFiles()) {
         			if (boardDirContent.getName().equals("graphicalBoard")) {
-        				Intent i = new Intent(this, GraphicalSoundboardEditor.class);
+        				Intent i = new Intent(this, BoardEditor.class);
         				i.putExtra(BoardsDbAdapter.KEY_TITLE, boardName);
         				startActivityForResult(i, ACTIVITY_EDIT);
         				boardFileFound = true;
@@ -851,7 +851,7 @@ public class SoundboardMenu extends BoarderListActivity {
         			}
         		}
 	        	if (!boardFileFound) {
-	        		Intent i = new Intent(this, GraphicalSoundboardEditor.class);
+	        		Intent i = new Intent(this, BoardEditor.class);
 	                i.putExtra(BoardsDbAdapter.KEY_TITLE, boardName);
 	        		startActivityForResult(i, ACTIVITY_ADD);
 	        	}

@@ -5,7 +5,7 @@ import java.util.List;
 
 import android.util.Log;
 import android.widget.Toast;
-import fi.mikuz.boarder.gui.GraphicalSoundboardEditor;
+import fi.mikuz.boarder.gui.BoardEditor;
 
 /**
  * Stores changes in soundboard
@@ -15,13 +15,13 @@ import fi.mikuz.boarder.gui.GraphicalSoundboardEditor;
 public class GraphicalSoundboardHistory {
 	private static final String TAG = "GraphicalSoundboardHistory";
 	
-	GraphicalSoundboardEditor editor;
+	BoardEditor editor;
 	private final Object lock = new Object();
 	
 	List<GraphicalSoundboard> history;
 	int index;
 
-	public GraphicalSoundboardHistory(GraphicalSoundboardEditor editor) {
+	public GraphicalSoundboardHistory(BoardEditor editor) {
 		this.editor = editor;
 		this.history = new ArrayList<GraphicalSoundboard>();
 		this.index = -1;
