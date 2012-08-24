@@ -57,6 +57,7 @@ import com.bugsense.trace.BugSenseHandler;
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.app.BoarderListActivity;
 import fi.mikuz.boarder.component.SoundPlayer;
+import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.gui.internet.InternetMenu;
 import fi.mikuz.boarder.service.TogglePlayPauseService;
 import fi.mikuz.boarder.util.ApiKeyLoader;
@@ -94,6 +95,7 @@ public class SoundboardMenu extends BoarderListActivity {
     String mAction;
 	
 	public static List<SoundPlayer> mSoundPlayerList = new ArrayList<SoundPlayer>();
+	public static GraphicalSound mCopiedSound = null;
 	
 	public static final File mBoarderDir = new File(Environment.getExternalStorageDirectory(), "boarder");
 	public static final File mSbDir = new File(mBoarderDir, "boards");

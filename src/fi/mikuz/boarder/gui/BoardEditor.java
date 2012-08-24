@@ -272,7 +272,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		menu.clear();
 		mMenu = menu;
 		MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.graphical_soundboard_editor_bottom, menu);
+	    inflater.inflate(R.menu.board_editor_bottom, menu);
 	    
 	    if (mMode == EDIT_BOARD) {
 	    	menu.setGroupVisible(R.id.edit_mode, false);
@@ -310,6 +310,23 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         		i.putExtra(FileExplorer.EXTRA_ACTION_KEY, FileExplorer.ACTION_ADD_GRAPHICAL_SOUND);
         		i.putExtra(FileExplorer.EXTRA_BOARD_NAME_KEY, mBoardName);
             	startActivityForResult(i, EXPLORE_SOUND);
+            	return true;
+            	
+        	case R.id.menu_paste_sound:
+        		GraphicalSound pasteSound = SoundboardMenu.mCopiedSound;
+        		if (pasteSound == null) {
+        			Toast.makeText(this, "Nothing copied", Toast.LENGTH_LONG).show();
+        		} else {
+        			if (mGsb.getAutoArrange()) {
+        				if (placeToFreeSlot(pasteSound)) {
+        					mGsb.getSoundList().add(pasteSound);
+        				}
+        			} else {
+        				placeToFreeSpace(pasteSound);
+        				mGsb.getSoundList().add(pasteSound);
+        			}
+        			mGsbh.createHistoryCheckpoint();
+        		}
             	return true;
             	
             case R.id.menu_save_board:
@@ -1627,7 +1644,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			  			invalidate();
 						
 						final CharSequence[] items = {"Info", "Name settings", "Image settings", "Sound settings",
-								"Duplicate sound", "Remove sound", "Set as..."};
+								"Copy sound", "Remove sound", "Set as..."};
 
 				    	AlertDialog.Builder optionsBuilder = new AlertDialog.Builder(BoardEditor.this);
 				    	optionsBuilder.setTitle("Options");
@@ -2056,16 +2073,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	          	
 				    	          	builder.show();
 				    	    	} else if (item == 4) {
-				    	    		GraphicalSound duplicate = (GraphicalSound) mDragSound.clone();
-				    	    		if (mGsb.getAutoArrange()) {
-				    	    			 if (placeToFreeSlot(duplicate)) {
-				    	    				 mGsb.getSoundList().add(duplicate);
-				    	    			 }
-				    	    		} else {
-				    	    			placeToFreeSpace(duplicate);
-				    	    			mGsb.getSoundList().add(duplicate);
-				    	    		}
-				    	    		mGsbh.createHistoryCheckpoint();
+				    	    		SoundboardMenu.mCopiedSound = (GraphicalSound) mDragSound.clone();
 				    	    		
 				    	    	} else if (item == 5) {
 				                	

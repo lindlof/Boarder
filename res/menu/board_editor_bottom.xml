@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<item android:id="@+id/menu_play_pause" 
+		android:title="@string/menu_play_pause" />
+	<item android:id="@+id/menu_board_settings" 
+		android:title="@string/menu_board_settings" />
+    
+    <group android:id="@+id/listen_mode">
+        <item android:id="@+id/menu_undo"
+	          android:title="Undo" />
+        <item android:id="@+id/menu_redo"
+	          android:title="Redo" />
+    	<item android:id="@+id/menu_listen_mode"
+	          android:title="@string/menu_listen_mode" />
+	</group>
+    
+    <group android:id="@+id/edit_mode">
+    	<item android:id="@+id/menu_edit_mode"
+	          android:title="@string/menu_edit_mode" />
+	</group>
+
+	<item android:id="@+id/menu_add_sound"
+		android:title="@string/menu_add_sound" />
+	<item android:id="@+id/menu_paste_sound"
+		android:title="Paste sound" />
+	<item android:id="@+id/menu_save_board"
+		android:title="@string/menu_save_board" />
+	<item android:id="@+id/menu_notification" 
+		android:title="@string/menu_notification" />
+	<item android:id="@+id/menu_convert_board"
+		android:title="@string/menu_convert_board" />
+	<item android:id="@+id/menu_take_screenshot"
+		android:title="Screenshot" />
+    
+</menu>
