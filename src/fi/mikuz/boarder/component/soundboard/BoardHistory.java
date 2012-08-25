@@ -12,34 +12,26 @@ import fi.mikuz.boarder.gui.BoardEditor;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class GraphicalSoundboardHistory {
-	private static final String TAG = "GraphicalSoundboardHistory";
+public class BoardHistory {
+	private static final String TAG = BoardHistory.class.getSimpleName();
 	
-	BoardEditor editor;
+	private final int boardId;
 	private final Object lock = new Object();
 	
 	List<GraphicalSoundboard> history;
 	int index;
 
-	public GraphicalSoundboardHistory(BoardEditor editor) {
-		this.editor = editor;
+	public BoardHistory(int boardId) {
 		this.history = new ArrayList<GraphicalSoundboard>();
 		this.index = -1;
-	}
-	public List<GraphicalSoundboard> getHistory() {
-		return history;
-	}
-	public void setHistory(List<GraphicalSoundboard> history) {
-		this.history = history;
-	}
-	public int getIndex() {
-		return index;
-	}
-	public void setIndex(int index) {
-		this.index = index;
+		this.boardId = boardId;
 	}
 	
-	public void createHistoryCheckpoint() {
+	public int getBoardId() {
+		return boardId;
+	}
+
+	public void createHistoryCheckpoint(GraphicalSoundboard board) {
 		synchronized (lock) {
 			for (int i = history.size()-index; i > 1; i--) {
 				// User has undone and then creates a checkpoint
@@ -48,7 +40,7 @@ public class GraphicalSoundboardHistory {
 			}
 			
 			index++;
-			setHistoryCheckpoint();
+			setHistoryCheckpoint(board);
 			
 			while (history.size() >= 30) {
 				Log.v(TAG, "removing history from start, size is " + history.size());
@@ -61,9 +53,9 @@ public class GraphicalSoundboardHistory {
 		}
 	}
 	
-	public void setHistoryCheckpoint() {
+	public void setHistoryCheckpoint(GraphicalSoundboard board) {
 		synchronized (lock) {
-			GraphicalSoundboard gsbh = GraphicalSoundboard.copy(editor.mGsb);
+			GraphicalSoundboard gsbh = GraphicalSoundboard.copy(board);
 			GraphicalSoundboard.unloadImages(gsbh);
 			
 			// If new checkpoint is being created then index is ahead of list by 1 now
@@ -79,7 +71,7 @@ public class GraphicalSoundboardHistory {
 		}
 	}
 
-	public void undo() {
+	public void undo(BoardEditor editor) {
 		synchronized (lock) {
 			if (index <= 0) {
 				Toast.makeText(editor.getApplicationContext(), "Unable to undo", Toast.LENGTH_SHORT).show();
@@ -92,7 +84,7 @@ public class GraphicalSoundboardHistory {
 		}
 	}
 
-	public void redo() {
+	public void redo(BoardEditor editor) {
 		synchronized (lock) {
 			if (index+1 >= history.size()) {
 				Toast.makeText(editor.getApplicationContext(), "Unable to redo", Toast.LENGTH_SHORT).show();
