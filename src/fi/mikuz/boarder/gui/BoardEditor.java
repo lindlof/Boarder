@@ -687,6 +687,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         	          	builder.show();
             	    	} else if (item == 5) {
             	    		ArrayList<String> itemArray = new ArrayList<String>();
+            	    		itemArray.add("> Background image");
 		    	    		for (GraphicalSound sound : mGsb.getSoundList()) {
 		    	    			itemArray.add(sound.getName());
 		    	    		}
@@ -694,14 +695,20 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		    	    		
 		    	    		AlertDialog.Builder resetBuilder = new AlertDialog.Builder(
 		                			BoardEditor.this);
-		                	resetBuilder.setTitle("Reset sound position");
+		                	resetBuilder.setTitle("Reset position");
 		                	resetBuilder.setItems(items, new DialogInterface.OnClickListener() {
 		                	    public void onClick(DialogInterface dialog, int item) {
-		                	    	GraphicalSound sound = mGsb.getSoundList().get(item);
-		                	    	sound.setNameFrameX(50);
-		        	    			sound.setNameFrameY(50);
-		        	    			sound.generateImageXYFromNameFrameLocation();
-		        	    			mBoardHistory.createHistoryCheckpoint(mGsb);
+		                	    	if (item == 0) { // Background
+		                	    		mGsb.setBackgroundX(0);
+		                	    		mGsb.setBackgroundY(0);
+		                	    		mBoardHistory.createHistoryCheckpoint(mGsb);
+		                	    	} else { // Sound
+		                	    		GraphicalSound sound = mGsb.getSoundList().get(item);
+			                	    	sound.setNameFrameX(50);
+			        	    			sound.setNameFrameY(50);
+			        	    			sound.generateImageXYFromNameFrameLocation();
+			        	    			mBoardHistory.createHistoryCheckpoint(mGsb);
+		                	    	}
 		                	    }
 		                	});
 		                	AlertDialog resetAlert = resetBuilder.create();
@@ -1646,6 +1653,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					if (mMoveBackground) {
 						mGsb.setBackgroundX(event.getX() - mBackgroundLeftDistance);
 						mGsb.setBackgroundY(event.getY() - mBackgroundTopDistance);
+						mBoardHistory.createHistoryCheckpoint(mGsb);
 					} else if (mDrawDragSound == true && Calendar.getInstance().getTimeInMillis()-mClickTime < 200) {
 						mClickTime = 0;
 						mDragSound.setNameFrameX(mInitialNameFrameX);
