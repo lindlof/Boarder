@@ -114,6 +114,9 @@ public class GraphicalSound implements Cloneable {
 	}
 	public void setNameSize(float nameSize) {
 		this.nameSize = nameSize;
+		this.updatePixelSize();
+	}
+	public void updatePixelSize() {
 		this.namePixelSize = new SoundNameDrawing(this).getNameFrameRect().width();
 	}
 	public float getNamePixelSize() {
@@ -215,6 +218,7 @@ public class GraphicalSound implements Cloneable {
 	}
 	public void setName(String name) {
 		this.name = name;
+		this.updatePixelSize();
 	}
 	public File getPath() {
 		return path;
