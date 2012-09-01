@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.IOException;
 
 import android.util.Log;
-
-import com.thoughtworks.xstream.XStream;
-
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
@@ -27,8 +24,7 @@ public class BoardLocal {
 		
 		try {
 			// No failsafes, return red if error occurs
-			XStream xstream = XStreamUtil.graphicalBoardXStream();
-			GraphicalSoundboardHolder boardHolder = (GraphicalSoundboardHolder) xstream.fromXML(new File(boardDir + "/graphicalBoard"));
+			GraphicalSoundboardHolder boardHolder = FileProcessor.loadGraphicalSoundboardHolder(boardName);
 			
 			for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
 				

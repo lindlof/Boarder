@@ -104,6 +104,8 @@ public class SoundboardMenu extends BoarderListActivity {
 	public static final File mDropboxCache = new File(mBoarderDir, "dropbox.cache");
 	public static final File mShareDir = new File(mBoarderDir, "share");
 	
+	public static final File mLocalBoardDir = new File("/Boarder/filePath/local/");
+	
 	public static List<String> mFunctionSounds = new ArrayList<String>();
 	public static final String mPauseSoundFilePath = "/Boarder/functions/pause";
 	public static final String mTopBlackBarSoundFilePath = "/Boarder/functions/topBlackBar";
