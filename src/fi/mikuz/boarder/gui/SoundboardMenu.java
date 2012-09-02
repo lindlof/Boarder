@@ -404,22 +404,7 @@ public class SoundboardMenu extends BoarderListActivity {
             String title = c.getString(c.getColumnIndex(BoardsDbAdapter.KEY_TITLE));
             int local = c.getInt(c.getColumnIndex(BoardsDbAdapter.KEY_LOCAL));
             
-            TextView title_text = (TextView) v.findViewById(R.id.soundboardName);
-            if (title_text != null) {
-                title_text.setText(title);
-            }
-            
-            if (local == BoardsDbAdapter.LOCAL_GREEN) {
-            	title_text.setTextColor(Color.parseColor("#A2F600"));
-			} else if (local == BoardsDbAdapter.LOCAL_YELLOW) {
-				title_text.setTextColor(Color.YELLOW);
-			} else if (local == BoardsDbAdapter.LOCAL_WHITE) {
-				title_text.setTextColor(Color.parseColor("#F1FFFF"));
-			} else if (local == BoardsDbAdapter.LOCAL_RED) {
-				title_text.setTextColor(Color.RED);
-			} else if (local == BoardsDbAdapter.LOCAL_ORANGE) {
-				title_text.setTextColor(Color.parseColor("#FF6600"));
-			}
+            setTitleText(v, title, local);
             
             File icon = new File(mSbDir, title + "/icon.png");
             if (icon.exists()) {
@@ -446,7 +431,11 @@ public class SoundboardMenu extends BoarderListActivity {
         	String title = c.getString(c.getColumnIndex(BoardsDbAdapter.KEY_TITLE));
             int local = c.getInt(c.getColumnIndex(BoardsDbAdapter.KEY_LOCAL));
             
-            TextView title_text = (TextView) v.findViewById(R.id.soundboardName);
+            setTitleText(v, title, local);
+        }
+        
+        private void setTitleText(View v, String title, int local) {
+        	TextView title_text = (TextView) v.findViewById(R.id.soundboardName);
             if (title_text != null) {
                 title_text.setText(title);
             }
@@ -459,8 +448,9 @@ public class SoundboardMenu extends BoarderListActivity {
 				title_text.setTextColor(Color.parseColor("#F1FFFF"));
 			} else if (local == BoardsDbAdapter.LOCAL_RED) {
 				title_text.setTextColor(Color.RED);
+			} else if (local == BoardsDbAdapter.LOCAL_ORANGE) {
+				title_text.setTextColor(Color.parseColor("#FF6600"));
 			}
-            
         }
 
     }
