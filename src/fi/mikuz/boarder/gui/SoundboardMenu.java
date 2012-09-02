@@ -90,6 +90,7 @@ public class SoundboardMenu extends BoarderListActivity {
 	private BoardsDbAdapter mDbHelper;
     private GlobalVariablesDbAdapter mGlobalVariableDbHelper;
 	private int mMoveBoard = -1;
+	private BoardsCursorAdapter mBoardsCursorAdapter;
 	
 	Intent mIntent;
     String mAction;
@@ -352,7 +353,12 @@ public class SoundboardMenu extends BoarderListActivity {
     
     private void refreshBoards() {
     	try {
-    		setListAdapter(new BoardsCursorAdapter(mDbHelper.fetchAllBoards()));
+    		if (mBoardsCursorAdapter == null) {
+    			mBoardsCursorAdapter = new BoardsCursorAdapter(mDbHelper.fetchAllBoards());
+        		setListAdapter(mBoardsCursorAdapter);
+    		} else {
+    			mBoardsCursorAdapter.changeCursor(mDbHelper.fetchAllBoards());
+    		}
     	} catch (IllegalStateException e) {
     		Log.w(TAG, "Unable to refresh board list", e);
     	}
