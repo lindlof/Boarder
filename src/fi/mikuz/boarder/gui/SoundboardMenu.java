@@ -264,7 +264,7 @@ public class SoundboardMenu extends BoarderListActivity {
 	    t.start();
     }
     
-    private void updateBoards() {
+    synchronized private void updateBoards() {
     	
     	try {
     		Log.v(TAG, "Updating board list");
