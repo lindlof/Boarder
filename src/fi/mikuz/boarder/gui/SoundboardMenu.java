@@ -357,7 +357,7 @@ public class SoundboardMenu extends BoarderListActivity {
     			mBoardsCursorAdapter = new BoardsCursorAdapter(mDbHelper.fetchAllBoards());
         		setListAdapter(mBoardsCursorAdapter);
     		} else {
-    			mBoardsCursorAdapter.changeCursor(mDbHelper.fetchAllBoards());
+    			mBoardsCursorAdapter.swapCursor(mDbHelper.fetchAllBoards());
     		}
     	} catch (IllegalStateException e) {
     		Log.w(TAG, "Unable to refresh board list", e);
@@ -398,10 +398,7 @@ public class SoundboardMenu extends BoarderListActivity {
         }
 
         @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        	startManagingCursor(cursor);
-
-            Cursor c = getCursor();
+        public View newView(Context context, Cursor c, ViewGroup parent) {
             startManagingCursor(c);
 
             final LayoutInflater inflater = LayoutInflater.from(context);
