@@ -11,16 +11,12 @@ import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.database.SQLException;
 import android.media.AudioManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.app.BoarderActivity;
@@ -42,7 +38,7 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 public class InternetMenu extends BoarderActivity implements ConnectionListener {
     private static final String TAG = "InternetMenu";
     
-    private static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://www.mikuz.org/php/boarder_test/" : "http://boarder.mikuz.org/";
+    private static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://test.boarder.mikuz.org/" : "http://boarder.mikuz.org/";
     static final String mGetSessionValidURL = InternetMenu.phpRepURL + "getSessionInfo.php";
     static final String mGetBoardsURL = InternetMenu.phpRepURL + "getBoards.php";
     static final String mGetBoardURL = InternetMenu.phpRepURL + "getBoard.php";
@@ -395,8 +391,6 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 	        	
 	        	builder.show();
 			}
-		} else if (ConnectionUtils.checkConnectionId(connectionSuccessfulResponse, InternetMenu.mDonationNotificationURL)) {
-			if (connectionSuccessfulResponse.getJSONObject().getInt(ConnectionUtils.returnData) == 1) showDonateNotification();
 		} else if (ConnectionUtils.checkConnectionId(connectionSuccessfulResponse, InternetMenu.mGetSessionValidURL)) {
 			mSessionValidityChecked = true;
 			if (connectionSuccessfulResponse.getJSONObject().getInt(InternetMenu.SESSION_VALID_KEY) == 0) {
@@ -434,50 +428,6 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
 		if (mDatabaseVersionChecked && mSessionValidityChecked) {
 			mWaitDialog.dismiss();
 		}
-	}
-	
-	private void showDonateNotification() {
-		LayoutInflater inflater = (LayoutInflater) InternetMenu.this.
-				getSystemService(LAYOUT_INFLATER_SERVICE);
-		View layout = inflater.inflate(R.layout.internet_menu_alert_donation,
-				(ViewGroup) findViewById(R.id.alert_settings_root));
-		
-		AlertDialog.Builder builder = new AlertDialog.Builder(InternetMenu.this);
-		builder.setView(layout);
-
-		final TextView donationText = (TextView) layout.findViewById(R.id.donationText);
-		final ImageView donationImage = (ImageView) layout.findViewById(R.id.donationImage);
-		final TextView rateText = (TextView) layout.findViewById(R.id.rateText);
-		final ImageView rateImage = (ImageView) layout.findViewById(R.id.rateImage);
-		final TextView lastWords = (TextView) layout.findViewById(R.id.lastWords);
-		
-		donationText.setText("Hey there " + getUsername() + "!\n\n" +
-				"You seem to like downloading soundboards.\n\n" +
-				"This service is not free to upkeep so I'd like to ask you to consider making a small donation.\n\n" +
-				"Your donation would also help me improve Boarders. " +
-				"I develope Boarder because I like doing it but money always helps.\n\n" +
-				"You can donate using the link below.\n");
-		
-		donationImage.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-            	ExternalIntent.openDonate(InternetMenu.this);
-            }
-        });
-		
-		rateText.setText("\n\n" +
-				"You can also help me by rating this app if you haven't done that already. " +
-				"Click the market link below to rate this app.\n\n");
-		
-		rateImage.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-            	ExternalIntent.openGooglePlay(InternetMenu.this);
-            }
-        });
-		
-		lastWords.setText("\n\n" +
-				"These options are also available in 'Soundboard Menu'.\n");
-		
-		if (this.hasWindowFocus()) builder.show();
 	}
 	
 	protected String getUsername() {
