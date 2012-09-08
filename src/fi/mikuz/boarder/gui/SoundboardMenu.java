@@ -347,6 +347,8 @@ public class SoundboardMenu extends BoarderListActivity {
         	}
     	} catch (StaleDataException e) {
     		Log.w(TAG, "Unable to update board list", e);
+    	} catch (IllegalStateException e) {
+    		Log.w(TAG, "Unable to update board list", e);
     	}
 
     }
