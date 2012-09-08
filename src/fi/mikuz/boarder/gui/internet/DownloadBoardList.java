@@ -187,7 +187,6 @@ public class DownloadBoardList extends BoarderActivity {
     	}
     	
     	private synchronized void getBoards() {
-    		Log.v(TAG, "getting boards");
     		HashMap<String, String> sendList = new HashMap<String, String>();
     		sendList.put(InternetMenu.ORDER_RULE_KEY, mOrderRule);
     		sendList.put(InternetMenu.ORDER_DIRECTION_KEY, mOrderDirection);
@@ -200,11 +199,9 @@ public class DownloadBoardList extends BoarderActivity {
     	
         private void populateList() {
         	synchronized(mBoardListLock) {
-    	    	Log.d(TAG, "Populating list");
     	    	BoardListAdapter adapter = new BoardListAdapter(mBoardList);
     	    	mListView.setAdapter(adapter);
     	    	setListener();
-    	    	Log.d(TAG, "list count is " + adapter.getCount());
         	}
         }
         
@@ -294,7 +291,6 @@ public class DownloadBoardList extends BoarderActivity {
         					mBoardList.add(internetBoard);
         				}
         			}
-        			Log.v(TAG, "got " + i + " boards");
         			if (i < mMaxResults) {
         				LAST_ACCESSABLE_PAGE = pageNumber;
         			}
@@ -346,7 +342,6 @@ public class DownloadBoardList extends BoarderActivity {
 		public Object instantiateItem(View collection, int position) {
 			
 			if (position < LAST_ACCESSABLE_PAGE-2) {
-				Log.v(TAG, "maxing count");
 				LAST_ACCESSABLE_PAGE = LAST_PAGE_COUNT_MAX;
 			}
 			
