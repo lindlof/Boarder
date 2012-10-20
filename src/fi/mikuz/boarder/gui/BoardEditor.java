@@ -927,7 +927,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					mGsb.setBackgroundY(0);
 					mBoardHistory.createHistoryCheckpoint(mGsb);
 	        	}
-	        	if (mBackgroundDialog != null) {
+	        	if (mBackgroundDialog != null && mGsb.getBackgroundImage() != null) {
 	        		mBackgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
 					mBackgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
 					mBackgroundWidthInput.setText(Float.toString(mGsb.getBackgroundWidth()));
