@@ -194,17 +194,20 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		  				
 		  				if (inputText.contains("\n")) {
 		  					mBoardName = inputText.substring(0, inputText.indexOf("\n"));
-		  				} else if (inputText.equals("")) {
-		  					finish();
-		  				}else {
+		  				} else {
 		  					mBoardName = inputText;
 		  				}
 		  				
-		  				mGsbp = new GraphicalSoundboardProvider(mBoardName);
-		  				initEditorBoard();
-		  				
-		  				setTitle(mBoardName);
-		  				save();
+		  				if (mBoardName.equals("")) {
+		  					mBoardName = null;
+		  					finish();
+		  				} else {
+		  					mGsbp = new GraphicalSoundboardProvider(mBoardName);
+			  				initEditorBoard();
+			  				
+			  				setTitle(mBoardName);
+			  				save();
+		  				}
 		  		}
 		  	});
 		  	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
