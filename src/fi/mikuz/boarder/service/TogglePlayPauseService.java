@@ -1,20 +1,22 @@
 package fi.mikuz.boarder.service;
 
-import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+import fi.mikuz.boarder.app.BoarderService;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 
 /**
  * 
  * @author Jan Mikael Lindlöf
  */
-public class TogglePlayPauseService extends Service {
+public class TogglePlayPauseService extends BoarderService {
 	public static final String TAG = "TogglePlayPauseService";
 	
     @Override
     public void onCreate() {
+    	super.onCreate();
+    	
     	try {
     		SoundPlayerControl.togglePlayPause();
     	} catch (NullPointerException e) {
