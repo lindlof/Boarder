@@ -319,7 +319,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         	case R.id.menu_paste_sound:
         		GraphicalSound pasteSound = SoundboardMenu.mCopiedSound;
         		if (pasteSound == null) {
-        			Toast.makeText(this, "Nothing copied", Toast.LENGTH_LONG).show();
+        			Toast.makeText(this.getApplicationContext(), "Nothing copied", Toast.LENGTH_LONG).show();
         		} else {
         			if (mGsb.getAutoArrange()) {
         				if (placeToFreeSlot(pasteSound)) {
@@ -363,7 +363,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	return true;
             
             case R.id.menu_play_pause:
-            	SoundPlayerControl.togglePlayPause();
+            	SoundPlayerControl.togglePlayPause(this.getApplicationContext());
             	return true;
             	
             case R.id.menu_notification:
@@ -1194,7 +1194,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     private void initializeDrag(MotionEvent event, GraphicalSound sound) {
     	if (mMode == LISTEN_BOARD) {
     		if (sound.getPath().getAbsolutePath().equals(SoundboardMenu.mPauseSoundFilePath)) { 
-    			SoundPlayerControl.togglePlayPause();
+    			SoundPlayerControl.togglePlayPause(this.getApplicationContext());
     		} else {
     			if (sound.getSecondClickAction() == GraphicalSound.SECOND_CLICK_PLAY_NEW) {
     				SoundPlayerControl.playSound(mGsb.getPlaySimultaneously(), sound.getPath(), sound.getVolumeLeft(), 

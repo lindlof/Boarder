@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
 
+import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import fi.mikuz.boarder.component.SoundPlayer;
 import fi.mikuz.boarder.gui.SoundboardMenu;
@@ -150,10 +152,15 @@ public abstract class SoundPlayerControl {
 		
 	}
 
-	public static void togglePlayPause() {
+	public static void togglePlayPause(Context context) {
 		
 		final List<SoundPlayer> soundPlayerList = SoundboardMenu.mSoundPlayerList;
     	boolean playing = false;
+    	
+    	if (soundPlayerList.size() == 0) {
+    		Log.w(TAG, "Nothing to play");
+    		Toast.makeText(context, "Nothing to play", Toast.LENGTH_SHORT).show();
+    	}
 		
 		for (SoundPlayer soundPlayer : soundPlayerList) {
 			if (soundPlayer.isPlaying()) {

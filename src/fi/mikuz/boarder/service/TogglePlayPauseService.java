@@ -18,7 +18,7 @@ public class TogglePlayPauseService extends BoarderService {
     	super.onCreate();
     	
     	try {
-    		SoundPlayerControl.togglePlayPause();
+    		SoundPlayerControl.togglePlayPause(this.getApplicationContext());
     	} catch (NullPointerException e) {
     		Log.w(TAG, "Boarder is not running, nothing to do", e);
     	}

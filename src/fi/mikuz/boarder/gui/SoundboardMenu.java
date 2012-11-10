@@ -525,7 +525,7 @@ public class SoundboardMenu extends BoarderListActivity {
             	return true;
             	
             case R.id.menu_play_pause:
-            	SoundPlayerControl.togglePlayPause();
+            	SoundPlayerControl.togglePlayPause(this.getApplicationContext());
             	return true;
             	
             case R.id.menu_internet:
