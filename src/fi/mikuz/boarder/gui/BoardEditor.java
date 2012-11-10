@@ -1430,6 +1430,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					builder.setPositiveButton("Resize", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
 							Log.v(TAG, "Resizing board");
+							
+							clearBlackBars();
 							float xScale = (float) windowWidth/(float) (mGsb.getScreenWidth());
 							float yScale = (float) windowHeight/(float) (mGsb.getScreenHeight());
 
@@ -1466,7 +1468,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					builder.setNeutralButton("Fit", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
 							Log.v(TAG, "Fitting board");
-
+							
+							clearBlackBars();
 							float xScale = (float) (windowWidth)/(float) (mGsb.getScreenWidth());
 							float yScale = (float) (windowHeight)/(float) (mGsb.getScreenHeight());
 
@@ -1574,6 +1577,22 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			}
 		};
 		t.start();
+	}
+	
+	private void clearBlackBars() {
+		ListIterator<GraphicalSound> iterator = mGsb.getSoundList().listIterator();
+		while (iterator.hasNext()) {
+			GraphicalSound sound = iterator.next();
+			if (sound.getPath().getAbsolutePath().equals(SoundboardMenu.mTopBlackBarSoundFilePath) ||
+					sound.getPath().getAbsolutePath().equals(SoundboardMenu.mBottomBlackBarSoundFilePath)) {
+				mGsb.setScreenHeight(mGsb.getScreenHeight() - Float.valueOf(sound.getImageHeight()).intValue());
+				iterator.remove();
+			} else if (sound.getPath().getAbsolutePath().equals(SoundboardMenu.mLeftBlackBarSoundFilePath) ||
+					sound.getPath().getAbsolutePath().equals(SoundboardMenu.mRightBlackBarSoundFilePath)) {
+				mGsb.setScreenWidth(mGsb.getScreenWidth() - Float.valueOf(sound.getImageWidth()).intValue());
+				iterator.remove();
+			}
+		}
 	}
 	
 	class DrawingPanel extends SurfaceView implements SurfaceHolder.Callback {
