@@ -38,9 +38,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.Filterable;
 import android.widget.ImageView;
@@ -67,7 +70,7 @@ import fi.mikuz.boarder.util.FileProcessor;
 import fi.mikuz.boarder.util.GlobalSettings;
 import fi.mikuz.boarder.util.IconUtils;
 import fi.mikuz.boarder.util.SoundPlayerControl;
-import fi.mikuz.boarder.util.dbadapter.BoardsDbAdapter;
+import fi.mikuz.boarder.util.dbadapter.MenuDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.GlobalVariablesDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
@@ -87,13 +90,16 @@ public class SoundboardMenu extends BoarderListActivity {
 	private static final int ACTIVITY_ADD = 0;
 	private static final int ACTIVITY_EDIT = 1;
 	
-	private BoardsDbAdapter mDbHelper;
+	private MenuDbAdapter mDbHelper;
     private GlobalVariablesDbAdapter mGlobalVariableDbHelper;
 	private int mMoveBoard = -1;
-	private BoardsCursorAdapter mBoardsCursorAdapter;
+	private CursorAdapter mMenuCursorAdapter;
 	
 	Intent mIntent;
     String mAction;
+    
+    private final Handler mHandler = new Handler();
+    ProgressDialog mWaitDialog;
 	
 	public static List<SoundPlayer> mSoundPlayerList = new ArrayList<SoundPlayer>();
 	public static GraphicalSound mCopiedSound = null;
@@ -152,7 +158,7 @@ public class SoundboardMenu extends BoarderListActivity {
         				break;
         			}
         		}
-        		i.putExtra(BoardsDbAdapter.KEY_TITLE, launchExtra);
+        		i.putExtra(MenuDbAdapter.KEY_TITLE, launchExtra);
         		startActivityForResult(i, ACTIVITY_EDIT);
         	} catch (NullPointerException e) {
         		mIntent = new Intent();
@@ -169,7 +175,7 @@ public class SoundboardMenu extends BoarderListActivity {
 	    mFunctionSounds.add(mLeftBlackBarSoundFilePath);
 	    mFunctionSounds.add(mRightBlackBarSoundFilePath);
 	    
-	    mDbHelper = new BoardsDbAdapter(this);
+	    mDbHelper = new MenuDbAdapter(this);
 	    mDbHelper.open();
 	    
 	    mGlobalVariableDbHelper = new GlobalVariablesDbAdapter(this);
@@ -181,7 +187,7 @@ public class SoundboardMenu extends BoarderListActivity {
 			mSbDir.mkdirs();
 		}
         
-        refreshBoards();
+        refreshMenu();
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
         View layout = inflater.inflate(R.layout.soundboard_menu_list, (ViewGroup) findViewById(R.id.soundboard_menu_root));
         Button enableNotificationButton = (Button) layout.findViewById(R.id.enableNotificationButton);
@@ -257,14 +263,14 @@ public class SoundboardMenu extends BoarderListActivity {
     	setProgressBarIndeterminateVisibility(true);
     	Thread t = new Thread() {
 			public void run() {
-				updateBoards();
+				updateMenu();
 				mHandler.post(mFinalizeBoardUpdating);
 	        }
 	    };
 	    t.start();
     }
     
-    synchronized private void updateBoards() {
+    synchronized private void updateMenu() {
     	
     	try {
     		Log.v(TAG, "Updating board list");
@@ -273,8 +279,8 @@ public class SoundboardMenu extends BoarderListActivity {
         		msg.show();
         	} else if (mSbDir.canRead()) {
 
-        		Cursor boardsCursor = mDbHelper.fetchAllBoards();
-        		startManagingCursor(boardsCursor);
+        		Cursor menuCursor = mDbHelper.fetchAllBoards();
+        		startManagingCursor(menuCursor);
 
         		File[] files = mSbDir.listFiles();
 
@@ -284,16 +290,16 @@ public class SoundboardMenu extends BoarderListActivity {
 
         				boolean databaseContainsFile = false;
 
-        				if (boardsCursor.moveToFirst()) {
+        				if (menuCursor.moveToFirst()) {
         					do {
-        						String boardName = boardsCursor.getString(
-        								boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE));
+        						String boardName = menuCursor.getString(
+        								menuCursor.getColumnIndexOrThrow(MenuDbAdapter.KEY_TITLE));
 
         						if (boardName.equals(files[i].getName().toString())) {
         							databaseContainsFile = true;
         							break;
         						}
-        					} while (boardsCursor.moveToNext());
+        					} while (menuCursor.moveToNext());
         				}
         				if (databaseContainsFile == false && !files[i].getName().toString().equals(mBackupDir.getName())) {
         					int boardLocaltion = 0;
@@ -311,10 +317,10 @@ public class SoundboardMenu extends BoarderListActivity {
         			}
         		}
 
-        		if (boardsCursor.moveToFirst()) {
+        		if (menuCursor.moveToFirst()) {
         			do {
-        				String boardName = boardsCursor.getString(
-        						boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE));
+        				String boardName = menuCursor.getString(
+        						menuCursor.getColumnIndexOrThrow(MenuDbAdapter.KEY_TITLE));
 
         				boolean boardInDbExists = false;
         				for (int i = 0; i < files.length; i++) {
@@ -326,7 +332,7 @@ public class SoundboardMenu extends BoarderListActivity {
 
         				if (boardInDbExists) {
 
-        					int boardLocal = BoardsDbAdapter.LOCAL_RED;
+        					int boardLocal = MenuDbAdapter.LOCAL_RED;
         					try {
         						boardLocal = BoardLocal.testIfBoardIsLocal(boardName);
         					} catch (IOException e) {
@@ -334,15 +340,15 @@ public class SoundboardMenu extends BoarderListActivity {
         					}
 
         					mDbHelper.updateBoard(
-        							boardsCursor.getInt(boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_ROWID)), 
-        							boardsCursor.getString(boardsCursor.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE)), 
+        							menuCursor.getInt(menuCursor.getColumnIndexOrThrow(MenuDbAdapter.KEY_ROWID)), 
+        							menuCursor.getString(menuCursor.getColumnIndexOrThrow(MenuDbAdapter.KEY_TITLE)), 
         							boardLocal);
 
         				} else {
-        					mDbHelper.deleteBoard(boardsCursor.getInt(boardsCursor.getColumnIndexOrThrow(
-        							BoardsDbAdapter.KEY_ROWID)));
+        					mDbHelper.deleteBoard(menuCursor.getInt(menuCursor.getColumnIndexOrThrow(
+        							MenuDbAdapter.KEY_ROWID)));
         				}
-        			} while (boardsCursor.moveToNext());
+        			} while (menuCursor.moveToNext());
         		}
         	}
     	} catch (StaleDataException e) {
@@ -353,13 +359,14 @@ public class SoundboardMenu extends BoarderListActivity {
 
     }
     
-    private void refreshBoards() {
+    private void refreshMenu() {
     	try {
-    		if (mBoardsCursorAdapter == null) {
-    			mBoardsCursorAdapter = new BoardsCursorAdapter(mDbHelper.fetchAllBoards());
-        		setListAdapter(mBoardsCursorAdapter);
+    		Cursor c = mDbHelper.fetchAllBoards();
+    		if (mMenuCursorAdapter == null) {
+    			mMenuCursorAdapter = new MenuCursorAdapter(SoundboardMenu.this.getApplicationContext(), c);
+        		setListAdapter(mMenuCursorAdapter);
     		} else {
-    			mBoardsCursorAdapter.swapCursor(mDbHelper.fetchAllBoards());
+    			mMenuCursorAdapter.swapCursor(c);
     		}
     	} catch (IllegalStateException e) {
     		Log.w(TAG, "Unable to refresh board list", e);
@@ -368,7 +375,7 @@ public class SoundboardMenu extends BoarderListActivity {
     
     final Runnable mFinalizeBoardUpdating = new Runnable() {
     	public void run() {
-    		refreshBoards();
+    		refreshMenu();
     		setProgressBarIndeterminateVisibility(false);
     	}
     };
@@ -388,13 +395,12 @@ public class SoundboardMenu extends BoarderListActivity {
 		}
     }
     
-    public class BoardsCursorAdapter extends SimpleCursorAdapter implements Filterable {
+    public class MenuCursorAdapter extends CursorAdapter implements Filterable {
 
         private int layout;
 
-        public BoardsCursorAdapter (Cursor c) {
-            super(SoundboardMenu.this, R.layout.soundboard_menu_row, c, 
-            		new String[]{BoardsDbAdapter.KEY_ROWID}, new int[]{R.layout.soundboard_menu_row});
+        public MenuCursorAdapter(Context context, Cursor c) {
+        	super(context, c, SimpleCursorAdapter.NO_SELECTION);
             startManagingCursor(c);
             this.layout = R.layout.soundboard_menu_row;
         }
@@ -406,58 +412,87 @@ public class SoundboardMenu extends BoarderListActivity {
             final LayoutInflater inflater = LayoutInflater.from(context);
             View v = inflater.inflate(layout, parent, false);
 
-            String title = c.getString(c.getColumnIndex(BoardsDbAdapter.KEY_TITLE));
-            int local = c.getInt(c.getColumnIndex(BoardsDbAdapter.KEY_LOCAL));
-            
-            setTitleText(v, title, local);
-            
-            File icon = new File(mSbDir, title + "/icon.png");
-            if (icon.exists()) {
-	            final ImageView title_icon = (ImageView) v.findViewById(R.id.soundboardIcon);
-				Bitmap bitmap = ImageDrawing.decodeFile(context, icon);
-				int viewSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, (float) 48, getResources().getDisplayMetrics());
-            	
-            	title_icon.setAdjustViewBounds(true);
-            	title_icon.setMaxHeight(viewSize);
-            	title_icon.setMaxWidth(viewSize);
-            	title_icon.setMinimumHeight(viewSize);
-            	title_icon.setMinimumWidth(viewSize);
-            	title_icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            	title_icon.setImageBitmap(bitmap);
-            }
-
             return v;
         }
 
         @Override
-        public void bindView(View v, Context context, Cursor c) {
+        public void bindView(final View v, final Context context, Cursor c) {
         	startManagingCursor(c);
-
-        	String title = c.getString(c.getColumnIndex(BoardsDbAdapter.KEY_TITLE));
-            int local = c.getInt(c.getColumnIndex(BoardsDbAdapter.KEY_LOCAL));
-            
+        	
+        	String title = c.getString(c.getColumnIndex(MenuDbAdapter.KEY_TITLE));
+            int local = c.getInt(c.getColumnIndex(MenuDbAdapter.KEY_LOCAL));
             setTitleText(v, title, local);
+            
+            ImageView icon = (ImageView) v.findViewById(R.id.soundboardIcon);
+            File iconPath = new File(mSbDir, title + "/icon.png");
+            setIcon(context, icon, iconPath);
         }
         
         private void setTitleText(View v, String title, int local) {
-        	TextView title_text = (TextView) v.findViewById(R.id.soundboardName);
-            if (title_text != null) {
-                title_text.setText(title);
+        	TextView titleText = (TextView) v.findViewById(R.id.soundboardName);
+            if (titleText != null) {
+                titleText.setText(title);
             }
             
-            if (local == BoardsDbAdapter.LOCAL_GREEN) {
-            	title_text.setTextColor(Color.parseColor("#A2F600"));
-			} else if (local == BoardsDbAdapter.LOCAL_YELLOW) {
-				title_text.setTextColor(Color.YELLOW);
-			} else if (local == BoardsDbAdapter.LOCAL_WHITE) {
-				title_text.setTextColor(Color.parseColor("#F1FFFF"));
-			} else if (local == BoardsDbAdapter.LOCAL_RED) {
-				title_text.setTextColor(Color.RED);
-			} else if (local == BoardsDbAdapter.LOCAL_ORANGE) {
-				title_text.setTextColor(Color.parseColor("#FF6600"));
+            if (local == MenuDbAdapter.LOCAL_GREEN) {
+            	titleText.setTextColor(Color.parseColor("#A2F600"));
+			} else if (local == MenuDbAdapter.LOCAL_YELLOW) {
+				titleText.setTextColor(Color.YELLOW);
+			} else if (local == MenuDbAdapter.LOCAL_WHITE) {
+				titleText.setTextColor(Color.parseColor("#F1FFFF"));
+			} else if (local == MenuDbAdapter.LOCAL_RED) {
+				titleText.setTextColor(Color.RED);
+			} else if (local == MenuDbAdapter.LOCAL_ORANGE) {
+				titleText.setTextColor(Color.parseColor("#FF6600"));
 			}
         }
+        
+        private void setIcon(final Context context, final ImageView icon, final File iconPath) {
+        	if (iconPath.exists()) {
+        		icon.setImageResource(android.R.color.transparent);
+            	Thread t = new Thread() {
+            		public void run() {
+            			Bitmap bitmap = ImageDrawing.decodeFile(context, iconPath);
+            			int viewSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, (float) 48, getResources().getDisplayMetrics());
 
+            			UpdateBoardImage update = new UpdateBoardImage(icon, bitmap, viewSize);
+            			mHandler.post(update);
+            		}
+            	};
+            	t.start();
+            } else {
+            	icon.setImageResource(R.drawable.board_icon);
+            	menuIconAnimation(icon);
+            }
+        }
+    }
+    
+    public class UpdateBoardImage implements Runnable {
+    	ImageView titleIcon;
+    	Bitmap bitmap;
+    	int viewSize;
+    	
+    	public UpdateBoardImage(ImageView title_icon, Bitmap bitmap, int viewSize) {
+    		this.titleIcon = title_icon;
+    		this.bitmap = bitmap;
+    		this.viewSize = viewSize;
+    	}
+    	
+        public void run() {
+        	titleIcon.setAdjustViewBounds(true);
+			titleIcon.setMaxHeight(viewSize);
+			titleIcon.setMaxWidth(viewSize);
+			titleIcon.setMinimumHeight(viewSize);
+			titleIcon.setMinimumWidth(viewSize);
+			titleIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+			titleIcon.setImageBitmap(bitmap);
+			menuIconAnimation(titleIcon);
+        }
+    };
+    
+    private void menuIconAnimation(View titleIcon) {
+    	Animation fadeInAnimation = AnimationUtils.loadAnimation(SoundboardMenu.this.getApplicationContext(), R.anim.menu_icon_fade_in);
+		titleIcon.startAnimation(fadeInAnimation);
     }
     
     @Override
@@ -659,9 +694,9 @@ public class SoundboardMenu extends BoarderListActivity {
     	final Cursor selection = mDbHelper.fetchBoard(info.id);
     	startManagingCursor(selection);
 		final String selectionTitle = selection.getString(
-			selection.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE));
+			selection.getColumnIndexOrThrow(MenuDbAdapter.KEY_TITLE));
 		final int selectionLocal = selection.getInt(
-				selection.getColumnIndexOrThrow(BoardsDbAdapter.KEY_LOCAL));
+				selection.getColumnIndexOrThrow(MenuDbAdapter.KEY_LOCAL));
     	
         switch(item.getItemId()) {
         	
@@ -684,7 +719,7 @@ public class SoundboardMenu extends BoarderListActivity {
     		  			
     		  			FileProcessor.renameBoard(selectionTitle, inputText);
     		  			
-    		  			mDbHelper.updateBoard(info.id, inputText, selection.getInt(selection.getColumnIndexOrThrow(BoardsDbAdapter.KEY_ROWID)));
+    		  			mDbHelper.updateBoard(info.id, inputText, selection.getInt(selection.getColumnIndexOrThrow(MenuDbAdapter.KEY_ROWID)));
     		  			initializeBoardUpdateThread();
     		  		}
     		  	});
@@ -724,7 +759,7 @@ public class SoundboardMenu extends BoarderListActivity {
         		return true;
         		
         	case R.id.menu_zip_board:
-        		if (selectionLocal == BoardsDbAdapter.LOCAL_GREEN) {
+        		if (selectionLocal == MenuDbAdapter.LOCAL_GREEN) {
         			mWaitDialog = ProgressDialog.show(this, "", "Please wait\n\n", true);
             		Toast.makeText(SoundboardMenu.this, "You will find the zip in:\n" + mShareDir.getAbsolutePath(), Toast.LENGTH_LONG).show();
             		Thread t = new Thread() {
@@ -750,9 +785,6 @@ public class SoundboardMenu extends BoarderListActivity {
     		mWaitDialog.dismiss();
     	}
     };
-    
-    final Handler mHandler = new Handler();
-    ProgressDialog mWaitDialog;
     
     private void duplicateBoard(final String boardName) {
 		mWaitDialog = ProgressDialog.show(this, "", "Please wait", true);
@@ -790,8 +822,8 @@ public class SoundboardMenu extends BoarderListActivity {
         
         Cursor selection = mDbHelper.fetchBoard(id);
     	startManagingCursor(selection);
-    	final String boardName = selection.getString(selection.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE));
-    	int boardLocal = selection.getInt(selection.getColumnIndexOrThrow(BoardsDbAdapter.KEY_LOCAL));
+    	final String boardName = selection.getString(selection.getColumnIndexOrThrow(MenuDbAdapter.KEY_TITLE));
+    	int boardLocal = selection.getInt(selection.getColumnIndexOrThrow(MenuDbAdapter.KEY_LOCAL));
     	File boardDir = new File(mSbDir, boardName);
         
         if (Intent.ACTION_CREATE_SHORTCUT.equals(mAction)) {
@@ -805,7 +837,7 @@ public class SoundboardMenu extends BoarderListActivity {
             Intent intent = new Intent();
             intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
             intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, selection.getString(
-            		selection.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE)));
+            		selection.getColumnIndexOrThrow(MenuDbAdapter.KEY_TITLE)));
             
             File icon = new File(mSbDir, boardName + "/icon.png");
             if (icon.exists()) {
@@ -826,8 +858,8 @@ public class SoundboardMenu extends BoarderListActivity {
         	Cursor moveFrom = mDbHelper.fetchBoard(mMoveBoard);
         	startManagingCursor(moveFrom);
         	
-        	String moveSourceTitle = moveFrom.getString(moveFrom.getColumnIndexOrThrow(BoardsDbAdapter.KEY_TITLE));
-        	int moveSourceLocal = moveFrom.getInt(moveFrom.getColumnIndexOrThrow(BoardsDbAdapter.KEY_LOCAL));
+        	String moveSourceTitle = moveFrom.getString(moveFrom.getColumnIndexOrThrow(MenuDbAdapter.KEY_TITLE));
+        	int moveSourceLocal = moveFrom.getInt(moveFrom.getColumnIndexOrThrow(MenuDbAdapter.KEY_LOCAL));
         	
         	mDbHelper.updateBoard((int) id, moveSourceTitle, moveSourceLocal);
         	mDbHelper.updateBoard(mMoveBoard, boardName, boardLocal);
@@ -843,7 +875,7 @@ public class SoundboardMenu extends BoarderListActivity {
         		for (File boardDirContent : boardDir.listFiles()) {
         			if (boardDirContent.getName().equals("graphicalBoard")) {
         				Intent i = new Intent(this, BoardEditor.class);
-        				i.putExtra(BoardsDbAdapter.KEY_TITLE, boardName);
+        				i.putExtra(MenuDbAdapter.KEY_TITLE, boardName);
         				startActivityForResult(i, ACTIVITY_EDIT);
         				boardFileFound = true;
         				break;
@@ -851,7 +883,7 @@ public class SoundboardMenu extends BoarderListActivity {
         		}
 	        	if (!boardFileFound) {
 	        		Intent i = new Intent(this, BoardEditor.class);
-	                i.putExtra(BoardsDbAdapter.KEY_TITLE, boardName);
+	                i.putExtra(MenuDbAdapter.KEY_TITLE, boardName);
 	        		startActivityForResult(i, ACTIVITY_ADD);
 	        	}
         	} catch (NullPointerException npe) {

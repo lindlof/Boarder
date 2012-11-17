@@ -26,7 +26,7 @@ import android.database.sqlite.SQLiteDatabase;
  * 
  * @author Jan Mikael Lindlöf
  */
-public class BoardsDbAdapter extends DbAdapter {
+public class MenuDbAdapter extends DbAdapter {
 
     public static final String KEY_TITLE = "title";
     public static final String KEY_LOCAL = "local";
@@ -49,7 +49,7 @@ public class BoardsDbAdapter extends DbAdapter {
      * 
      * @param ctx the Context within which to work
      */
-    public BoardsDbAdapter(Context ctx) {
+    public MenuDbAdapter(Context ctx) {
         this.mCtx = ctx;
     }
 
@@ -62,7 +62,7 @@ public class BoardsDbAdapter extends DbAdapter {
      *         initialization call)
      * @throws SQLException if the database could be neither opened or created
      */
-    public BoardsDbAdapter open() throws SQLException {
+    public MenuDbAdapter open() throws SQLException {
         mDbHelper = new DatabaseHelper(mCtx);
         mDb = mDbHelper.getWritableDatabase();
         return this;

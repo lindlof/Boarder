@@ -70,7 +70,7 @@ import fi.mikuz.boarder.util.FileProcessor;
 import fi.mikuz.boarder.util.IconUtils;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.XStreamUtil;
-import fi.mikuz.boarder.util.dbadapter.BoardsDbAdapter;
+import fi.mikuz.boarder.util.dbadapter.MenuDbAdapter;
 import fi.mikuz.boarder.util.editor.BoardHistoryProvider;
 import fi.mikuz.boarder.util.editor.EditorOrientation;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
@@ -167,7 +167,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
-			mBoardName = extras.getString(BoardsDbAdapter.KEY_TITLE);
+			mBoardName = extras.getString(MenuDbAdapter.KEY_TITLE);
 			setTitle(mBoardName);
 			
 			mGsbp = new GraphicalSoundboardProvider(mBoardName);
