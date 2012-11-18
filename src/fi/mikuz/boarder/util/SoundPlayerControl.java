@@ -131,25 +131,31 @@ public abstract class SoundPlayerControl {
 			}
         }
 		
+		boolean playerPrepared = false;
         try {
         	soundPlayer.prepare();
-        	soundPlayer.setVolume(volumeLeft*boardVolume, volumeRight*boardVolume);
+        	playerPrepared = true;
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(TAG, "Unable to play sound", e);
+		} catch (IllegalStateException e) {
+			Log.e(TAG, "Unable to play sound", e);
 		}
-		
-		soundPlayer.start();
-		
-		ListIterator<SoundPlayer> iterator = SoundboardMenu.mSoundPlayerList.listIterator();
         
-		while (iterator.hasNext()) {
-			SoundPlayer iteratedPlayer = iterator.next();
-			if (iteratedPlayer.isPlaying() == false) {
-				iterator.remove();
-				iteratedPlayer.release();
-	    	}
-		}
-		
+        if (playerPrepared) {
+        	soundPlayer.setVolume(volumeLeft*boardVolume, volumeRight*boardVolume);
+        	
+        	soundPlayer.start();
+    		
+    		ListIterator<SoundPlayer> iterator = SoundboardMenu.mSoundPlayerList.listIterator();
+            
+    		while (iterator.hasNext()) {
+    			SoundPlayer iteratedPlayer = iterator.next();
+    			if (iteratedPlayer.isPlaying() == false) {
+    				iterator.remove();
+    				iteratedPlayer.release();
+    	    	}
+    		}
+        }
 	}
 
 	public static void togglePlayPause(Context context) {
