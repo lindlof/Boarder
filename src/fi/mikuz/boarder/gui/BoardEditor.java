@@ -690,7 +690,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         	          	builder.show();
             	    	} else if (item == 5) {
             	    		ArrayList<String> itemArray = new ArrayList<String>();
+            	    		
+            	    		final int extraItemCount = 1;
             	    		itemArray.add("> Background image");
+            	    		
 		    	    		for (GraphicalSound sound : mGsb.getSoundList()) {
 		    	    			itemArray.add(sound.getName());
 		    	    		}
@@ -706,7 +709,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		                	    		mGsb.setBackgroundY(0);
 		                	    		mBoardHistory.createHistoryCheckpoint(mGsb);
 		                	    	} else { // Sound
-		                	    		GraphicalSound sound = mGsb.getSoundList().get(item);
+		                	    		GraphicalSound sound = mGsb.getSoundList().get(item - extraItemCount);
 			                	    	sound.setNameFrameX(50);
 			        	    			sound.setNameFrameY(50);
 			        	    			sound.generateImageXYFromNameFrameLocation();
