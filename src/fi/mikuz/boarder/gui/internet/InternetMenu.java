@@ -110,7 +110,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
     private boolean mDatabaseVersionChecked = false;
     
     private static final int mServiceVersion = 4; // TODO version control variables probably don't belong here
-    private static final int mTosVersion = 3;
+    private static final int mTosVersion = 4;
     
     private final Handler mHandler = new Handler();
 
@@ -167,6 +167,8 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
         	builder.setTitle("Terms of service");
         	builder.setMessage("Excited to get your hands on those sweet boards? - Good.\n\n" +
         			"There are some terms you must agree to and follow to get things rolling smoothly;\n\n" +
+        			"You may only communicate in English in the Boarder Internet service.\n\n" +
+        			"An uploaded board may contain any languages. However, if the board is not 'in English' that must be visibly stated in the description.\n\n" +
         			"You agree to always follow applicable laws when using Boarder.\n\n" +
         			"Pornographic and other adult only material is not allowed.\n\n" +
         			"You must be at least 13 years old to register to the Boarder Internet service.\n\n" +
