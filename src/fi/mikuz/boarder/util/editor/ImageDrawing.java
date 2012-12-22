@@ -9,6 +9,7 @@ import fi.mikuz.boarder.gui.SoundboardMenu;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -28,6 +29,7 @@ public class ImageDrawing {
 	 * @return image bitmap
 	 */
 	public static Bitmap decodeFile(Context context, File f) { // TODO Could a same bitmap in memory be reused elegantly here?
+		Looper.prepare();
 	    Bitmap b = null;
 	    
 	    // Bitmaps can take large amounts of memory.
