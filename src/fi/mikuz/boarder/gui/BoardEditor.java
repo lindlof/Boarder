@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.ConcurrentModificationException;
 import java.util.ListIterator;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -16,6 +18,7 @@ import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -31,8 +34,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -84,6 +89,8 @@ import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private String TAG = "GraphicalSoundboardEditor";
 	
+	Vibrator vibrator;
+	
 	private static EditorOrientation editorOrientation;
 	
 	public GraphicalSoundboard mGsb;
@@ -111,9 +118,17 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	private int mCopyColor = 0;
 	
+	/**
+	 * PRESS_BLANK: initial state before swipe gestures
+	 * PRESS_BOARD: initial state before tap, drag and swipe gestures
+	 * DRAG: sound is being dragged
+	 * SWIPE: swiping to other page
+	 */
+	private enum TouchGesture {PRESS_BLANK, PRESS_BOARD, DRAG, SWIPE};
+	private TouchGesture mCurrentGesture = null;
+	
 	private Paint mSoundImagePaint;
-	private GraphicalSound mDragSound = null;
-	private boolean mDrawDragSound = false;
+	private GraphicalSound mPressedSound = null;
 	private float mInitialNameFrameX = 0;
 	private float mInitialNameFrameY = 0;
 	private float mInitialImageX = 0;
@@ -162,6 +177,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         
         mBoardHistoryProvider = new BoardHistoryProvider();
         
@@ -946,14 +962,14 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	        	if (resultCode == RESULT_OK) {
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE));
-		        	mDragSound.setImagePath(image);
-		        	mDragSound.setImage(ImageDrawing.decodeFile(this.getApplicationContext(), mDragSound.getImagePath()));
+		        	mPressedSound.setImagePath(image);
+		        	mPressedSound.setImage(ImageDrawing.decodeFile(this.getApplicationContext(), mPressedSound.getImagePath()));
 	        	}
 	        	if (mSoundImageDialog != null) {
-	        		mSoundImageWidthText.setText("Width (" + mDragSound.getImage().getWidth() + ")");
-					mSoundImageHeightText.setText("Height (" + mDragSound.getImage().getHeight() + ")");
-					mSoundImageWidthInput.setText(Float.toString(mDragSound.getImage().getWidth()));
-					mSoundImageHeightInput.setText(Float.toString(mDragSound.getImage().getHeight()));
+	        		mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
+					mSoundImageHeightText.setText("Height (" + mPressedSound.getImage().getHeight() + ")");
+					mSoundImageWidthInput.setText(Float.toString(mPressedSound.getImage().getWidth()));
+					mSoundImageHeightInput.setText(Float.toString(mPressedSound.getImage().getHeight()));
 	        	}
 	        	break;
 	        	
@@ -962,8 +978,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	        	if (resultCode == RESULT_OK) {
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE));
-		        	mDragSound.setActiveImagePath(image);
-		        	mDragSound.setActiveImage(ImageDrawing.decodeFile(this.getApplicationContext(), mDragSound.getActiveImagePath()));
+		        	mPressedSound.setActiveImagePath(image);
+		        	mPressedSound.setActiveImage(ImageDrawing.decodeFile(this.getApplicationContext(), mPressedSound.getActiveImagePath()));
 	        	}
 	        	break;
 	        	
@@ -974,7 +990,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	if (extras.getBoolean("copyKey")) {
 		        		mCopyColor = CHANGE_NAME_COLOR;
 		        	} else {
-		        		mDragSound.setNameTextColorInt(extras.getInt("colorKey"));
+		        		mPressedSound.setNameTextColorInt(extras.getInt("colorKey"));
 		        	}
 	        	}
 	        	break;
@@ -986,7 +1002,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	if (extras.getBoolean("copyKey")) {
 		        		mCopyColor = CHANGE_INNER_PAINT_COLOR;
 		        	} else {
-		        		mDragSound.setNameFrameInnerColorInt(extras.getInt("colorKey"));
+		        		mPressedSound.setNameFrameInnerColorInt(extras.getInt("colorKey"));
 		        	}
 				}
 				break;
@@ -998,7 +1014,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	if (extras.getBoolean("copyKey")) {
 		        		mCopyColor = CHANGE_BORDER_PAINT_COLOR;
 		        	} else {
-		        		mDragSound.setNameFrameBorderColorInt(extras.getInt("colorKey"));
+		        		mPressedSound.setNameFrameBorderColorInt(extras.getInt("colorKey"));
 		        	}
 	        	}
 	        	break;
@@ -1023,7 +1039,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
               	  	
               	  	final CheckBox removeFileCheckBox = 
               	  		(CheckBox) removeLayout.findViewById(R.id.removeFile);
-              	  	removeFileCheckBox.setText(" DELETE " + mDragSound.getPath().getAbsolutePath());
+              	  	removeFileCheckBox.setText(" DELETE " + mPressedSound.getPath().getAbsolutePath());
               	  	
               	  	AlertDialog.Builder removeBuilder = new AlertDialog.Builder(
               	  		BoardEditor.this);
@@ -1033,10 +1049,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
               	  	removeBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
     	          	  	public void onClick(DialogInterface dialog, int whichButton) {
     	          	  		if (removeFileCheckBox.isChecked() == true) {
-    	          	  			mDragSound.getPath().delete();
+    	          	  			mPressedSound.getPath().delete();
     	          	  		}
 	    	          	  	Bundle extras = intent.getExtras();
-				        	mDragSound.setPath(new File(extras.getString(FileExplorer.ACTION_CHANGE_SOUND_PATH)));
+				        	mPressedSound.setPath(new File(extras.getString(FileExplorer.ACTION_CHANGE_SOUND_PATH)));
     	          	    }
     	          	});
 
@@ -1185,7 +1201,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     	if (mBoardName != null) {
     		try {
     			GraphicalSoundboard gsb = GraphicalSoundboard.copy(mGsb);
-    			if (mDragSound != null && mDrawDragSound == true) gsb.getSoundList().add(mDragSound); // Sound is being dragged
+    			if (mPressedSound != null && mCurrentGesture == TouchGesture.DRAG) gsb.getSoundList().add(mPressedSound); // Sound is being dragged
         		mGsbp.saveBoard(mBoardName, gsb);
         		Log.v(TAG, "Board " + mBoardName + " saved");
     		} catch (IOException e) {
@@ -1194,49 +1210,49 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     	}
     }
     
-    private void initializeDrag(MotionEvent event, GraphicalSound sound) {
-    	if (mMode == LISTEN_BOARD) {
-    		if (sound.getPath().getAbsolutePath().equals(SoundboardMenu.mPauseSoundFilePath)) { 
-    			SoundPlayerControl.togglePlayPause(this.getApplicationContext());
-    		} else {
-    			if (sound.getSecondClickAction() == GraphicalSound.SECOND_CLICK_PLAY_NEW) {
-    				SoundPlayerControl.playSound(mGsb.getPlaySimultaneously(), sound.getPath(), sound.getVolumeLeft(), 
-                			sound.getVolumeRight(), mGsb.getBoardVolume());
-    			} else if (sound.getSecondClickAction() == GraphicalSound.SECOND_CLICK_PAUSE) {
-    				SoundPlayerControl.pauseSound(mGsb.getPlaySimultaneously(), sound.getPath(), sound.getVolumeLeft(), 
-                			sound.getVolumeRight(), mGsb.getBoardVolume());
-    			} else if (sound.getSecondClickAction() == GraphicalSound.SECOND_CLICK_STOP) {
-    				SoundPlayerControl.stopSound(mGsb.getPlaySimultaneously(), sound.getPath(), sound.getVolumeLeft(), 
-                			sound.getVolumeRight(), mGsb.getBoardVolume());
-    			}
-    			mCanvasInvalidated = true;
-    		}
+    private void playTouchedSound(GraphicalSound sound) {
+    	if (sound.getPath().getAbsolutePath().equals(SoundboardMenu.mPauseSoundFilePath)) { 
+			SoundPlayerControl.togglePlayPause(this.getApplicationContext());
 		} else {
-			mDragSound = sound;
-			mDrawDragSound = true;
-			mInitialNameFrameX = sound.getNameFrameX();
-			mInitialNameFrameY = sound.getNameFrameY();
-			mInitialImageX = sound.getImageX();
-			mInitialImageY = sound.getImageY();
-			mGsb.getSoundList().remove(sound);
-			
-			mNameFrameDragDistanceX = event.getX() - sound.getNameFrameX();
-			mNameFrameDragDistanceY = event.getY() - sound.getNameFrameY();
-			mImageDragDistanceX = event.getX() - sound.getImageX();
-			mImageDragDistanceY = event.getY() - sound.getImageY();
+			if (sound.getSecondClickAction() == GraphicalSound.SECOND_CLICK_PLAY_NEW) {
+				SoundPlayerControl.playSound(mGsb.getPlaySimultaneously(), sound.getPath(), sound.getVolumeLeft(), 
+            			sound.getVolumeRight(), mGsb.getBoardVolume());
+			} else if (sound.getSecondClickAction() == GraphicalSound.SECOND_CLICK_PAUSE) {
+				SoundPlayerControl.pauseSound(mGsb.getPlaySimultaneously(), sound.getPath(), sound.getVolumeLeft(), 
+            			sound.getVolumeRight(), mGsb.getBoardVolume());
+			} else if (sound.getSecondClickAction() == GraphicalSound.SECOND_CLICK_STOP) {
+				SoundPlayerControl.stopSound(mGsb.getPlaySimultaneously(), sound.getPath(), sound.getVolumeLeft(), 
+            			sound.getVolumeRight(), mGsb.getBoardVolume());
+			}
+			mCanvasInvalidated = true;
 		}
+    }
+    
+    private void initializeDrag(float initTouchEventX, float initTouchEventY, GraphicalSound sound) {
+    	mPressedSound = sound;
+    	mCurrentGesture = TouchGesture.DRAG;
+    	mInitialNameFrameX = sound.getNameFrameX();
+    	mInitialNameFrameY = sound.getNameFrameY();
+    	mInitialImageX = sound.getImageX();
+    	mInitialImageY = sound.getImageY();
+    	mGsb.getSoundList().remove(sound);
+
+    	mNameFrameDragDistanceX = initTouchEventX - sound.getNameFrameX();
+    	mNameFrameDragDistanceY = initTouchEventY - sound.getNameFrameY();
+    	mImageDragDistanceX = initTouchEventX - sound.getImageX();
+    	mImageDragDistanceY = initTouchEventY - sound.getImageY();
     }
     
     private void copyColor(GraphicalSound sound) {
 		switch(mCopyColor) {
 			case CHANGE_NAME_COLOR:
-				mDragSound.setNameTextColorInt(sound.getNameTextColor());
+				mPressedSound.setNameTextColorInt(sound.getNameTextColor());
 				break;
 			case CHANGE_INNER_PAINT_COLOR:
-				mDragSound.setNameFrameInnerColorInt(sound.getNameFrameInnerColor());
+				mPressedSound.setNameFrameInnerColorInt(sound.getNameFrameInnerColor());
 				break;
 			case CHANGE_BORDER_PAINT_COLOR:
-				mDragSound.setNameFrameBorderColorInt(sound.getNameFrameBorderColor());
+				mPressedSound.setNameFrameBorderColorInt(sound.getNameFrameBorderColor());
 				break;
 		}
 		mCopyColor = 0;
@@ -1244,16 +1260,16 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	}
     
     void moveSound(float X, float Y) {
-		if (mDragSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
-			mDragSound.setNameFrameX(X-mNameFrameDragDistanceX);
-			mDragSound.setNameFrameY(Y-mNameFrameDragDistanceY);
+		if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
+			mPressedSound.setNameFrameX(X-mNameFrameDragDistanceX);
+			mPressedSound.setNameFrameY(Y-mNameFrameDragDistanceY);
 		}
-		if (mDragSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
-			mDragSound.setImageX(X-mImageDragDistanceX);
-			mDragSound.setImageY(Y-mImageDragDistanceY);
+		if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
+			mPressedSound.setImageX(X-mImageDragDistanceX);
+			mPressedSound.setImageY(Y-mImageDragDistanceY);
 		}
-		mGsb.getSoundList().add(mDragSound);
-		mDrawDragSound = false;
+		mGsb.getSoundList().add(mPressedSound);
+		mCurrentGesture = null;
 	}
 	
 	public void moveSoundToSlot(GraphicalSound sound, int column, int row, float imageX, float imageY, float nameX, float nameY) {
@@ -1376,7 +1392,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	}
 	
 	public boolean onTrackballEvent (MotionEvent event) {
-		if (mMode == EDIT_BOARD && event.getAction() == MotionEvent.ACTION_MOVE && mDragSound != null && 
+		if (mMode == EDIT_BOARD && event.getAction() == MotionEvent.ACTION_MOVE && mPressedSound != null && 
 				(mLastTrackballEvent == 0 || System.currentTimeMillis() - mLastTrackballEvent > 500)) {
 			mLastTrackballEvent = System.currentTimeMillis();
 			
@@ -1393,13 +1409,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				movementY = -1;
 			}
 			
-			if (mDragSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
-				mDragSound.setNameFrameX(mDragSound.getNameFrameX() + movementX);
-				mDragSound.setNameFrameY(mDragSound.getNameFrameY() + movementY);
+			if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
+				mPressedSound.setNameFrameX(mPressedSound.getNameFrameX() + movementX);
+				mPressedSound.setNameFrameY(mPressedSound.getNameFrameY() + movementY);
 			}
-			if (mDragSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
-				mDragSound.setImageX(mDragSound.getImageX() + movementX);
-				mDragSound.setImageY(mDragSound.getImageY() + movementY);
+			if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
+				mPressedSound.setImageX(mPressedSound.getImageX() + movementX);
+				mPressedSound.setImageY(mPressedSound.getImageY() + movementY);
 			}
 			mBoardHistory.setHistoryCheckpoint(mGsb);
 			return true;
@@ -1600,93 +1616,134 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	class DrawingPanel extends SurfaceView implements SurfaceHolder.Callback {
 		
+		private float mInitTouchEventX = 0;
+		private float mInitTouchEventY = 0;
+		
 		public DrawingPanel(Context context) {
 			super(context);
             getHolder().addCallback(this);
             mThread = new DrawingThread(getHolder(), this);
 		}
 		
+		private GraphicalSound findPressedSound(MotionEvent pressInitEvent) {
+			GraphicalSound pressedSound = null;
+			
+			ListIterator<GraphicalSound> iterator = mGsb.getSoundList().listIterator();
+			while (iterator.hasNext()) {iterator.next();}
+			while (iterator.hasPrevious()) {
+				GraphicalSound sound = iterator.previous();
+				String soundPath = sound.getPath().getAbsolutePath();
+				SoundNameDrawing soundNameDrawing = new SoundNameDrawing(sound);
+				float nameFrameX = sound.getNameFrameX();
+				float nameFrameY = sound.getNameFrameY();
+				float nameFrameWidth = soundNameDrawing.getNameFrameRect().width();
+				float nameFrameHeight = soundNameDrawing.getNameFrameRect().height();
+				if (pressInitEvent.getX() >= sound.getImageX() && 
+						pressInitEvent.getX() <= sound.getImageWidth() + sound.getImageX() &&
+								pressInitEvent.getY() >= sound.getImageY() &&
+										pressInitEvent.getY() <= sound.getImageHeight() + sound.getImageY())  {
+					
+					mDragTarget = DRAG_IMAGE;
+					return sound;
+					
+				} else if ((pressInitEvent.getX() >= sound.getNameFrameX() && 
+						pressInitEvent.getX() <= nameFrameWidth + sound.getNameFrameX() &&
+						pressInitEvent.getY() >= sound.getNameFrameY() && 
+						pressInitEvent.getY() <= nameFrameHeight + sound.getNameFrameY()) ||
+						
+						soundPath.equals(SoundboardMenu.mTopBlackBarSoundFilePath) && pressInitEvent.getY() <= nameFrameY ||
+						soundPath.equals(SoundboardMenu.mBottomBlackBarSoundFilePath) && pressInitEvent.getY() >= nameFrameY ||
+						soundPath.equals(SoundboardMenu.mLeftBlackBarSoundFilePath) && pressInitEvent.getX() <= nameFrameX ||
+						soundPath.equals(SoundboardMenu.mRightBlackBarSoundFilePath) && pressInitEvent.getX() >= nameFrameX) {
+					
+					mDragTarget = DRAG_TEXT;
+					return sound;
+				}
+			}
+			
+			return pressedSound;
+		}
+		
+		private long holdTime() {
+			return Calendar.getInstance().getTimeInMillis()-mClickTime;
+		}
+
+		class Checker extends TimerTask {
+			public void run() {
+				if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == EDIT_BOARD) {
+					initializeDrag(mInitTouchEventX, mInitTouchEventY, mPressedSound);
+					mCurrentGesture = TouchGesture.DRAG;
+					vibrator.vibrate(60);
+				}
+			}
+		}
+
+		/**
+		 * Release in 200ms -> Gesture = TAP
+		 */
 		@Override
 		public boolean onTouchEvent(MotionEvent event) {
 			if (mThread == null) return false;
 			synchronized (mThread.getSurfaceHolder()) {
-				if(event.getAction() == MotionEvent.ACTION_DOWN){
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					
+					mInitTouchEventX = event.getX();
+					mInitTouchEventY = event.getY();
+					
+					mPressedSound = findPressedSound(event);
+					mClickTime = Calendar.getInstance().getTimeInMillis();
+					
+					if (mPressedSound == null) {
+						mCurrentGesture = TouchGesture.PRESS_BLANK;
+					} else {
+						mCurrentGesture = TouchGesture.PRESS_BOARD;
+						vibrator.vibrate(15);
+						new Timer().schedule(new Checker(), 300);
+					}
 					
 					if (mMoveBackground) {
 						mBackgroundLeftDistance = event.getX() - mGsb.getBackgroundX();
 						mBackgroundTopDistance = event.getY() - mGsb.getBackgroundY();
-					} else {
-						ListIterator<GraphicalSound> iterator = mGsb.getSoundList().listIterator();
-						while (iterator.hasNext()) {iterator.next();}
-						while (iterator.hasPrevious()) {
-							GraphicalSound sound = iterator.previous();
-							String soundPath = sound.getPath().getAbsolutePath();
-							SoundNameDrawing soundNameDrawing = new SoundNameDrawing(sound);
-							float nameFrameX = sound.getNameFrameX();
-							float nameFrameY = sound.getNameFrameY();
-							float nameFrameWidth = soundNameDrawing.getNameFrameRect().width();
-							float nameFrameHeight = soundNameDrawing.getNameFrameRect().height();
-							if (event.getX() >= sound.getImageX() && 
-									event.getX() <= sound.getImageWidth() + sound.getImageX() &&
-									event.getY() >= sound.getImageY() &&
-									event.getY() <= sound.getImageHeight() + sound.getImageY())  {
-								if (mCopyColor != 0) {
-									copyColor(sound);
-								} else {
-									mDragTarget = DRAG_IMAGE;
-									initializeDrag(event, sound);
-								}
-								break;
-							} else if ((event.getX() >= sound.getNameFrameX() && 
-									event.getX() <= nameFrameWidth + sound.getNameFrameX() &&
-									event.getY() >= sound.getNameFrameY() && 
-									event.getY() <= nameFrameHeight + sound.getNameFrameY()) ||
-									
-									soundPath.equals(SoundboardMenu.mTopBlackBarSoundFilePath) && event.getY() <= nameFrameY ||
-									soundPath.equals(SoundboardMenu.mBottomBlackBarSoundFilePath) && event.getY() >= nameFrameY ||
-									soundPath.equals(SoundboardMenu.mLeftBlackBarSoundFilePath) && event.getX() <= nameFrameX ||
-									soundPath.equals(SoundboardMenu.mRightBlackBarSoundFilePath) && event.getX() >= nameFrameX) {
-								if (mCopyColor != 0) {
-									copyColor(sound);
-								} else {
-									mDragTarget = DRAG_TEXT;
-									initializeDrag(event, sound);
-								}
-								break;
-							}
-						}
-						
-						mClickTime = Calendar.getInstance().getTimeInMillis();
+					} else if (mCopyColor != 0) {
+						copyColor(mPressedSound);
+						mPressedSound = null;
 					}
 						
-				} else if(event.getAction() == MotionEvent.ACTION_MOVE){
+				} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
 					if (mMoveBackground) {
 						mGsb.setBackgroundX(event.getX() - mBackgroundLeftDistance);
 						mGsb.setBackgroundY(event.getY() - mBackgroundTopDistance);
-					} else if (mDrawDragSound == true) {
-						if (mDragSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
-							mDragSound.setNameFrameX(event.getX()-mNameFrameDragDistanceX);
-							mDragSound.setNameFrameY(event.getY()-mNameFrameDragDistanceY);
+					} else if (mCurrentGesture == TouchGesture.PRESS_BOARD || mCurrentGesture == TouchGesture.PRESS_BLANK) {
+
+						float swipeTriggerDistance = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+						double distanceFromInit = Math.sqrt(
+								Math.pow((mInitTouchEventX - event.getX()), 2) +
+								Math.pow((mInitTouchEventY - event.getY()), 2)); // hypotenuse
+
+						if (distanceFromInit > swipeTriggerDistance) {
+							mCurrentGesture = TouchGesture.SWIPE;
+							Log.v(TAG, "SWIPING!!!");
 						}
-						if (mDragSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
-							mDragSound.setImageX(event.getX() - mImageDragDistanceX);
-							mDragSound.setImageY(event.getY() - mImageDragDistanceY);
+
+					} else if (mCurrentGesture == TouchGesture.DRAG) {
+						if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
+							mPressedSound.setNameFrameX(event.getX()-mNameFrameDragDistanceX);
+							mPressedSound.setNameFrameY(event.getY()-mNameFrameDragDistanceY);
+						}
+						if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
+							mPressedSound.setImageX(event.getX() - mImageDragDistanceX);
+							mPressedSound.setImageY(event.getY() - mImageDragDistanceY);
 						}
 					}
 					
-				} else if(event.getAction() == MotionEvent.ACTION_UP){
+				} else if (event.getAction() == MotionEvent.ACTION_UP) {
 					if (mMoveBackground) {
 						mGsb.setBackgroundX(event.getX() - mBackgroundLeftDistance);
 						mGsb.setBackgroundY(event.getY() - mBackgroundTopDistance);
 						mBoardHistory.createHistoryCheckpoint(mGsb);
-					} else if (mDrawDragSound == true && Calendar.getInstance().getTimeInMillis()-mClickTime < 200) {
+					} else if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == EDIT_BOARD && holdTime() < 200) {
 						mClickTime = 0;
-						mDragSound.setNameFrameX(mInitialNameFrameX);
-			  			mDragSound.setNameFrameY(mInitialNameFrameY);
-			  			mDragSound.setImageX(mInitialImageX);
-			  			mDragSound.setImageY(mInitialImageY);
-			  			mGsb.getSoundList().add(mDragSound);
-			  			mDrawDragSound = false;
+			  			mCurrentGesture = null;
 			  			invalidate();
 						
 						final CharSequence[] items = {"Info", "Name settings", "Image settings", "Sound settings",
@@ -1698,34 +1755,34 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	    public void onClick(DialogInterface dialog, int item) {
 				    	    	
 				    	    	if (item == 0) {
-				    	    		SoundNameDrawing soundNameDrawing = new SoundNameDrawing(mDragSound);
+				    	    		SoundNameDrawing soundNameDrawing = new SoundNameDrawing(mPressedSound);
 				    	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
 				    	    		builder.setTitle("Sound info");
-				                	builder.setMessage("Name:\n"+mDragSound.getName()+
-				                					"\n\nSound path:\n"+mDragSound.getPath()+
-				                					"\n\nImage path:\n"+mDragSound.getImagePath()+
-				                					"\n\nActive image path:\n"+mDragSound.getActiveImagePath()+
-				                					"\n\nName and image linked:\n"+mDragSound.getLinkNameAndImage()+
-				                					"\n\nHide image or text:\n"+mDragSound.getHideImageOrText()+
-				                					"\n\nImage X:\n"+mDragSound.getImageX()+
-				                					"\n\nImage Y:\n"+mDragSound.getImageY()+
-				                					"\n\nImage width:\n"+mDragSound.getImageWidth()+
-				                					"\n\nImage height:\n"+mDragSound.getImageHeight()+
-				                					"\n\nName frame X:\n"+mDragSound.getNameFrameX()+
-				                					"\n\nName frame Y:\n"+mDragSound.getNameFrameY()+
+				                	builder.setMessage("Name:\n"+mPressedSound.getName()+
+				                					"\n\nSound path:\n"+mPressedSound.getPath()+
+				                					"\n\nImage path:\n"+mPressedSound.getImagePath()+
+				                					"\n\nActive image path:\n"+mPressedSound.getActiveImagePath()+
+				                					"\n\nName and image linked:\n"+mPressedSound.getLinkNameAndImage()+
+				                					"\n\nHide image or text:\n"+mPressedSound.getHideImageOrText()+
+				                					"\n\nImage X:\n"+mPressedSound.getImageX()+
+				                					"\n\nImage Y:\n"+mPressedSound.getImageY()+
+				                					"\n\nImage width:\n"+mPressedSound.getImageWidth()+
+				                					"\n\nImage height:\n"+mPressedSound.getImageHeight()+
+				                					"\n\nName frame X:\n"+mPressedSound.getNameFrameX()+
+				                					"\n\nName frame Y:\n"+mPressedSound.getNameFrameY()+
 				                					"\n\nName frame width:\n"+soundNameDrawing.getNameFrameRect().width()+
 				                					"\n\nName frame height:\n"+soundNameDrawing.getNameFrameRect().height()+
-				                					"\n\nAuto arrange column:\n"+mDragSound.getAutoArrangeColumn()+
-				                					"\n\nAuto arrange row:\n"+mDragSound.getAutoArrangeRow()+
-				                					"\n\nSecond click action:\n"+mDragSound.getSecondClickAction()+
-				                					"\n\nLeft volume:\n"+mDragSound.getVolumeLeft()+
-				                					"\n\nRight volume:\n"+mDragSound.getVolumeRight()+
-				                					"\n\nName frame border color:\n"+mDragSound.getNameFrameBorderColor()+
-				                					"\n\nName frame inner color:\n"+mDragSound.getNameFrameInnerColor()+
-				                					"\n\nName text color:\n"+mDragSound.getNameTextColor()+
-				                					"\n\nName text size:\n"+mDragSound.getNameSize()+
-				                					"\n\nShow name frame border paint:\n"+mDragSound.getShowNameFrameBorderPaint()+
-				                					"\n\nShow name frame inner paint:\n"+mDragSound.getShowNameFrameBorderPaint());
+				                					"\n\nAuto arrange column:\n"+mPressedSound.getAutoArrangeColumn()+
+				                					"\n\nAuto arrange row:\n"+mPressedSound.getAutoArrangeRow()+
+				                					"\n\nSecond click action:\n"+mPressedSound.getSecondClickAction()+
+				                					"\n\nLeft volume:\n"+mPressedSound.getVolumeLeft()+
+				                					"\n\nRight volume:\n"+mPressedSound.getVolumeRight()+
+				                					"\n\nName frame border color:\n"+mPressedSound.getNameFrameBorderColor()+
+				                					"\n\nName frame inner color:\n"+mPressedSound.getNameFrameInnerColor()+
+				                					"\n\nName text color:\n"+mPressedSound.getNameTextColor()+
+				                					"\n\nName text size:\n"+mPressedSound.getNameSize()+
+				                					"\n\nShow name frame border paint:\n"+mPressedSound.getShowNameFrameBorderPaint()+
+				                					"\n\nShow name frame inner paint:\n"+mPressedSound.getShowNameFrameBorderPaint());
 				                					
 				                	builder.show();
 				    	    	} else if (item == 1) {
@@ -1738,34 +1795,34 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				                	
 				                	final EditText soundNameInput = 
 				              	  		(EditText) layout.findViewById(R.id.soundNameInput);
-				              	  	soundNameInput.setText(mDragSound.getName());
+				              	  	soundNameInput.setText(mPressedSound.getName());
 				              	  	
 				              	  	final EditText soundNameSizeInput = 
 				              	  		(EditText) layout.findViewById(R.id.soundNameSizeInput);
-				              	  	soundNameSizeInput.setText(Float.toString(mDragSound.getNameSize()));
+				              	  	soundNameSizeInput.setText(Float.toString(mPressedSound.getNameSize()));
 				              	  	
 				              	  	final CheckBox checkShowSoundName = 
 				              	  		(CheckBox) layout.findViewById(R.id.showSoundNameCheckBox);
-				              	  	checkShowSoundName.setChecked(mDragSound.getHideImageOrText() != GraphicalSound.HIDE_TEXT);
+				              	  	checkShowSoundName.setChecked(mPressedSound.getHideImageOrText() != GraphicalSound.HIDE_TEXT);
 				              	  	
 				              	  	final CheckBox checkShowInnerPaint = 
 				              	  		(CheckBox) layout.findViewById(R.id.showInnerPaintCheckBox);
-				              	  	checkShowInnerPaint.setChecked(mDragSound.getShowNameFrameInnerPaint());
+				              	  	checkShowInnerPaint.setChecked(mPressedSound.getShowNameFrameInnerPaint());
 				              	  	
 				              	  	final CheckBox checkShowBorderPaint = 
 				              	  		(CheckBox) layout.findViewById(R.id.showBorderPaintCheckBox);
-				              	  	checkShowBorderPaint.setChecked(mDragSound.getShowNameFrameBorderPaint());
+				              	  	checkShowBorderPaint.setChecked(mPressedSound.getShowNameFrameBorderPaint());
 				              	  	
 				              	  	final Button nameColorButton = 
 				              	  		(Button) layout.findViewById(R.id.nameColorButton);
 				              	  	nameColorButton.setOnClickListener(new OnClickListener() {
 				    					public void onClick(View v) {
-				    						mDragSound.setName(soundNameInput.getText().toString());
-				    			  			mDragSound.generateImageXYFromNameFrameLocation();
+				    						mPressedSound.setName(soundNameInput.getText().toString());
+				    			  			mPressedSound.generateImageXYFromNameFrameLocation();
 				    			  			
 				    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 				    		        		i.putExtra("parentKey", "changeNameColor");
-				    		        		i.putExtras(XStreamUtil.getSoundBundle(mDragSound, mGsb));
+				    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
 				    		            	startActivityForResult(i, CHANGE_NAME_COLOR);
 				    					}
 				              	  	});
@@ -1774,12 +1831,12 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				              	  		(Button) layout.findViewById(R.id.innerPaintColorButton);
 				              	  	innerPaintColorButton.setOnClickListener(new OnClickListener() {
 				    					public void onClick(View v) {
-				    						mDragSound.setName(soundNameInput.getText().toString());
-				    			  			mDragSound.generateImageXYFromNameFrameLocation();
+				    						mPressedSound.setName(soundNameInput.getText().toString());
+				    			  			mPressedSound.generateImageXYFromNameFrameLocation();
 				    			  			
 				    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 				    		        		i.putExtra("parentKey", "changeinnerPaintColor");
-				    		        		i.putExtras(XStreamUtil.getSoundBundle(mDragSound, mGsb));
+				    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
 				    		            	startActivityForResult(i, CHANGE_INNER_PAINT_COLOR);
 				    					}
 				              	  	});
@@ -1788,12 +1845,12 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				              	  		(Button) layout.findViewById(R.id.borderPaintColorButton);
 				              	  	borderPaintColorButton.setOnClickListener(new OnClickListener() {
 				    					public void onClick(View v) {
-				    						mDragSound.setName(soundNameInput.getText().toString());
-				    			  			mDragSound.generateImageXYFromNameFrameLocation();
+				    						mPressedSound.setName(soundNameInput.getText().toString());
+				    			  			mPressedSound.generateImageXYFromNameFrameLocation();
 				    			  			
 				    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 				    		        		i.putExtra("parentKey", "changeBorderPaintColor");
-				    		        		i.putExtras(XStreamUtil.getSoundBundle(mDragSound, mGsb));
+				    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
 				    		            	startActivityForResult(i, CHANGE_BORDER_PAINT_COLOR);
 				    					}
 				              	  	});
@@ -1807,26 +1864,26 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	          			boolean notifyIncorrectValue = false;
 				    	          			
 				    	          			if (checkShowSoundName.isChecked() == false) {
-				    	          				mDragSound.setHideImageOrText(GraphicalSound.HIDE_TEXT);
+				    	          				mPressedSound.setHideImageOrText(GraphicalSound.HIDE_TEXT);
 				    	          			} else if (checkShowSoundName.isChecked() && 
-				    	          				mDragSound.getHideImageOrText() == GraphicalSound.HIDE_TEXT) {
-				    	          				mDragSound.setHideImageOrText(GraphicalSound.SHOW_ALL);
-				    	          				mDragSound.generateImageXYFromNameFrameLocation();
+				    	          				mPressedSound.getHideImageOrText() == GraphicalSound.HIDE_TEXT) {
+				    	          				mPressedSound.setHideImageOrText(GraphicalSound.SHOW_ALL);
+				    	          				mPressedSound.generateImageXYFromNameFrameLocation();
 				    	          			}
-				    	          			mDragSound.setShowNameFrameInnerPaint(checkShowInnerPaint.isChecked());
-				    	          			mDragSound.setShowNameFrameBorderPaint(checkShowBorderPaint.isChecked());
+				    	          			mPressedSound.setShowNameFrameInnerPaint(checkShowInnerPaint.isChecked());
+				    	          			mPressedSound.setShowNameFrameBorderPaint(checkShowBorderPaint.isChecked());
 				    	          			
-				    	          			mDragSound.setName(soundNameInput.getText().toString());
+				    	          			mPressedSound.setName(soundNameInput.getText().toString());
 				    			  			
 				    			  			try {
-				    			  				mDragSound.setNameSize(Float.valueOf(
+				    			  				mPressedSound.setNameSize(Float.valueOf(
 				    			  						soundNameSizeInput.getText().toString()).floatValue());
 				    	          			} catch(NumberFormatException nfe) {
 				    	          				notifyIncorrectValue = true;
 				    	          			}
 				    	          			
-				    	          			if (mDragSound.getLinkNameAndImage()) {
-				    			  				mDragSound.generateImageXYFromNameFrameLocation();
+				    	          			if (mPressedSound.getLinkNameAndImage()) {
+				    			  				mPressedSound.generateImageXYFromNameFrameLocation();
 				    			  			}
 				    	          			
 				    	          			if (notifyIncorrectValue == true) {
@@ -1856,19 +1913,19 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				              	  	
 				              	  	final CheckBox checkShowSoundImage = 
 				              	  		(CheckBox) layout.findViewById(R.id.showSoundImageCheckBox);
-				              	  	checkShowSoundImage.setChecked(mDragSound.getHideImageOrText() != GraphicalSound.HIDE_IMAGE);
+				              	  	checkShowSoundImage.setChecked(mPressedSound.getHideImageOrText() != GraphicalSound.HIDE_IMAGE);
 				              	  	
 				              	  	mSoundImageWidthText = (TextView) layout.findViewById(R.id.soundImageWidthText);
-				              	  	mSoundImageWidthText.setText("Width (" + mDragSound.getImage().getWidth() + ")");
+				              	  	mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
 				            	  	
 				            	  	mSoundImageHeightText = (TextView) layout.findViewById(R.id.soundImageHeightText);
-				            	  	mSoundImageHeightText.setText("Height (" + mDragSound.getImage().getHeight() + ")");
+				            	  	mSoundImageHeightText.setText("Height (" + mPressedSound.getImage().getHeight() + ")");
 				              	  	
 				              	  	mSoundImageWidthInput = (EditText) layout.findViewById(R.id.soundImageWidthInput);
-				              	  	mSoundImageWidthInput.setText(Float.toString(mDragSound.getImageWidth()));  	
+				              	  	mSoundImageWidthInput.setText(Float.toString(mPressedSound.getImageWidth()));  	
 				              	  	
 				              	  	mSoundImageHeightInput = (EditText) layout.findViewById(R.id.soundImageHeightInput);
-				              	  	mSoundImageHeightInput.setText(Float.toString(mDragSound.getImageHeight()));
+				              	  	mSoundImageHeightInput.setText(Float.toString(mPressedSound.getImageHeight()));
 				              	  	
 
 				              	  	final CheckBox scaleWidthHeight = 
@@ -1884,7 +1941,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				              	  			} catch(NumberFormatException nfe) {Log.e(TAG, "Unable to calculate width and height scale", nfe);}
 				              	  		}
 				              	  	});
-				              	  	mWidthHeightScale = mDragSound.getImageWidth() / mDragSound.getImageHeight();
+				              	  	mWidthHeightScale = mPressedSound.getImageWidth() / mPressedSound.getImageHeight();
 
 				              	  	mSoundImageWidthInput.setOnKeyListener(new OnKeyListener() {
 				              	  		public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -1913,9 +1970,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				              	  	final Button revertSizeButton = (Button) layout.findViewById(R.id.revertImageSizeButton);
 				              	  	revertSizeButton.setOnClickListener(new OnClickListener() {
 				              	  		public void onClick(View v) {
-				              	  			mSoundImageWidthInput.setText(Float.valueOf(mDragSound.getImageWidth()).toString());
-				              	  			mSoundImageHeightInput.setText(Float.valueOf(mDragSound.getImageHeight()).toString());
-				              	  			mWidthHeightScale = mDragSound.getImageWidth() / mDragSound.getImageHeight();
+				              	  			mSoundImageWidthInput.setText(Float.valueOf(mPressedSound.getImageWidth()).toString());
+				              	  			mSoundImageHeightInput.setText(Float.valueOf(mPressedSound.getImageHeight()).toString());
+				              	  			mWidthHeightScale = mPressedSound.getImageWidth() / mPressedSound.getImageHeight();
 				              	  		}
 				              	  	});
 				              	  	
@@ -1932,8 +1989,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    						Bitmap defaultSound = BitmapFactory.decodeResource(getResources(), R.drawable.sound);
 				    						String soundWidth = Integer.toString(defaultSound.getWidth());
 				    						String soundHeight = Integer.toString(defaultSound.getHeight());
-				    						mDragSound.setImage(defaultSound);
-				    						mDragSound.setImagePath(null);
+				    						mPressedSound.setImage(defaultSound);
+				    						mPressedSound.setImagePath(null);
 				    						mSoundImageWidthInput.setText(soundWidth);
 				              	  			mSoundImageHeightInput.setText(soundHeight);
 				              	  			mSoundImageWidthText.setText("Width (" + soundWidth + ")");
@@ -1951,8 +2008,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				              	  	final Button resetSoundActiveImageButton = (Button) layout.findViewById(R.id.resetSoundActiveImageButton);
 				              	  	resetSoundActiveImageButton.setOnClickListener(new OnClickListener() {
 				    					public void onClick(View v) {
-				    						mDragSound.setActiveImage(null);
-				    						mDragSound.setActiveImagePath(null);
+				    						mPressedSound.setActiveImage(null);
+				    						mPressedSound.setActiveImagePath(null);
 				    					}
 				              	  	});
 				              	  	
@@ -1965,21 +2022,21 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	          			boolean notifyIncorrectValue = false;
 				    	          			
 				    	          			if (checkShowSoundImage.isChecked() == false) {
-				    	          				mDragSound.setHideImageOrText(GraphicalSound.HIDE_IMAGE);
+				    	          				mPressedSound.setHideImageOrText(GraphicalSound.HIDE_IMAGE);
 				    	          			} else if (checkShowSoundImage.isChecked() && 
-				    	          				mDragSound.getHideImageOrText() == GraphicalSound.HIDE_IMAGE) {
-				    	          				mDragSound.setHideImageOrText(GraphicalSound.SHOW_ALL);
+				    	          				mPressedSound.getHideImageOrText() == GraphicalSound.HIDE_IMAGE) {
+				    	          				mPressedSound.setHideImageOrText(GraphicalSound.SHOW_ALL);
 				    	          			}
 				    	          			
 				    	          			try {
-				    	          				mDragSound.setImageWidth(Float.valueOf(
+				    	          				mPressedSound.setImageWidth(Float.valueOf(
 				    	          						mSoundImageWidthInput.getText().toString()).floatValue());
-				    	          				mDragSound.setImageHeight(Float.valueOf(
+				    	          				mPressedSound.setImageHeight(Float.valueOf(
 				    	          						mSoundImageHeightInput.getText().toString()).floatValue());	
 				    	          			} catch(NumberFormatException nfe) {
 				    	          				notifyIncorrectValue = true;
 				    	          			}
-				    	          			mDragSound.generateImageXYFromNameFrameLocation();
+				    	          			mPressedSound.generateImageXYFromNameFrameLocation();
 				    	          			
 				    	          			if (notifyIncorrectValue == true) {
 				    	          				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
@@ -2012,7 +2069,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	    		
 				    	    		final CheckBox linkNameAndImageCheckBox = 
 				              	  		(CheckBox) layout.findViewById(R.id.linkNameAndImageCheckBox);
-				    	    		linkNameAndImageCheckBox.setChecked(mDragSound.getLinkNameAndImage());
+				    	    		linkNameAndImageCheckBox.setChecked(mPressedSound.getLinkNameAndImage());
 				    	    		
 				    	    		final Button changeSoundPathButton = 
 				              	  		(Button) layout.findViewById(R.id.changeSoundPathButton);
@@ -2036,11 +2093,11 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						                	secondClickBuilder.setItems(items, new DialogInterface.OnClickListener() {
 						                	    public void onClick(DialogInterface dialog, int item) {
 						                	    	if (item == 0) {
-						                	    		mDragSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_PLAY_NEW);
+						                	    		mPressedSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_PLAY_NEW);
 						                	    	} else if (item == 1) {
-						                	    		mDragSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_PAUSE);
+						                	    		mPressedSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_PAUSE);
 						                	    	} else if (item == 2) {
-						                	    		mDragSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_STOP);
+						                	    		mPressedSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_STOP);
 						                	    	}
 						                	    }
 						                	});
@@ -2050,9 +2107,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				              	  	});
 				    	    		
 				    	    		final EditText leftVolumeInput = (EditText) layout.findViewById(R.id.leftVolumeInput);
-				            	  	leftVolumeInput.setText(Float.toString(mDragSound.getVolumeLeft()*100) + "%");
+				            	  	leftVolumeInput.setText(Float.toString(mPressedSound.getVolumeLeft()*100) + "%");
 				            	  	final EditText rightVolumeInput = (EditText) layout.findViewById(R.id.rightVolumeInput);
-				            	  	rightVolumeInput.setText(Float.toString(mDragSound.getVolumeRight()*100) + "%");
+				            	  	rightVolumeInput.setText(Float.toString(mPressedSound.getVolumeRight()*100) + "%");
 				    	    		
 				    	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
 				              	  	builder.setView(layout);
@@ -2060,9 +2117,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				          	  	
 				    	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 				    	          		public void onClick(DialogInterface dialog, int whichButton) {
-				    	          			mDragSound.setLinkNameAndImage(linkNameAndImageCheckBox.isChecked());
-				    	          			if (mDragSound.getLinkNameAndImage()) {
-					    	          			mDragSound.generateImageXYFromNameFrameLocation();
+				    	          			mPressedSound.setLinkNameAndImage(linkNameAndImageCheckBox.isChecked());
+				    	          			if (mPressedSound.getLinkNameAndImage()) {
+					    	          			mPressedSound.generateImageXYFromNameFrameLocation();
 				    	          			}
 				    	          			
 				    	          			boolean notifyIncorrectValue = false;
@@ -2078,7 +2135,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	          				
 				    	          				
 				    	          				if (leftVolumeValue >= 0 && leftVolumeValue <= 1 && leftVolumeValue != null) {
-				    	          					mDragSound.setVolumeLeft(leftVolumeValue);
+				    	          					mPressedSound.setVolumeLeft(leftVolumeValue);
 				    		          			} else {
 				    		          				notifyIncorrectValue = true;
 				    		          			}
@@ -2097,7 +2154,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	          				}
 				    	          				
 				    	          				if (rightVolumeValue >= 0 && rightVolumeValue <= 1 && rightVolumeValue != null) {
-				    	          					mDragSound.setVolumeRight(rightVolumeValue);
+				    	          					mPressedSound.setVolumeRight(rightVolumeValue);
 				    		          			} else {
 				    		          				notifyIncorrectValue = true;
 				    		          			}
@@ -2119,7 +2176,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	          	
 				    	          	builder.show();
 				    	    	} else if (item == 4) {
-				    	    		SoundboardMenu.mCopiedSound = (GraphicalSound) mDragSound.clone();
+				    	    		SoundboardMenu.mCopiedSound = (GraphicalSound) mPressedSound.clone();
 				    	    		
 				    	    	} else if (item == 5) {
 				                	
@@ -2131,19 +2188,19 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				              	  	
 				              	  	final CheckBox removeFileCheckBox = 
 				              	  		(CheckBox) removeLayout.findViewById(R.id.removeFile);
-				              	  	removeFileCheckBox.setText(" DELETE " + mDragSound.getPath().getAbsolutePath());
+				              	  	removeFileCheckBox.setText(" DELETE " + mPressedSound.getPath().getAbsolutePath());
 				              	  	
 				              	  	AlertDialog.Builder removeBuilder = new AlertDialog.Builder(
 				              	  		BoardEditor.this);
 				              	  	removeBuilder.setView(removeLayout);
-				              	  	removeBuilder.setTitle("Removing " + mDragSound.getName());
+				              	  	removeBuilder.setTitle("Removing " + mPressedSound.getName());
 				          	  	
 				              	  	removeBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 				    	          	  	public void onClick(DialogInterface dialog, int whichButton) {
 				    	          	  		if (removeFileCheckBox.isChecked() == true) {
-				    	          	  			mDragSound.getPath().delete();
+				    	          	  			mPressedSound.getPath().delete();
 				    	          	  		}
-				    	          	  		mGsb.getSoundList().remove(mDragSound);
+				    	          	  		mGsb.getSoundList().remove(mPressedSound);
 				    	          	  		mBoardHistory.createHistoryCheckpoint(mGsb);
 				    	          	    }
 				    	          	});
@@ -2162,11 +2219,11 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				                	setAsBuilder.setTitle("Set as...");
 				                	setAsBuilder.setItems(items, new DialogInterface.OnClickListener() {
 				                	    public void onClick(DialogInterface dialog, int item) {
-				                	    	String filePath = mDragSound.getPath().getAbsolutePath();
+				                	    	String filePath = mPressedSound.getPath().getAbsolutePath();
 
 				                	    	ContentValues values = new ContentValues();
 				                	    	values.put(MediaStore.MediaColumns.DATA, filePath);
-				                        	values.put(MediaStore.MediaColumns.TITLE, mDragSound.getName());
+				                        	values.put(MediaStore.MediaColumns.TITLE, mPressedSound.getName());
 				                        	
 				                        	values.put(MediaStore.MediaColumns.MIME_TYPE, MimeTypeMap.getSingleton().getMimeTypeFromExtension(
 				                        			filePath.substring(filePath.lastIndexOf('.'+1))));
@@ -2211,7 +2268,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	optionsAlert.show();
 				    	
 				    	invalidate();
-					} else if (mDrawDragSound == true) {
+					} else if (mCurrentGesture == TouchGesture.DRAG) {
 						if (mGsb.getAutoArrange()) {
 							
 							int width = mPanel.getWidth();
@@ -2224,7 +2281,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         						}
       							if (i > 1000) {
       								Log.e(TAG, "column fail");
-      								mDragSound.getAutoArrangeColumn();
+      								mPressedSound.getAutoArrangeColumn();
       								break;
       							}
       							i++;
@@ -2237,7 +2294,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         						}
       							if (i > 1000) {
       								Log.e(TAG, "row fail");
-      								mDragSound.getAutoArrangeRow();
+      								mPressedSound.getAutoArrangeRow();
       								break;
       							}
       							i++;
@@ -2250,16 +2307,16 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
       							}
       						}
       						
-      						if (column == mDragSound.getAutoArrangeColumn() && row == mDragSound.getAutoArrangeRow()) {
+      						if (column == mPressedSound.getAutoArrangeColumn() && row == mPressedSound.getAutoArrangeRow()) {
       							moveSound(event.getX(), event.getY());
       						} else {
       							try {
-      								moveSoundToSlot(swapSound, mDragSound.getAutoArrangeColumn(), mDragSound.getAutoArrangeRow(), 
+      								moveSoundToSlot(swapSound, mPressedSound.getAutoArrangeColumn(), mPressedSound.getAutoArrangeRow(), 
       										swapSound.getImageX(), swapSound.getImageY(), swapSound.getNameFrameX(), swapSound.getNameFrameY());
       							} catch (NullPointerException e) {}
-      							moveSoundToSlot(mDragSound, column, row, mInitialImageX, mInitialImageY, mInitialNameFrameX, mInitialNameFrameY);
-      							mGsb.addSound(mDragSound);
-      							mDrawDragSound = false;
+      							moveSoundToSlot(mPressedSound, column, row, mInitialImageX, mInitialImageY, mInitialNameFrameX, mInitialNameFrameY);
+      							mGsb.addSound(mPressedSound);
+      							mCurrentGesture = null;
       						}
   							
 						} else {
@@ -2267,6 +2324,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						}
 						mBoardHistory.createHistoryCheckpoint(mGsb);
 						
+					} else if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == LISTEN_BOARD) {
+						playTouchedSound(mPressedSound);
 					}
 				}
 				
@@ -2313,7 +2372,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				try {
 					ArrayList<GraphicalSound> drawList = new ArrayList<GraphicalSound>();
 					drawList.addAll(mGsb.getSoundList());
-					if (mDrawDragSound) drawList.add(mDragSound);
+					if (mCurrentGesture == TouchGesture.DRAG) drawList.add(mPressedSound);
 					
 					for (GraphicalSound sound : drawList) {
 						Paint barPaint = new Paint();
@@ -2385,7 +2444,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 								}
 						    }
 						    
-						    if (mGsb.getAutoArrange() && sound == mDragSound) {
+						    if (mGsb.getAutoArrange() && sound == mPressedSound) {
 						    	int width = mPanel.getWidth();
 								int height = mPanel.getHeight();
 								
@@ -2473,13 +2532,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
                     }
                 }
                 try {
-            		if (mMode == EDIT_BOARD && (mDrawDragSound || mMoveBackground )) {
+            		if (mMode == EDIT_BOARD && (mCurrentGesture == TouchGesture.DRAG || mMoveBackground )) {
             			Thread.sleep(10);
-            		} else if (mMode == EDIT_BOARD && mDrawDragSound == false && mMoveBackground == false) {
+            		} else if (mMode == EDIT_BOARD && mCurrentGesture != TouchGesture.DRAG && mMoveBackground == false) {
             			
             			for (int i = 0; i <= 5; i++) {
             				Thread.sleep(100);
-            				if (mDrawDragSound || mMoveBackground) {
+            				if (mCurrentGesture == TouchGesture.DRAG || mMoveBackground) {
             					break;
             				}
             			}
