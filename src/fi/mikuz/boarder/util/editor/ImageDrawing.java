@@ -29,7 +29,6 @@ public class ImageDrawing {
 	 * @return image bitmap
 	 */
 	public static Bitmap decodeFile(Context context, File f) { // TODO Could a same bitmap in memory be reused elegantly here?
-		Looper.prepare();
 	    Bitmap b = null;
 	    
 	    // Bitmaps can take large amounts of memory.
