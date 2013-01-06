@@ -18,7 +18,6 @@ import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -137,7 +136,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private float mNameFrameDragDistanceY = -1;
 	private float mImageDragDistanceX = -1;
 	private float mImageDragDistanceY = -1;
-	private long mClickTime = 0;
 	private long mLastTrackballEvent = 0;
 	private DrawingThread mThread;
 	private Menu mMenu;
@@ -150,6 +148,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private boolean mMoveBackground = false;
 	private float mBackgroundLeftDistance = 0;
 	private float mBackgroundTopDistance = 0;
+	
+	private GraphicalSound mFineTuningSound = null;
 	
 	final Handler mHandler = new Handler();
 	ProgressDialog mWaitDialog;
@@ -1618,6 +1618,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		
 		private float mInitTouchEventX = 0;
 		private float mInitTouchEventY = 0;
+		private long mClickTime = 0;
+		
+		private float mJoystickX = 0;
+		private float mJoystickY = 0;
+		private float mJoystickDistanceX = 0;
+		private float mJoystickDistanceY = 0;
+		private long mLastFineTuneTime = 0;
 		
 		public DrawingPanel(Context context) {
 			super(context);
@@ -1667,53 +1674,75 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		private long holdTime() {
 			return Calendar.getInstance().getTimeInMillis()-mClickTime;
 		}
+		
+		private void updateClickTime() {
+			mClickTime = Calendar.getInstance().getTimeInMillis();
+		}
+		
+		private long fineTuningTime() {
+			return Calendar.getInstance().getTimeInMillis()-mLastFineTuneTime;
+		}
+		
+		private void updateFineTuningTime() {
+			mLastFineTuneTime = Calendar.getInstance().getTimeInMillis();
+		}
 
 		class Checker extends TimerTask {
 			public void run() {
 				if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == EDIT_BOARD) {
 					initializeDrag(mInitTouchEventX, mInitTouchEventY, mPressedSound);
-					mCurrentGesture = TouchGesture.DRAG;
 					vibrator.vibrate(60);
 				}
 			}
 		}
 
-		/**
-		 * Release in 200ms -> Gesture = TAP
-		 */
 		@Override
 		public boolean onTouchEvent(MotionEvent event) {
 			if (mThread == null) return false;
 			synchronized (mThread.getSurfaceHolder()) {
 				if (event.getAction() == MotionEvent.ACTION_DOWN) {
-					
-					mInitTouchEventX = event.getX();
-					mInitTouchEventY = event.getY();
-					
-					mPressedSound = findPressedSound(event);
-					mClickTime = Calendar.getInstance().getTimeInMillis();
-					
-					if (mPressedSound == null) {
-						mCurrentGesture = TouchGesture.PRESS_BLANK;
-					} else {
-						mCurrentGesture = TouchGesture.PRESS_BOARD;
-						vibrator.vibrate(15);
-						new Timer().schedule(new Checker(), 300);
-					}
-					
+
 					if (mMoveBackground) {
 						mBackgroundLeftDistance = event.getX() - mGsb.getBackgroundX();
 						mBackgroundTopDistance = event.getY() - mGsb.getBackgroundY();
-					} else if (mCopyColor != 0) {
-						copyColor(mPressedSound);
-						mPressedSound = null;
-					}
+					} else if (mFineTuningSound != null) {
+						mInitTouchEventX = event.getX();
+						mInitTouchEventY = event.getY();
 						
+						mPressedSound = mFineTuningSound;
+						updateClickTime();
+						mCurrentGesture = TouchGesture.PRESS_BOARD;
+						mJoystickX = event.getX();
+						mJoystickY = event.getY();
+						mJoystickDistanceX = 0;
+						mJoystickDistanceY = 0;
+						new Timer().schedule(new Checker(), 210);
+					} else {
+						mInitTouchEventX = event.getX();
+						mInitTouchEventY = event.getY();
+
+						mPressedSound = findPressedSound(event);
+						updateClickTime();
+
+						if (mPressedSound == null) {
+							mCurrentGesture = TouchGesture.PRESS_BLANK;
+						} else {
+							mCurrentGesture = TouchGesture.PRESS_BOARD;
+							vibrator.vibrate(15);
+							new Timer().schedule(new Checker(), 300);
+						}
+
+						if (mCopyColor != 0) {
+							copyColor(mPressedSound);
+							mPressedSound = null;
+						}
+					}
 				} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
 					if (mMoveBackground) {
 						mGsb.setBackgroundX(event.getX() - mBackgroundLeftDistance);
 						mGsb.setBackgroundY(event.getY() - mBackgroundTopDistance);
-					} else if (mCurrentGesture == TouchGesture.PRESS_BOARD || mCurrentGesture == TouchGesture.PRESS_BLANK) {
+					} else if ((mCurrentGesture == TouchGesture.PRESS_BOARD || mCurrentGesture == TouchGesture.PRESS_BLANK) 
+							&& mFineTuningSound == null) {
 
 						float swipeTriggerDistance = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
 						double distanceFromInit = Math.sqrt(
@@ -1726,13 +1755,28 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						}
 
 					} else if (mCurrentGesture == TouchGesture.DRAG) {
+						float eventX = event.getX();
+						float eventY = event.getY();
+						
+						if (mFineTuningSound != null) {
+							if (fineTuningTime() > 150) {
+								mJoystickDistanceX = (eventX > mJoystickX) ? mJoystickDistanceX + 1 : mJoystickDistanceX - 1;
+								mJoystickDistanceY = (eventY > mJoystickY) ? mJoystickDistanceY + 1 : mJoystickDistanceY - 1;
+								
+								updateFineTuningTime();
+							}
+							
+							eventX = mJoystickX + mJoystickDistanceX;
+							eventY = mJoystickY + mJoystickDistanceY;
+						}
+						
 						if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
-							mPressedSound.setNameFrameX(event.getX()-mNameFrameDragDistanceX);
-							mPressedSound.setNameFrameY(event.getY()-mNameFrameDragDistanceY);
+							mPressedSound.setNameFrameX(eventX-mNameFrameDragDistanceX);
+							mPressedSound.setNameFrameY(eventY-mNameFrameDragDistanceY);
 						}
 						if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
-							mPressedSound.setImageX(event.getX() - mImageDragDistanceX);
-							mPressedSound.setImageY(event.getY() - mImageDragDistanceY);
+							mPressedSound.setImageX(eventX - mImageDragDistanceX);
+							mPressedSound.setImageY(eventY - mImageDragDistanceY);
 						}
 					}
 					
@@ -1741,12 +1785,15 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						mGsb.setBackgroundX(event.getX() - mBackgroundLeftDistance);
 						mGsb.setBackgroundY(event.getY() - mBackgroundTopDistance);
 						mBoardHistory.createHistoryCheckpoint(mGsb);
-					} else if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == EDIT_BOARD && holdTime() < 200) {
+					} else if ((mCurrentGesture == TouchGesture.PRESS_BOARD || mFineTuningSound != null) 
+							&& mMode == EDIT_BOARD && holdTime() < 200) {
 						mClickTime = 0;
 			  			mCurrentGesture = null;
 			  			invalidate();
 						
-						final CharSequence[] items = {"Info", "Name settings", "Image settings", "Sound settings",
+			  			String fineTuningText = (mFineTuningSound == null) ? "on" : "off";
+			  			
+						final CharSequence[] items = {"Fine tuning "+fineTuningText, "Info", "Name settings", "Image settings", "Sound settings",
 								"Copy sound", "Remove sound", "Set as..."};
 
 				    	AlertDialog.Builder optionsBuilder = new AlertDialog.Builder(BoardEditor.this);
@@ -1755,6 +1802,12 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	    public void onClick(DialogInterface dialog, int item) {
 				    	    	
 				    	    	if (item == 0) {
+				    	    		if (mFineTuningSound == null) {
+				    	    			mFineTuningSound = mPressedSound;
+				    	    		} else {
+				    	    			mFineTuningSound = null;
+				    	    		}
+				    	    	} else if (item == 1) {
 				    	    		SoundNameDrawing soundNameDrawing = new SoundNameDrawing(mPressedSound);
 				    	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
 				    	    		builder.setTitle("Sound info");
@@ -1785,7 +1838,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				                					"\n\nShow name frame inner paint:\n"+mPressedSound.getShowNameFrameBorderPaint());
 				                					
 				                	builder.show();
-				    	    	} else if (item == 1) {
+				    	    	} else if (item == 2) {
 				    	    		
 					    	    	LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
 				    	    			getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -1902,7 +1955,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	          	
 				    	          	builder.show();
 		    						
-				    	    	} else if (item == 2) {
+				    	    	} else if (item == 3) {
 				    	    		
 				    	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
 				    	    			getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -2059,7 +2112,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	          	
 				    	          	mSoundImageDialog = builder.create();
 				    	          	mSoundImageDialog.show();
-				    	    	} else if (item == 3) {
+				    	    	} else if (item == 4) {
 				    	    		
 				    	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
 			    	    				getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -2175,10 +2228,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	          	});
 				    	          	
 				    	          	builder.show();
-				    	    	} else if (item == 4) {
+				    	    	} else if (item ==5) {
 				    	    		SoundboardMenu.mCopiedSound = (GraphicalSound) mPressedSound.clone();
 				    	    		
-				    	    	} else if (item == 5) {
+				    	    	} else if (item == 6) {
 				                	
 				                	LayoutInflater removeInflater = (LayoutInflater) 
 				                			BoardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -2211,7 +2264,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				    	          	});
 				    	          	
 				              	  	removeBuilder.show();
-				    	    	} else if (item == 6) {
+				    	    	} else if (item == 7) {
 				    	    		final CharSequence[] items = {"Ringtone", "Notification", "Alerts"};
 
 				                	AlertDialog.Builder setAsBuilder = new AlertDialog.Builder(
@@ -2320,7 +2373,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
       						}
   							
 						} else {
-							moveSound(event.getX(), event.getY());
+							if (mFineTuningSound == null) moveSound(event.getX(), event.getY());
 						}
 						mBoardHistory.createHistoryCheckpoint(mGsb);
 						
@@ -2367,6 +2420,18 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						Log.e(TAG, "Unable to draw image " + mGsb.getBackgroundImagePath().getAbsolutePath());
 						mGsb.setBackgroundImage(BitmapFactory.decodeResource(getResources(), R.drawable.sound));
 					}
+				}
+				
+				if (mFineTuningSound != null) {
+					float joystickSide = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+					
+					RectF imageRect = new RectF();
+				    imageRect.set(mJoystickX, 
+				    		mJoystickY, 
+				    		joystickSide + mJoystickX, 
+				    		joystickSide + mJoystickY);
+				    
+					canvas.drawBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.joystick), null, imageRect, mSoundImagePaint);
 				}
 				
 				try {
