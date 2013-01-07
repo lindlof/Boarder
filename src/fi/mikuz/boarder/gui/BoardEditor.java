@@ -79,6 +79,7 @@ import fi.mikuz.boarder.util.editor.BoardHistoryProvider;
 import fi.mikuz.boarder.util.editor.EditorOrientation;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
+import fi.mikuz.boarder.util.editor.Joystick;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
 /**
@@ -170,9 +171,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private EditText mBackgroundWidthInput;
 	private EditText mBackgroundHeightInput;
 	private float mWidthHeightScale;
-	
-	private float mJoystickSide;
-	private float mJoystickReferenceDistance;
 	
 	int mNullCanvasCount = 0;
 	
@@ -269,9 +267,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	}
             }
         });
-        
-        mJoystickSide = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
-        mJoystickReferenceDistance = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, getResources().getDisplayMetrics());
 	}
 	
 	public void initEditorBoard() {
@@ -1626,13 +1621,11 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		private float mInitTouchEventY = 0;
 		private long mClickTime = 0;
 		
-		Timer mJoystickTimer = null;
-		private float mJoystickX = 0;
-		private float mJoystickY = 0;
-		private float mJoystickDistanceX = 0;
-		private float mJoystickDistanceY = 0;
 		private float mLatestEventX = 0;
 		private float mLatestEventY = 0;
+		
+		Joystick mJoystick = new Joystick(getApplicationContext());
+		Timer mJoystickTimer = null;
 		
 		Object mGestureLock = new Object();
 		
@@ -1690,39 +1683,15 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		}
 		
 		private void dragEvent(float eventX, float eventY) {
-
 			if (mFineTuningSound != null) {
-				
-
-				float moveX;
-				float moveY;
-				float joystickSide = mJoystickSide/2;
-
-				if (Math.abs(eventX - mJoystickX) < joystickSide) {
-					moveX = 0;
-				} else {
-					float joystickDistanceCancel = (eventX - mJoystickX < 0) ? joystickSide*(-1) : joystickSide;
-					moveX = (eventX - mJoystickX - joystickDistanceCancel)/mJoystickReferenceDistance;
-				}
-
-				if (Math.abs(eventY - mJoystickY) < joystickSide) {
-					moveY = 0;
-				} else {
-					float joystickDistanceCancel = (eventY - mJoystickY < 0) ? joystickSide*(-1) : joystickSide;
-					moveY = (eventY - mJoystickY - joystickDistanceCancel)/mJoystickReferenceDistance;
-				}
-
-				mJoystickDistanceX = mJoystickDistanceX + moveX;
-				mJoystickDistanceY = mJoystickDistanceY + moveY;
-
-				eventX = mInitTouchEventX + mJoystickDistanceX;
-				eventY = mInitTouchEventY + mJoystickDistanceY;
+				eventX = mInitTouchEventX + mJoystick.dragDistanceX(eventX);
+				eventY = mInitTouchEventY + mJoystick.dragDistanceY(eventY);
 			}
 
 			moveSound(eventX, eventY);
 		}
 
-		class DragTimer extends TimerTask {
+		class DragInitializeTimer extends TimerTask {
 			public void run() {
 				synchronized (mGestureLock) {
 					if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == EDIT_BOARD) {
@@ -1757,11 +1726,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						mPressedSound = mFineTuningSound;
 						updateClickTime();
 						mCurrentGesture = TouchGesture.PRESS_BOARD;
-						mJoystickX = event.getX();
-						mJoystickY = event.getY();
-						mJoystickDistanceX = 0;
-						mJoystickDistanceY = 0;
-						new Timer().schedule(new DragTimer(), 200);
+						new Timer().schedule(new DragInitializeTimer(), 200);
+						
+						mJoystick.init(event);
 						mJoystickTimer = new Timer();
 						mJoystickTimer.schedule(new JoystickTimer(), 210, 50);
 					} else {
@@ -1776,7 +1743,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						} else {
 							mCurrentGesture = TouchGesture.PRESS_BOARD;
 							vibrator.vibrate(15);
-							new Timer().schedule(new DragTimer(), 300);
+							new Timer().schedule(new DragInitializeTimer(), 300);
 						}
 
 						if (mCopyColor != 0) {
@@ -2561,14 +2528,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				}
 				
 				if (mFineTuningSound != null && mCurrentGesture == TouchGesture.DRAG) {
-
-					RectF imageRect = new RectF();
-					imageRect.set(mJoystickX - mJoystickSide/2, 
-							mJoystickY - mJoystickSide/2, 
-							mJoystickX + mJoystickSide/2, 
-							mJoystickY + mJoystickSide/2);
-
-					canvas.drawBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.joystick), null, imageRect, mSoundImagePaint);
+					canvas.drawBitmap(mJoystick.getJoystickImage(), null, mJoystick.getJoystickImageRect(), mSoundImagePaint);
 				}
 			}
 
