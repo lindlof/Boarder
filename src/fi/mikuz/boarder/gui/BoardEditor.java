@@ -123,7 +123,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	 * DRAG: sound is being dragged
 	 * SWIPE: swiping to other page
 	 */
-	private enum TouchGesture {PRESS_BLANK, PRESS_BOARD, DRAG, SWIPE};
+	private enum TouchGesture {PRESS_BLANK, PRESS_BOARD, DRAG, SWIPE, TAP};
 	private TouchGesture mCurrentGesture = null;
 	
 	private Paint mSoundImagePaint;
@@ -170,6 +170,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private EditText mBackgroundWidthInput;
 	private EditText mBackgroundHeightInput;
 	private float mWidthHeightScale;
+	
+	private float mJoystickSide;
+	private float mJoystickReferenceDistance;
 	
 	int mNullCanvasCount = 0;
 	
@@ -266,6 +269,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	}
             }
         });
+        
+        mJoystickSide = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+        mJoystickReferenceDistance = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, getResources().getDisplayMetrics());
 	}
 	
 	public void initEditorBoard() {
@@ -319,10 +325,12 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         		
         	case R.id.menu_undo:
         		mBoardHistory.undo(this);
+        		mFineTuningSound = null;
         		return true;
         	
         	case R.id.menu_redo:
         		mBoardHistory.redo(this);
+        		mFineTuningSound = null;
         		return true;
         		
         	case R.id.menu_add_sound:
@@ -1268,8 +1276,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			mPressedSound.setImageX(X-mImageDragDistanceX);
 			mPressedSound.setImageY(Y-mImageDragDistanceY);
 		}
-		mGsb.getSoundList().add(mPressedSound);
-		mCurrentGesture = null;
 	}
 	
 	public void moveSoundToSlot(GraphicalSound sound, int column, int row, float imageX, float imageY, float nameX, float nameY) {
@@ -1620,11 +1626,15 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		private float mInitTouchEventY = 0;
 		private long mClickTime = 0;
 		
+		Timer mJoystickTimer = null;
 		private float mJoystickX = 0;
 		private float mJoystickY = 0;
 		private float mJoystickDistanceX = 0;
 		private float mJoystickDistanceY = 0;
-		private long mLastFineTuneTime = 0;
+		private float mLatestEventX = 0;
+		private float mLatestEventY = 0;
+		
+		Object mGestureLock = new Object();
 		
 		public DrawingPanel(Context context) {
 			super(context);
@@ -1647,8 +1657,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				float nameFrameHeight = soundNameDrawing.getNameFrameRect().height();
 				if (pressInitEvent.getX() >= sound.getImageX() && 
 						pressInitEvent.getX() <= sound.getImageWidth() + sound.getImageX() &&
-								pressInitEvent.getY() >= sound.getImageY() &&
-										pressInitEvent.getY() <= sound.getImageHeight() + sound.getImageY())  {
+						pressInitEvent.getY() >= sound.getImageY() &&
+						pressInitEvent.getY() <= sound.getImageHeight() + sound.getImageY())  {
 					
 					mDragTarget = DRAG_IMAGE;
 					return sound;
@@ -1679,29 +1689,64 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			mClickTime = Calendar.getInstance().getTimeInMillis();
 		}
 		
-		private long fineTuningTime() {
-			return Calendar.getInstance().getTimeInMillis()-mLastFineTuneTime;
-		}
-		
-		private void updateFineTuningTime() {
-			mLastFineTuneTime = Calendar.getInstance().getTimeInMillis();
+		private void dragEvent(float eventX, float eventY) {
+
+			if (mFineTuningSound != null) {
+				
+
+				float moveX;
+				float moveY;
+				float joystickSide = mJoystickSide/2;
+
+				if (Math.abs(eventX - mJoystickX) < joystickSide) {
+					moveX = 0;
+				} else {
+					float joystickDistanceCancel = (eventX - mJoystickX < 0) ? joystickSide*(-1) : joystickSide;
+					moveX = (eventX - mJoystickX - joystickDistanceCancel)/mJoystickReferenceDistance;
+				}
+
+				if (Math.abs(eventY - mJoystickY) < joystickSide) {
+					moveY = 0;
+				} else {
+					float joystickDistanceCancel = (eventY - mJoystickY < 0) ? joystickSide*(-1) : joystickSide;
+					moveY = (eventY - mJoystickY - joystickDistanceCancel)/mJoystickReferenceDistance;
+				}
+
+				mJoystickDistanceX = mJoystickDistanceX + moveX;
+				mJoystickDistanceY = mJoystickDistanceY + moveY;
+
+				eventX = mInitTouchEventX + mJoystickDistanceX;
+				eventY = mInitTouchEventY + mJoystickDistanceY;
+			}
+
+			moveSound(eventX, eventY);
 		}
 
-		class Checker extends TimerTask {
+		class DragTimer extends TimerTask {
 			public void run() {
-				if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == EDIT_BOARD) {
-					initializeDrag(mInitTouchEventX, mInitTouchEventY, mPressedSound);
-					vibrator.vibrate(60);
+				synchronized (mGestureLock) {
+					if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == EDIT_BOARD) {
+						initializeDrag(mInitTouchEventX, mInitTouchEventY, mPressedSound);
+						vibrator.vibrate(60);
+					}
 				}
+			}
+		}
+		
+		class JoystickTimer extends TimerTask {
+			public void run() {
+				dragEvent(mLatestEventX, mLatestEventY);
 			}
 		}
 
 		@Override
 		public boolean onTouchEvent(MotionEvent event) {
+			mLatestEventX = event.getX();
+			mLatestEventY = event.getY();
+			
 			if (mThread == null) return false;
 			synchronized (mThread.getSurfaceHolder()) {
 				if (event.getAction() == MotionEvent.ACTION_DOWN) {
-
 					if (mMoveBackground) {
 						mBackgroundLeftDistance = event.getX() - mGsb.getBackgroundX();
 						mBackgroundTopDistance = event.getY() - mGsb.getBackgroundY();
@@ -1716,7 +1761,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						mJoystickY = event.getY();
 						mJoystickDistanceX = 0;
 						mJoystickDistanceY = 0;
-						new Timer().schedule(new Checker(), 210);
+						new Timer().schedule(new DragTimer(), 200);
+						mJoystickTimer = new Timer();
+						mJoystickTimer.schedule(new JoystickTimer(), 210, 50);
 					} else {
 						mInitTouchEventX = event.getX();
 						mInitTouchEventY = event.getY();
@@ -1729,7 +1776,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						} else {
 							mCurrentGesture = TouchGesture.PRESS_BOARD;
 							vibrator.vibrate(15);
-							new Timer().schedule(new Checker(), 300);
+							new Timer().schedule(new DragTimer(), 300);
 						}
 
 						if (mCopyColor != 0) {
@@ -1749,636 +1796,624 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 								Math.pow((mInitTouchEventX - event.getX()), 2) +
 								Math.pow((mInitTouchEventY - event.getY()), 2)); // hypotenuse
 
-						if (distanceFromInit > swipeTriggerDistance) {
-							mCurrentGesture = TouchGesture.SWIPE;
-							Log.v(TAG, "SWIPING!!!");
+						synchronized (mGestureLock) {
+							if (distanceFromInit > swipeTriggerDistance) {
+								mCurrentGesture = TouchGesture.SWIPE;
+								Log.v(TAG, "SWIPING!!!");
+							}
 						}
 
 					} else if (mCurrentGesture == TouchGesture.DRAG) {
-						float eventX = event.getX();
-						float eventY = event.getY();
-						
-						if (mFineTuningSound != null) {
-							if (fineTuningTime() > 150) {
-								mJoystickDistanceX = (eventX > mJoystickX) ? mJoystickDistanceX + 1 : mJoystickDistanceX - 1;
-								mJoystickDistanceY = (eventY > mJoystickY) ? mJoystickDistanceY + 1 : mJoystickDistanceY - 1;
-								
-								updateFineTuningTime();
-							}
-							
-							eventX = mJoystickX + mJoystickDistanceX;
-							eventY = mJoystickY + mJoystickDistanceY;
-						}
-						
-						if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
-							mPressedSound.setNameFrameX(eventX-mNameFrameDragDistanceX);
-							mPressedSound.setNameFrameY(eventY-mNameFrameDragDistanceY);
-						}
-						if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
-							mPressedSound.setImageX(eventX - mImageDragDistanceX);
-							mPressedSound.setImageY(eventY - mImageDragDistanceY);
-						}
+						if (mFineTuningSound == null) dragEvent(event.getX(), event.getY());
 					}
 					
 				} else if (event.getAction() == MotionEvent.ACTION_UP) {
-					if (mMoveBackground) {
-						mGsb.setBackgroundX(event.getX() - mBackgroundLeftDistance);
-						mGsb.setBackgroundY(event.getY() - mBackgroundTopDistance);
-						mBoardHistory.createHistoryCheckpoint(mGsb);
-					} else if ((mCurrentGesture == TouchGesture.PRESS_BOARD || mFineTuningSound != null) 
-							&& mMode == EDIT_BOARD && holdTime() < 200) {
-						mClickTime = 0;
-			  			mCurrentGesture = null;
-			  			invalidate();
-						
-			  			String fineTuningText = (mFineTuningSound == null) ? "on" : "off";
-			  			
-						final CharSequence[] items = {"Fine tuning "+fineTuningText, "Info", "Name settings", "Image settings", "Sound settings",
-								"Copy sound", "Remove sound", "Set as..."};
-
-				    	AlertDialog.Builder optionsBuilder = new AlertDialog.Builder(BoardEditor.this);
-				    	optionsBuilder.setTitle("Options");
-				    	optionsBuilder.setItems(items, new DialogInterface.OnClickListener() {
-				    	    public void onClick(DialogInterface dialog, int item) {
-				    	    	
-				    	    	if (item == 0) {
-				    	    		if (mFineTuningSound == null) {
-				    	    			mFineTuningSound = mPressedSound;
-				    	    		} else {
-				    	    			mFineTuningSound = null;
-				    	    		}
-				    	    	} else if (item == 1) {
-				    	    		SoundNameDrawing soundNameDrawing = new SoundNameDrawing(mPressedSound);
-				    	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
-				    	    		builder.setTitle("Sound info");
-				                	builder.setMessage("Name:\n"+mPressedSound.getName()+
-				                					"\n\nSound path:\n"+mPressedSound.getPath()+
-				                					"\n\nImage path:\n"+mPressedSound.getImagePath()+
-				                					"\n\nActive image path:\n"+mPressedSound.getActiveImagePath()+
-				                					"\n\nName and image linked:\n"+mPressedSound.getLinkNameAndImage()+
-				                					"\n\nHide image or text:\n"+mPressedSound.getHideImageOrText()+
-				                					"\n\nImage X:\n"+mPressedSound.getImageX()+
-				                					"\n\nImage Y:\n"+mPressedSound.getImageY()+
-				                					"\n\nImage width:\n"+mPressedSound.getImageWidth()+
-				                					"\n\nImage height:\n"+mPressedSound.getImageHeight()+
-				                					"\n\nName frame X:\n"+mPressedSound.getNameFrameX()+
-				                					"\n\nName frame Y:\n"+mPressedSound.getNameFrameY()+
-				                					"\n\nName frame width:\n"+soundNameDrawing.getNameFrameRect().width()+
-				                					"\n\nName frame height:\n"+soundNameDrawing.getNameFrameRect().height()+
-				                					"\n\nAuto arrange column:\n"+mPressedSound.getAutoArrangeColumn()+
-				                					"\n\nAuto arrange row:\n"+mPressedSound.getAutoArrangeRow()+
-				                					"\n\nSecond click action:\n"+mPressedSound.getSecondClickAction()+
-				                					"\n\nLeft volume:\n"+mPressedSound.getVolumeLeft()+
-				                					"\n\nRight volume:\n"+mPressedSound.getVolumeRight()+
-				                					"\n\nName frame border color:\n"+mPressedSound.getNameFrameBorderColor()+
-				                					"\n\nName frame inner color:\n"+mPressedSound.getNameFrameInnerColor()+
-				                					"\n\nName text color:\n"+mPressedSound.getNameTextColor()+
-				                					"\n\nName text size:\n"+mPressedSound.getNameSize()+
-				                					"\n\nShow name frame border paint:\n"+mPressedSound.getShowNameFrameBorderPaint()+
-				                					"\n\nShow name frame inner paint:\n"+mPressedSound.getShowNameFrameBorderPaint());
-				                					
-				                	builder.show();
-				    	    	} else if (item == 2) {
-				    	    		
-					    	    	LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
-				    	    			getSystemService(LAYOUT_INFLATER_SERVICE);
-				                	View layout = inflater.inflate(
-				                			R.layout.graphical_soundboard_editor_alert_sound_name_settings, 
-				                			(ViewGroup) findViewById(R.id.alert_settings_root));
-				                	
-				                	final EditText soundNameInput = 
-				              	  		(EditText) layout.findViewById(R.id.soundNameInput);
-				              	  	soundNameInput.setText(mPressedSound.getName());
-				              	  	
-				              	  	final EditText soundNameSizeInput = 
-				              	  		(EditText) layout.findViewById(R.id.soundNameSizeInput);
-				              	  	soundNameSizeInput.setText(Float.toString(mPressedSound.getNameSize()));
-				              	  	
-				              	  	final CheckBox checkShowSoundName = 
-				              	  		(CheckBox) layout.findViewById(R.id.showSoundNameCheckBox);
-				              	  	checkShowSoundName.setChecked(mPressedSound.getHideImageOrText() != GraphicalSound.HIDE_TEXT);
-				              	  	
-				              	  	final CheckBox checkShowInnerPaint = 
-				              	  		(CheckBox) layout.findViewById(R.id.showInnerPaintCheckBox);
-				              	  	checkShowInnerPaint.setChecked(mPressedSound.getShowNameFrameInnerPaint());
-				              	  	
-				              	  	final CheckBox checkShowBorderPaint = 
-				              	  		(CheckBox) layout.findViewById(R.id.showBorderPaintCheckBox);
-				              	  	checkShowBorderPaint.setChecked(mPressedSound.getShowNameFrameBorderPaint());
-				              	  	
-				              	  	final Button nameColorButton = 
-				              	  		(Button) layout.findViewById(R.id.nameColorButton);
-				              	  	nameColorButton.setOnClickListener(new OnClickListener() {
-				    					public void onClick(View v) {
-				    						mPressedSound.setName(soundNameInput.getText().toString());
-				    			  			mPressedSound.generateImageXYFromNameFrameLocation();
-				    			  			
-				    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
-				    		        		i.putExtra("parentKey", "changeNameColor");
-				    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
-				    		            	startActivityForResult(i, CHANGE_NAME_COLOR);
-				    					}
-				              	  	});
-				              	  	
-				              	  	final Button innerPaintColorButton = 
-				              	  		(Button) layout.findViewById(R.id.innerPaintColorButton);
-				              	  	innerPaintColorButton.setOnClickListener(new OnClickListener() {
-				    					public void onClick(View v) {
-				    						mPressedSound.setName(soundNameInput.getText().toString());
-				    			  			mPressedSound.generateImageXYFromNameFrameLocation();
-				    			  			
-				    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
-				    		        		i.putExtra("parentKey", "changeinnerPaintColor");
-				    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
-				    		            	startActivityForResult(i, CHANGE_INNER_PAINT_COLOR);
-				    					}
-				              	  	});
-				              	  	
-				              	  	final Button borderPaintColorButton = 
-				              	  		(Button) layout.findViewById(R.id.borderPaintColorButton);
-				              	  	borderPaintColorButton.setOnClickListener(new OnClickListener() {
-				    					public void onClick(View v) {
-				    						mPressedSound.setName(soundNameInput.getText().toString());
-				    			  			mPressedSound.generateImageXYFromNameFrameLocation();
-				    			  			
-				    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
-				    		        		i.putExtra("parentKey", "changeBorderPaintColor");
-				    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
-				    		            	startActivityForResult(i, CHANGE_BORDER_PAINT_COLOR);
-				    					}
-				              	  	});
-				              	  	
-				              	  	AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
-				              	  	builder.setView(layout);
-				              	  	builder.setTitle("Name settings");
-				          	  	
-				    	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-				    	          		public void onClick(DialogInterface dialog, int whichButton) {
-				    	          			boolean notifyIncorrectValue = false;
-				    	          			
-				    	          			if (checkShowSoundName.isChecked() == false) {
-				    	          				mPressedSound.setHideImageOrText(GraphicalSound.HIDE_TEXT);
-				    	          			} else if (checkShowSoundName.isChecked() && 
-				    	          				mPressedSound.getHideImageOrText() == GraphicalSound.HIDE_TEXT) {
-				    	          				mPressedSound.setHideImageOrText(GraphicalSound.SHOW_ALL);
-				    	          				mPressedSound.generateImageXYFromNameFrameLocation();
-				    	          			}
-				    	          			mPressedSound.setShowNameFrameInnerPaint(checkShowInnerPaint.isChecked());
-				    	          			mPressedSound.setShowNameFrameBorderPaint(checkShowBorderPaint.isChecked());
-				    	          			
-				    	          			mPressedSound.setName(soundNameInput.getText().toString());
-				    			  			
-				    			  			try {
-				    			  				mPressedSound.setNameSize(Float.valueOf(
-				    			  						soundNameSizeInput.getText().toString()).floatValue());
-				    	          			} catch(NumberFormatException nfe) {
-				    	          				notifyIncorrectValue = true;
-				    	          			}
-				    	          			
-				    	          			if (mPressedSound.getLinkNameAndImage()) {
-				    			  				mPressedSound.generateImageXYFromNameFrameLocation();
-				    			  			}
-				    	          			
-				    	          			if (notifyIncorrectValue == true) {
-				    	          				Toast.makeText(getApplicationContext(), "Incorrect value", 
-				    	          						Toast.LENGTH_SHORT).show();
-				    	          			}
-				    	          			
-				    	          			mBoardHistory.createHistoryCheckpoint(mGsb);
-				    	          		}
-				    	          	});
-	
-				    	          	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-				    		          	public void onClick(DialogInterface dialog, int whichButton) {
-				    	          	    }
-				    	          	});
-				    	          	
-				    	          	builder.show();
-		    						
-				    	    	} else if (item == 3) {
-				    	    		
-				    	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
-				    	    			getSystemService(LAYOUT_INFLATER_SERVICE);
-				                	View layout = inflater.inflate(
-				                			R.layout.graphical_soundboard_editor_alert_sound_image_settings, 
-				                			(ViewGroup) findViewById(R.id.alert_settings_root));
-
-				              	  	
-				              	  	final CheckBox checkShowSoundImage = 
-				              	  		(CheckBox) layout.findViewById(R.id.showSoundImageCheckBox);
-				              	  	checkShowSoundImage.setChecked(mPressedSound.getHideImageOrText() != GraphicalSound.HIDE_IMAGE);
-				              	  	
-				              	  	mSoundImageWidthText = (TextView) layout.findViewById(R.id.soundImageWidthText);
-				              	  	mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
-				            	  	
-				            	  	mSoundImageHeightText = (TextView) layout.findViewById(R.id.soundImageHeightText);
-				            	  	mSoundImageHeightText.setText("Height (" + mPressedSound.getImage().getHeight() + ")");
-				              	  	
-				              	  	mSoundImageWidthInput = (EditText) layout.findViewById(R.id.soundImageWidthInput);
-				              	  	mSoundImageWidthInput.setText(Float.toString(mPressedSound.getImageWidth()));  	
-				              	  	
-				              	  	mSoundImageHeightInput = (EditText) layout.findViewById(R.id.soundImageHeightInput);
-				              	  	mSoundImageHeightInput.setText(Float.toString(mPressedSound.getImageHeight()));
-				              	  	
-
-				              	  	final CheckBox scaleWidthHeight = 
-				              	  			(CheckBox) layout.findViewById(R.id.scaleWidthHeightCheckBox);
-				              	  	scaleWidthHeight.setChecked(true);
-
-				              	  	scaleWidthHeight.setOnClickListener(new OnClickListener() {
-				              	  		public void onClick(View v) {
-				              	  			try {
-				              	  			// Calculate a new scale
-				              	  				mWidthHeightScale = Float.valueOf(mSoundImageWidthInput.getText().toString()).floatValue() 
-				              	  									/ Float.valueOf(mSoundImageHeightInput.getText().toString()).floatValue();
-				              	  			} catch(NumberFormatException nfe) {Log.e(TAG, "Unable to calculate width and height scale", nfe);}
-				              	  		}
-				              	  	});
-				              	  	mWidthHeightScale = mPressedSound.getImageWidth() / mPressedSound.getImageHeight();
-
-				              	  	mSoundImageWidthInput.setOnKeyListener(new OnKeyListener() {
-				              	  		public boolean onKey(View v, int keyCode, KeyEvent event) {
-				              	  			if (scaleWidthHeight.isChecked()) {
-				              	  				try {
-				              	  					float value = Float.valueOf(mSoundImageWidthInput.getText().toString()).floatValue();
-				              	  					mSoundImageHeightInput.setText(Float.valueOf(value/mWidthHeightScale).toString());
-				              	  				} catch(NumberFormatException nfe) {}
-				              	  			}
-				              	  			return false;
-				              	  		}
-				              	  	});
-				              	  	
-				              	  	mSoundImageHeightInput.setOnKeyListener(new OnKeyListener() {
-										public boolean onKey(View v, int keyCode, KeyEvent event) {
-											if (scaleWidthHeight.isChecked()) {
-												try {
-													float value = Float.valueOf(mSoundImageHeightInput.getText().toString()).floatValue();
-													mSoundImageWidthInput.setText(Float.valueOf(value*mWidthHeightScale).toString());
-												} catch(NumberFormatException nfe) {}
-											}
-											return false;
-										}
-				              	  	});
-				              	  	
-				              	  	final Button revertSizeButton = (Button) layout.findViewById(R.id.revertImageSizeButton);
-				              	  	revertSizeButton.setOnClickListener(new OnClickListener() {
-				              	  		public void onClick(View v) {
-				              	  			mSoundImageWidthInput.setText(Float.valueOf(mPressedSound.getImageWidth()).toString());
-				              	  			mSoundImageHeightInput.setText(Float.valueOf(mPressedSound.getImageHeight()).toString());
-				              	  			mWidthHeightScale = mPressedSound.getImageWidth() / mPressedSound.getImageHeight();
-				              	  		}
-				              	  	});
-				              	  	
-				              	  	final Button setSoundImageButton = (Button) layout.findViewById(R.id.setSoundImageButton);
-				              	  	setSoundImageButton.setOnClickListener(new OnClickListener() {
-				    					public void onClick(View v) {
-				    						selectImageFile();
-				    					}
-				              	  	});
-				              	  	
-				              	  	final Button resetSoundImageButton = (Button) layout.findViewById(R.id.resetSoundImageButton);
-				              	  	resetSoundImageButton.setOnClickListener(new OnClickListener() {
-				    					public void onClick(View v) {
-				    						Bitmap defaultSound = BitmapFactory.decodeResource(getResources(), R.drawable.sound);
-				    						String soundWidth = Integer.toString(defaultSound.getWidth());
-				    						String soundHeight = Integer.toString(defaultSound.getHeight());
-				    						mPressedSound.setImage(defaultSound);
-				    						mPressedSound.setImagePath(null);
-				    						mSoundImageWidthInput.setText(soundWidth);
-				              	  			mSoundImageHeightInput.setText(soundHeight);
-				              	  			mSoundImageWidthText.setText("Width (" + soundWidth + ")");
-				              	  			mSoundImageHeightText.setText("Height (" + soundHeight + ")");
-				    					}
-				              	  	});
-				              	  	
-				              	  	final Button setSoundActiveImageButton = (Button) layout.findViewById(R.id.setSoundActiveImageButton);
-				              	  	setSoundActiveImageButton.setOnClickListener(new OnClickListener() {
-				    					public void onClick(View v) {
-				    						selectActiveImageFile();
-				    					}
-				              	  	});
-				              	  	
-				              	  	final Button resetSoundActiveImageButton = (Button) layout.findViewById(R.id.resetSoundActiveImageButton);
-				              	  	resetSoundActiveImageButton.setOnClickListener(new OnClickListener() {
-				    					public void onClick(View v) {
-				    						mPressedSound.setActiveImage(null);
-				    						mPressedSound.setActiveImagePath(null);
-				    					}
-				              	  	});
-				              	  	
-				              	  	AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
-				              	  	builder.setView(layout);
-				              	  	builder.setTitle("Image settings");
-				          	  	
-				    	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-				    	          		public void onClick(DialogInterface dialog, int whichButton) {
-				    	          			boolean notifyIncorrectValue = false;
-				    	          			
-				    	          			if (checkShowSoundImage.isChecked() == false) {
-				    	          				mPressedSound.setHideImageOrText(GraphicalSound.HIDE_IMAGE);
-				    	          			} else if (checkShowSoundImage.isChecked() && 
-				    	          				mPressedSound.getHideImageOrText() == GraphicalSound.HIDE_IMAGE) {
-				    	          				mPressedSound.setHideImageOrText(GraphicalSound.SHOW_ALL);
-				    	          			}
-				    	          			
-				    	          			try {
-				    	          				mPressedSound.setImageWidth(Float.valueOf(
-				    	          						mSoundImageWidthInput.getText().toString()).floatValue());
-				    	          				mPressedSound.setImageHeight(Float.valueOf(
-				    	          						mSoundImageHeightInput.getText().toString()).floatValue());	
-				    	          			} catch(NumberFormatException nfe) {
-				    	          				notifyIncorrectValue = true;
-				    	          			}
-				    	          			mPressedSound.generateImageXYFromNameFrameLocation();
-				    	          			
-				    	          			if (notifyIncorrectValue == true) {
-				    	          				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
-				    	          			}
-				    	          			mBoardHistory.createHistoryCheckpoint(mGsb);
-				    	          		}
-				    	          	});
-
-				    	          	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-				    		          	public void onClick(DialogInterface dialog, int whichButton) {
-				    	          	    }
-				    	          	});
-				    	          	
-				    	          	builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-										@Override
-										public void onCancel(DialogInterface dialog) {
-											mSoundImageDialog = null;
-										}
-									});
-				    	          	
-				    	          	mSoundImageDialog = builder.create();
-				    	          	mSoundImageDialog.show();
-				    	    	} else if (item == 4) {
-				    	    		
-				    	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
-			    	    				getSystemService(LAYOUT_INFLATER_SERVICE);
-				    	    		View layout = inflater.inflate(
-			                			R.layout.graphical_soundboard_editor_alert_sound_settings, 
-			                			(ViewGroup) findViewById(R.id.alert_settings_root));
-				    	    		
-				    	    		final CheckBox linkNameAndImageCheckBox = 
-				              	  		(CheckBox) layout.findViewById(R.id.linkNameAndImageCheckBox);
-				    	    		linkNameAndImageCheckBox.setChecked(mPressedSound.getLinkNameAndImage());
-				    	    		
-				    	    		final Button changeSoundPathButton = 
-				              	  		(Button) layout.findViewById(R.id.changeSoundPathButton);
-				    	    		changeSoundPathButton.setOnClickListener(new OnClickListener() {
-				    					public void onClick(View v) {
-				    						Intent i = new Intent(BoardEditor.this, FileExplorer.class);
-				    						i.putExtra(FileExplorer.EXTRA_ACTION_KEY, FileExplorer.ACTION_CHANGE_SOUND_PATH);
-				    						i.putExtra(FileExplorer.EXTRA_BOARD_NAME_KEY, mBoardName);
-				    						startActivityForResult(i, CHANGE_SOUND_PATH);
-				    					}
-				              	  	});
-				    	    		
-				    	    		final Button secondClickActionButton = 
-				              	  		(Button) layout.findViewById(R.id.secondClickActionButton);
-				    	    		secondClickActionButton.setOnClickListener(new OnClickListener() {
-				    					public void onClick(View v) {
-				    						final CharSequence[] items = {"Play new", "Pause", "Stop"};
-						                	AlertDialog.Builder secondClickBuilder = new AlertDialog.Builder(
-						                			BoardEditor.this);
-						                	secondClickBuilder.setTitle("Action");
-						                	secondClickBuilder.setItems(items, new DialogInterface.OnClickListener() {
-						                	    public void onClick(DialogInterface dialog, int item) {
-						                	    	if (item == 0) {
-						                	    		mPressedSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_PLAY_NEW);
-						                	    	} else if (item == 1) {
-						                	    		mPressedSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_PAUSE);
-						                	    	} else if (item == 2) {
-						                	    		mPressedSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_STOP);
-						                	    	}
-						                	    }
-						                	});
-						                	AlertDialog secondClickAlert = secondClickBuilder.create();
-						                	secondClickAlert.show();
-				    					}
-				              	  	});
-				    	    		
-				    	    		final EditText leftVolumeInput = (EditText) layout.findViewById(R.id.leftVolumeInput);
-				            	  	leftVolumeInput.setText(Float.toString(mPressedSound.getVolumeLeft()*100) + "%");
-				            	  	final EditText rightVolumeInput = (EditText) layout.findViewById(R.id.rightVolumeInput);
-				            	  	rightVolumeInput.setText(Float.toString(mPressedSound.getVolumeRight()*100) + "%");
-				    	    		
-				    	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
-				              	  	builder.setView(layout);
-				              	  	builder.setTitle("Sound settings");
-				          	  	
-				    	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-				    	          		public void onClick(DialogInterface dialog, int whichButton) {
-				    	          			mPressedSound.setLinkNameAndImage(linkNameAndImageCheckBox.isChecked());
-				    	          			if (mPressedSound.getLinkNameAndImage()) {
-					    	          			mPressedSound.generateImageXYFromNameFrameLocation();
-				    	          			}
-				    	          			
-				    	          			boolean notifyIncorrectValue = false;
-				    	          			Float leftVolumeValue = null;
-				    	          			try {
-				    	          				String leftVolumeString = leftVolumeInput.getText().toString();
-				    	          				if (leftVolumeString.contains("%")) {
-				    	          					leftVolumeValue = Float.valueOf(leftVolumeString.substring(0, 
-				    	          							leftVolumeString.indexOf("%"))).floatValue()/100;
-				    	          				} else {
-				    	          					leftVolumeValue = Float.valueOf(leftVolumeString).floatValue()/100;
-				    	          				}
-				    	          				
-				    	          				
-				    	          				if (leftVolumeValue >= 0 && leftVolumeValue <= 1 && leftVolumeValue != null) {
-				    	          					mPressedSound.setVolumeLeft(leftVolumeValue);
-				    		          			} else {
-				    		          				notifyIncorrectValue = true;
-				    		          			}
-				    	          			} catch(NumberFormatException nfe) {
-				    	          				notifyIncorrectValue = true;
-				    	          			}
-				    	          			
-				    	          			Float rightVolumeValue = null;
-				    	          			try {
-				    	          				String rightVolumeString = rightVolumeInput.getText().toString();
-				    	          				if (rightVolumeString.contains("%")) {
-				    	          				rightVolumeValue = Float.valueOf(rightVolumeString.substring(0, 
-				    	          						rightVolumeString.indexOf("%"))).floatValue()/100;
-				    	          				} else {
-				    	          					rightVolumeValue = Float.valueOf(rightVolumeString).floatValue()/100;
-				    	          				}
-				    	          				
-				    	          				if (rightVolumeValue >= 0 && rightVolumeValue <= 1 && rightVolumeValue != null) {
-				    	          					mPressedSound.setVolumeRight(rightVolumeValue);
-				    		          			} else {
-				    		          				notifyIncorrectValue = true;
-				    		          			}
-				    	          			} catch(NumberFormatException nfe) {
-				    	          				notifyIncorrectValue = true;
-				    	          			}
-				    	          			
-				    	          			if (notifyIncorrectValue == true) {
-				    	          				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
-				    	          			}
-				    	          			mBoardHistory.createHistoryCheckpoint(mGsb);
-				    	          		}
-				    	          	});
-
-				    	          	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-				    		          	public void onClick(DialogInterface dialog, int whichButton) {
-				    	          	    }
-				    	          	});
-				    	          	
-				    	          	builder.show();
-				    	    	} else if (item ==5) {
-				    	    		SoundboardMenu.mCopiedSound = (GraphicalSound) mPressedSound.clone();
-				    	    		
-				    	    	} else if (item == 6) {
-				                	
-				                	LayoutInflater removeInflater = (LayoutInflater) 
-				                			BoardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
-				                	View removeLayout = removeInflater.inflate(
-				                			R.layout.graphical_soundboard_editor_alert_remove_sound,
-				                	        (ViewGroup) findViewById(R.id.alert_remove_sound_root));
-				              	  	
-				              	  	final CheckBox removeFileCheckBox = 
-				              	  		(CheckBox) removeLayout.findViewById(R.id.removeFile);
-				              	  	removeFileCheckBox.setText(" DELETE " + mPressedSound.getPath().getAbsolutePath());
-				              	  	
-				              	  	AlertDialog.Builder removeBuilder = new AlertDialog.Builder(
-				              	  		BoardEditor.this);
-				              	  	removeBuilder.setView(removeLayout);
-				              	  	removeBuilder.setTitle("Removing " + mPressedSound.getName());
-				          	  	
-				              	  	removeBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-				    	          	  	public void onClick(DialogInterface dialog, int whichButton) {
-				    	          	  		if (removeFileCheckBox.isChecked() == true) {
-				    	          	  			mPressedSound.getPath().delete();
-				    	          	  		}
-				    	          	  		mGsb.getSoundList().remove(mPressedSound);
-				    	          	  		mBoardHistory.createHistoryCheckpoint(mGsb);
-				    	          	    }
-				    	          	});
-
-				              	  	removeBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-				    		          	public void onClick(DialogInterface dialog, int whichButton) {
-				    	          	    }
-				    	          	});
-				    	          	
-				              	  	removeBuilder.show();
-				    	    	} else if (item == 7) {
-				    	    		final CharSequence[] items = {"Ringtone", "Notification", "Alerts"};
-
-				                	AlertDialog.Builder setAsBuilder = new AlertDialog.Builder(
-				                			BoardEditor.this);
-				                	setAsBuilder.setTitle("Set as...");
-				                	setAsBuilder.setItems(items, new DialogInterface.OnClickListener() {
-				                	    public void onClick(DialogInterface dialog, int item) {
-				                	    	String filePath = mPressedSound.getPath().getAbsolutePath();
-
-				                	    	ContentValues values = new ContentValues();
-				                	    	values.put(MediaStore.MediaColumns.DATA, filePath);
-				                        	values.put(MediaStore.MediaColumns.TITLE, mPressedSound.getName());
-				                        	
-				                        	values.put(MediaStore.MediaColumns.MIME_TYPE, MimeTypeMap.getSingleton().getMimeTypeFromExtension(
-				                        			filePath.substring(filePath.lastIndexOf('.'+1))));
-				                        	values.put(MediaStore.Audio.Media.ARTIST, "Artist");
-				                	    	
-				                	    	int selectedAction = 0;
-				                	    	if (item == 0) {
-				                	    		selectedAction = RingtoneManager.TYPE_RINGTONE;
-				                	    		values.put(MediaStore.Audio.Media.IS_RINGTONE, true);
-				                            	values.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
-				                            	values.put(MediaStore.Audio.Media.IS_ALARM, false);
-				                            	values.put(MediaStore.Audio.Media.IS_MUSIC, false);
-				                	    	} else if (item == 1) {
-				                	    		selectedAction = RingtoneManager.TYPE_NOTIFICATION;
-				                	    		values.put(MediaStore.Audio.Media.IS_RINGTONE, false);
-				                            	values.put(MediaStore.Audio.Media.IS_NOTIFICATION, true);
-				                            	values.put(MediaStore.Audio.Media.IS_ALARM, false);
-				                            	values.put(MediaStore.Audio.Media.IS_MUSIC, false);
-				                	    	} else if (item == 2) {
-				                	    		selectedAction = RingtoneManager.TYPE_ALARM;
-				                	    		values.put(MediaStore.Audio.Media.IS_RINGTONE, false);
-				                            	values.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
-				                            	values.put(MediaStore.Audio.Media.IS_ALARM, true);
-				                            	values.put(MediaStore.Audio.Media.IS_MUSIC, false);
-				                	    	}
-				                        	
-				                        	Uri uri = MediaStore.Audio.Media.getContentUriForPath(filePath);
-				                        	getContentResolver().delete(uri, MediaStore.MediaColumns.DATA + "=\"" + filePath + "\"", null);
-				                        	Uri newUri = BoardEditor.this.getContentResolver().insert(uri, values);
-				                        	
-				                        	RingtoneManager.setActualDefaultRingtoneUri(BoardEditor.this, selectedAction, newUri);
-				                        	
-				                	    }
-				                	});
-				                	AlertDialog setAsAlert = setAsBuilder.create();
-				                	setAsAlert.show();
-				    	    	}
-				            	
-				    	    }
-				    	});
-				    	AlertDialog optionsAlert = optionsBuilder.create();
-				    	optionsAlert.show();
-				    	
-				    	invalidate();
-					} else if (mCurrentGesture == TouchGesture.DRAG) {
-						if (mGsb.getAutoArrange()) {
+					synchronized (mGestureLock) {
+						if (mMoveBackground) {
+							mGsb.setBackgroundX(event.getX() - mBackgroundLeftDistance);
+							mGsb.setBackgroundY(event.getY() - mBackgroundTopDistance);
+							mBoardHistory.createHistoryCheckpoint(mGsb);
+						} else if ((mCurrentGesture == TouchGesture.PRESS_BOARD || mFineTuningSound != null) 
+								&& mMode == EDIT_BOARD && holdTime() < 200) {
+							mCurrentGesture = TouchGesture.TAP;
+							mClickTime = 0;
+				  			invalidate();
 							
-							int width = mPanel.getWidth();
-							int height = mPanel.getHeight();
-      						
-      						int column = -1, i = 0;
-      						while (column == -1) {
-      							if (event.getX() >= i*(width/mGsb.getAutoArrangeColumns()) && event.getX() <= (i+1)*(width/(mGsb.getAutoArrangeColumns()))) {
-      								column = i;
-        						}
-      							if (i > 1000) {
-      								Log.e(TAG, "column fail");
-      								mPressedSound.getAutoArrangeColumn();
-      								break;
-      							}
-      							i++;
-      						}
-      						i = 0;
-      						int row = -1;
-      						while (row == -1) {
-      							if (event.getY() >= i*(height/mGsb.getAutoArrangeRows()) && event.getY() <= (i+1)*(height/(mGsb.getAutoArrangeRows()))) {
-      								row = i;
-        						}
-      							if (i > 1000) {
-      								Log.e(TAG, "row fail");
-      								mPressedSound.getAutoArrangeRow();
-      								break;
-      							}
-      							i++;
-      						}
-      						
-      						GraphicalSound swapSound = null;
-      						for (GraphicalSound sound : mGsb.getSoundList()) {
-      							if (sound.getAutoArrangeColumn() == column && sound.getAutoArrangeRow() == row) {
-      								swapSound = sound;
-      							}
-      						}
-      						
-      						if (column == mPressedSound.getAutoArrangeColumn() && row == mPressedSound.getAutoArrangeRow()) {
-      							moveSound(event.getX(), event.getY());
-      						} else {
-      							try {
-      								moveSoundToSlot(swapSound, mPressedSound.getAutoArrangeColumn(), mPressedSound.getAutoArrangeRow(), 
-      										swapSound.getImageX(), swapSound.getImageY(), swapSound.getNameFrameX(), swapSound.getNameFrameY());
-      							} catch (NullPointerException e) {}
-      							moveSoundToSlot(mPressedSound, column, row, mInitialImageX, mInitialImageY, mInitialNameFrameX, mInitialNameFrameY);
-      							mGsb.addSound(mPressedSound);
-      							mCurrentGesture = null;
-      						}
-  							
-						} else {
-							if (mFineTuningSound == null) moveSound(event.getX(), event.getY());
+				  			String fineTuningText = (mFineTuningSound == null) ? "on" : "off";
+				  			
+							final CharSequence[] items = {"Fine tuning "+fineTuningText, "Info", "Name settings", "Image settings", "Sound settings",
+									"Copy sound", "Remove sound", "Set as..."};
+	
+					    	AlertDialog.Builder optionsBuilder = new AlertDialog.Builder(BoardEditor.this);
+					    	optionsBuilder.setTitle("Options");
+					    	optionsBuilder.setItems(items, new DialogInterface.OnClickListener() {
+					    	    public void onClick(DialogInterface dialog, int item) {
+					    	    	
+					    	    	if (item == 0) {
+					    	    		if (mFineTuningSound == null) {
+					    	    			mFineTuningSound = mPressedSound;
+					    	    		} else {
+					    	    			mFineTuningSound = null;
+					    	    		}
+					    	    	} else if (item == 1) {
+					    	    		SoundNameDrawing soundNameDrawing = new SoundNameDrawing(mPressedSound);
+					    	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
+					    	    		builder.setTitle("Sound info");
+					                	builder.setMessage("Name:\n"+mPressedSound.getName()+
+					                					"\n\nSound path:\n"+mPressedSound.getPath()+
+					                					"\n\nImage path:\n"+mPressedSound.getImagePath()+
+					                					"\n\nActive image path:\n"+mPressedSound.getActiveImagePath()+
+					                					"\n\nName and image linked:\n"+mPressedSound.getLinkNameAndImage()+
+					                					"\n\nHide image or text:\n"+mPressedSound.getHideImageOrText()+
+					                					"\n\nImage X:\n"+mPressedSound.getImageX()+
+					                					"\n\nImage Y:\n"+mPressedSound.getImageY()+
+					                					"\n\nImage width:\n"+mPressedSound.getImageWidth()+
+					                					"\n\nImage height:\n"+mPressedSound.getImageHeight()+
+					                					"\n\nName frame X:\n"+mPressedSound.getNameFrameX()+
+					                					"\n\nName frame Y:\n"+mPressedSound.getNameFrameY()+
+					                					"\n\nName frame width:\n"+soundNameDrawing.getNameFrameRect().width()+
+					                					"\n\nName frame height:\n"+soundNameDrawing.getNameFrameRect().height()+
+					                					"\n\nAuto arrange column:\n"+mPressedSound.getAutoArrangeColumn()+
+					                					"\n\nAuto arrange row:\n"+mPressedSound.getAutoArrangeRow()+
+					                					"\n\nSecond click action:\n"+mPressedSound.getSecondClickAction()+
+					                					"\n\nLeft volume:\n"+mPressedSound.getVolumeLeft()+
+					                					"\n\nRight volume:\n"+mPressedSound.getVolumeRight()+
+					                					"\n\nName frame border color:\n"+mPressedSound.getNameFrameBorderColor()+
+					                					"\n\nName frame inner color:\n"+mPressedSound.getNameFrameInnerColor()+
+					                					"\n\nName text color:\n"+mPressedSound.getNameTextColor()+
+					                					"\n\nName text size:\n"+mPressedSound.getNameSize()+
+					                					"\n\nShow name frame border paint:\n"+mPressedSound.getShowNameFrameBorderPaint()+
+					                					"\n\nShow name frame inner paint:\n"+mPressedSound.getShowNameFrameBorderPaint());
+					                					
+					                	builder.show();
+					    	    	} else if (item == 2) {
+					    	    		
+						    	    	LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
+					    	    			getSystemService(LAYOUT_INFLATER_SERVICE);
+					                	View layout = inflater.inflate(
+					                			R.layout.graphical_soundboard_editor_alert_sound_name_settings, 
+					                			(ViewGroup) findViewById(R.id.alert_settings_root));
+					                	
+					                	final EditText soundNameInput = 
+					              	  		(EditText) layout.findViewById(R.id.soundNameInput);
+					              	  	soundNameInput.setText(mPressedSound.getName());
+					              	  	
+					              	  	final EditText soundNameSizeInput = 
+					              	  		(EditText) layout.findViewById(R.id.soundNameSizeInput);
+					              	  	soundNameSizeInput.setText(Float.toString(mPressedSound.getNameSize()));
+					              	  	
+					              	  	final CheckBox checkShowSoundName = 
+					              	  		(CheckBox) layout.findViewById(R.id.showSoundNameCheckBox);
+					              	  	checkShowSoundName.setChecked(mPressedSound.getHideImageOrText() != GraphicalSound.HIDE_TEXT);
+					              	  	
+					              	  	final CheckBox checkShowInnerPaint = 
+					              	  		(CheckBox) layout.findViewById(R.id.showInnerPaintCheckBox);
+					              	  	checkShowInnerPaint.setChecked(mPressedSound.getShowNameFrameInnerPaint());
+					              	  	
+					              	  	final CheckBox checkShowBorderPaint = 
+					              	  		(CheckBox) layout.findViewById(R.id.showBorderPaintCheckBox);
+					              	  	checkShowBorderPaint.setChecked(mPressedSound.getShowNameFrameBorderPaint());
+					              	  	
+					              	  	final Button nameColorButton = 
+					              	  		(Button) layout.findViewById(R.id.nameColorButton);
+					              	  	nameColorButton.setOnClickListener(new OnClickListener() {
+					    					public void onClick(View v) {
+					    						mPressedSound.setName(soundNameInput.getText().toString());
+					    			  			mPressedSound.generateImageXYFromNameFrameLocation();
+					    			  			
+					    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
+					    		        		i.putExtra("parentKey", "changeNameColor");
+					    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
+					    		            	startActivityForResult(i, CHANGE_NAME_COLOR);
+					    					}
+					              	  	});
+					              	  	
+					              	  	final Button innerPaintColorButton = 
+					              	  		(Button) layout.findViewById(R.id.innerPaintColorButton);
+					              	  	innerPaintColorButton.setOnClickListener(new OnClickListener() {
+					    					public void onClick(View v) {
+					    						mPressedSound.setName(soundNameInput.getText().toString());
+					    			  			mPressedSound.generateImageXYFromNameFrameLocation();
+					    			  			
+					    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
+					    		        		i.putExtra("parentKey", "changeinnerPaintColor");
+					    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
+					    		            	startActivityForResult(i, CHANGE_INNER_PAINT_COLOR);
+					    					}
+					              	  	});
+					              	  	
+					              	  	final Button borderPaintColorButton = 
+					              	  		(Button) layout.findViewById(R.id.borderPaintColorButton);
+					              	  	borderPaintColorButton.setOnClickListener(new OnClickListener() {
+					    					public void onClick(View v) {
+					    						mPressedSound.setName(soundNameInput.getText().toString());
+					    			  			mPressedSound.generateImageXYFromNameFrameLocation();
+					    			  			
+					    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
+					    		        		i.putExtra("parentKey", "changeBorderPaintColor");
+					    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
+					    		            	startActivityForResult(i, CHANGE_BORDER_PAINT_COLOR);
+					    					}
+					              	  	});
+					              	  	
+					              	  	AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
+					              	  	builder.setView(layout);
+					              	  	builder.setTitle("Name settings");
+					          	  	
+					    	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+					    	          		public void onClick(DialogInterface dialog, int whichButton) {
+					    	          			boolean notifyIncorrectValue = false;
+					    	          			
+					    	          			if (checkShowSoundName.isChecked() == false) {
+					    	          				mPressedSound.setHideImageOrText(GraphicalSound.HIDE_TEXT);
+					    	          			} else if (checkShowSoundName.isChecked() && 
+					    	          				mPressedSound.getHideImageOrText() == GraphicalSound.HIDE_TEXT) {
+					    	          				mPressedSound.setHideImageOrText(GraphicalSound.SHOW_ALL);
+					    	          				mPressedSound.generateImageXYFromNameFrameLocation();
+					    	          			}
+					    	          			mPressedSound.setShowNameFrameInnerPaint(checkShowInnerPaint.isChecked());
+					    	          			mPressedSound.setShowNameFrameBorderPaint(checkShowBorderPaint.isChecked());
+					    	          			
+					    	          			mPressedSound.setName(soundNameInput.getText().toString());
+					    			  			
+					    			  			try {
+					    			  				mPressedSound.setNameSize(Float.valueOf(
+					    			  						soundNameSizeInput.getText().toString()).floatValue());
+					    	          			} catch(NumberFormatException nfe) {
+					    	          				notifyIncorrectValue = true;
+					    	          			}
+					    	          			
+					    	          			if (mPressedSound.getLinkNameAndImage()) {
+					    			  				mPressedSound.generateImageXYFromNameFrameLocation();
+					    			  			}
+					    	          			
+					    	          			if (notifyIncorrectValue == true) {
+					    	          				Toast.makeText(getApplicationContext(), "Incorrect value", 
+					    	          						Toast.LENGTH_SHORT).show();
+					    	          			}
+					    	          			
+					    	          			mBoardHistory.createHistoryCheckpoint(mGsb);
+					    	          		}
+					    	          	});
+		
+					    	          	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+					    		          	public void onClick(DialogInterface dialog, int whichButton) {
+					    	          	    }
+					    	          	});
+					    	          	
+					    	          	builder.show();
+			    						
+					    	    	} else if (item == 3) {
+					    	    		
+					    	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
+					    	    			getSystemService(LAYOUT_INFLATER_SERVICE);
+					                	View layout = inflater.inflate(
+					                			R.layout.graphical_soundboard_editor_alert_sound_image_settings, 
+					                			(ViewGroup) findViewById(R.id.alert_settings_root));
+	
+					              	  	
+					              	  	final CheckBox checkShowSoundImage = 
+					              	  		(CheckBox) layout.findViewById(R.id.showSoundImageCheckBox);
+					              	  	checkShowSoundImage.setChecked(mPressedSound.getHideImageOrText() != GraphicalSound.HIDE_IMAGE);
+					              	  	
+					              	  	mSoundImageWidthText = (TextView) layout.findViewById(R.id.soundImageWidthText);
+					              	  	mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
+					            	  	
+					            	  	mSoundImageHeightText = (TextView) layout.findViewById(R.id.soundImageHeightText);
+					            	  	mSoundImageHeightText.setText("Height (" + mPressedSound.getImage().getHeight() + ")");
+					              	  	
+					              	  	mSoundImageWidthInput = (EditText) layout.findViewById(R.id.soundImageWidthInput);
+					              	  	mSoundImageWidthInput.setText(Float.toString(mPressedSound.getImageWidth()));  	
+					              	  	
+					              	  	mSoundImageHeightInput = (EditText) layout.findViewById(R.id.soundImageHeightInput);
+					              	  	mSoundImageHeightInput.setText(Float.toString(mPressedSound.getImageHeight()));
+					              	  	
+	
+					              	  	final CheckBox scaleWidthHeight = 
+					              	  			(CheckBox) layout.findViewById(R.id.scaleWidthHeightCheckBox);
+					              	  	scaleWidthHeight.setChecked(true);
+	
+					              	  	scaleWidthHeight.setOnClickListener(new OnClickListener() {
+					              	  		public void onClick(View v) {
+					              	  			try {
+					              	  			// Calculate a new scale
+					              	  				mWidthHeightScale = Float.valueOf(mSoundImageWidthInput.getText().toString()).floatValue() 
+					              	  									/ Float.valueOf(mSoundImageHeightInput.getText().toString()).floatValue();
+					              	  			} catch(NumberFormatException nfe) {Log.e(TAG, "Unable to calculate width and height scale", nfe);}
+					              	  		}
+					              	  	});
+					              	  	mWidthHeightScale = mPressedSound.getImageWidth() / mPressedSound.getImageHeight();
+	
+					              	  	mSoundImageWidthInput.setOnKeyListener(new OnKeyListener() {
+					              	  		public boolean onKey(View v, int keyCode, KeyEvent event) {
+					              	  			if (scaleWidthHeight.isChecked()) {
+					              	  				try {
+					              	  					float value = Float.valueOf(mSoundImageWidthInput.getText().toString()).floatValue();
+					              	  					mSoundImageHeightInput.setText(Float.valueOf(value/mWidthHeightScale).toString());
+					              	  				} catch(NumberFormatException nfe) {}
+					              	  			}
+					              	  			return false;
+					              	  		}
+					              	  	});
+					              	  	
+					              	  	mSoundImageHeightInput.setOnKeyListener(new OnKeyListener() {
+											public boolean onKey(View v, int keyCode, KeyEvent event) {
+												if (scaleWidthHeight.isChecked()) {
+													try {
+														float value = Float.valueOf(mSoundImageHeightInput.getText().toString()).floatValue();
+														mSoundImageWidthInput.setText(Float.valueOf(value*mWidthHeightScale).toString());
+													} catch(NumberFormatException nfe) {}
+												}
+												return false;
+											}
+					              	  	});
+					              	  	
+					              	  	final Button revertSizeButton = (Button) layout.findViewById(R.id.revertImageSizeButton);
+					              	  	revertSizeButton.setOnClickListener(new OnClickListener() {
+					              	  		public void onClick(View v) {
+					              	  			mSoundImageWidthInput.setText(Float.valueOf(mPressedSound.getImageWidth()).toString());
+					              	  			mSoundImageHeightInput.setText(Float.valueOf(mPressedSound.getImageHeight()).toString());
+					              	  			mWidthHeightScale = mPressedSound.getImageWidth() / mPressedSound.getImageHeight();
+					              	  		}
+					              	  	});
+					              	  	
+					              	  	final Button setSoundImageButton = (Button) layout.findViewById(R.id.setSoundImageButton);
+					              	  	setSoundImageButton.setOnClickListener(new OnClickListener() {
+					    					public void onClick(View v) {
+					    						selectImageFile();
+					    					}
+					              	  	});
+					              	  	
+					              	  	final Button resetSoundImageButton = (Button) layout.findViewById(R.id.resetSoundImageButton);
+					              	  	resetSoundImageButton.setOnClickListener(new OnClickListener() {
+					    					public void onClick(View v) {
+					    						Bitmap defaultSound = BitmapFactory.decodeResource(getResources(), R.drawable.sound);
+					    						String soundWidth = Integer.toString(defaultSound.getWidth());
+					    						String soundHeight = Integer.toString(defaultSound.getHeight());
+					    						mPressedSound.setImage(defaultSound);
+					    						mPressedSound.setImagePath(null);
+					    						mSoundImageWidthInput.setText(soundWidth);
+					              	  			mSoundImageHeightInput.setText(soundHeight);
+					              	  			mSoundImageWidthText.setText("Width (" + soundWidth + ")");
+					              	  			mSoundImageHeightText.setText("Height (" + soundHeight + ")");
+					    					}
+					              	  	});
+					              	  	
+					              	  	final Button setSoundActiveImageButton = (Button) layout.findViewById(R.id.setSoundActiveImageButton);
+					              	  	setSoundActiveImageButton.setOnClickListener(new OnClickListener() {
+					    					public void onClick(View v) {
+					    						selectActiveImageFile();
+					    					}
+					              	  	});
+					              	  	
+					              	  	final Button resetSoundActiveImageButton = (Button) layout.findViewById(R.id.resetSoundActiveImageButton);
+					              	  	resetSoundActiveImageButton.setOnClickListener(new OnClickListener() {
+					    					public void onClick(View v) {
+					    						mPressedSound.setActiveImage(null);
+					    						mPressedSound.setActiveImagePath(null);
+					    					}
+					              	  	});
+					              	  	
+					              	  	AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
+					              	  	builder.setView(layout);
+					              	  	builder.setTitle("Image settings");
+					          	  	
+					    	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+					    	          		public void onClick(DialogInterface dialog, int whichButton) {
+					    	          			boolean notifyIncorrectValue = false;
+					    	          			
+					    	          			if (checkShowSoundImage.isChecked() == false) {
+					    	          				mPressedSound.setHideImageOrText(GraphicalSound.HIDE_IMAGE);
+					    	          			} else if (checkShowSoundImage.isChecked() && 
+					    	          				mPressedSound.getHideImageOrText() == GraphicalSound.HIDE_IMAGE) {
+					    	          				mPressedSound.setHideImageOrText(GraphicalSound.SHOW_ALL);
+					    	          			}
+					    	          			
+					    	          			try {
+					    	          				mPressedSound.setImageWidth(Float.valueOf(
+					    	          						mSoundImageWidthInput.getText().toString()).floatValue());
+					    	          				mPressedSound.setImageHeight(Float.valueOf(
+					    	          						mSoundImageHeightInput.getText().toString()).floatValue());	
+					    	          			} catch(NumberFormatException nfe) {
+					    	          				notifyIncorrectValue = true;
+					    	          			}
+					    	          			mPressedSound.generateImageXYFromNameFrameLocation();
+					    	          			
+					    	          			if (notifyIncorrectValue == true) {
+					    	          				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
+					    	          			}
+					    	          			mBoardHistory.createHistoryCheckpoint(mGsb);
+					    	          		}
+					    	          	});
+	
+					    	          	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+					    		          	public void onClick(DialogInterface dialog, int whichButton) {
+					    	          	    }
+					    	          	});
+					    	          	
+					    	          	builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+											@Override
+											public void onCancel(DialogInterface dialog) {
+												mSoundImageDialog = null;
+											}
+										});
+					    	          	
+					    	          	mSoundImageDialog = builder.create();
+					    	          	mSoundImageDialog.show();
+					    	    	} else if (item == 4) {
+					    	    		
+					    	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
+				    	    				getSystemService(LAYOUT_INFLATER_SERVICE);
+					    	    		View layout = inflater.inflate(
+				                			R.layout.graphical_soundboard_editor_alert_sound_settings, 
+				                			(ViewGroup) findViewById(R.id.alert_settings_root));
+					    	    		
+					    	    		final CheckBox linkNameAndImageCheckBox = 
+					              	  		(CheckBox) layout.findViewById(R.id.linkNameAndImageCheckBox);
+					    	    		linkNameAndImageCheckBox.setChecked(mPressedSound.getLinkNameAndImage());
+					    	    		
+					    	    		final Button changeSoundPathButton = 
+					              	  		(Button) layout.findViewById(R.id.changeSoundPathButton);
+					    	    		changeSoundPathButton.setOnClickListener(new OnClickListener() {
+					    					public void onClick(View v) {
+					    						Intent i = new Intent(BoardEditor.this, FileExplorer.class);
+					    						i.putExtra(FileExplorer.EXTRA_ACTION_KEY, FileExplorer.ACTION_CHANGE_SOUND_PATH);
+					    						i.putExtra(FileExplorer.EXTRA_BOARD_NAME_KEY, mBoardName);
+					    						startActivityForResult(i, CHANGE_SOUND_PATH);
+					    					}
+					              	  	});
+					    	    		
+					    	    		final Button secondClickActionButton = 
+					              	  		(Button) layout.findViewById(R.id.secondClickActionButton);
+					    	    		secondClickActionButton.setOnClickListener(new OnClickListener() {
+					    					public void onClick(View v) {
+					    						final CharSequence[] items = {"Play new", "Pause", "Stop"};
+							                	AlertDialog.Builder secondClickBuilder = new AlertDialog.Builder(
+							                			BoardEditor.this);
+							                	secondClickBuilder.setTitle("Action");
+							                	secondClickBuilder.setItems(items, new DialogInterface.OnClickListener() {
+							                	    public void onClick(DialogInterface dialog, int item) {
+							                	    	if (item == 0) {
+							                	    		mPressedSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_PLAY_NEW);
+							                	    	} else if (item == 1) {
+							                	    		mPressedSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_PAUSE);
+							                	    	} else if (item == 2) {
+							                	    		mPressedSound.setSecondClickAction(GraphicalSound.SECOND_CLICK_STOP);
+							                	    	}
+							                	    }
+							                	});
+							                	AlertDialog secondClickAlert = secondClickBuilder.create();
+							                	secondClickAlert.show();
+					    					}
+					              	  	});
+					    	    		
+					    	    		final EditText leftVolumeInput = (EditText) layout.findViewById(R.id.leftVolumeInput);
+					            	  	leftVolumeInput.setText(Float.toString(mPressedSound.getVolumeLeft()*100) + "%");
+					            	  	final EditText rightVolumeInput = (EditText) layout.findViewById(R.id.rightVolumeInput);
+					            	  	rightVolumeInput.setText(Float.toString(mPressedSound.getVolumeRight()*100) + "%");
+					    	    		
+					    	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
+					              	  	builder.setView(layout);
+					              	  	builder.setTitle("Sound settings");
+					          	  	
+					    	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+					    	          		public void onClick(DialogInterface dialog, int whichButton) {
+					    	          			mPressedSound.setLinkNameAndImage(linkNameAndImageCheckBox.isChecked());
+					    	          			if (mPressedSound.getLinkNameAndImage()) {
+						    	          			mPressedSound.generateImageXYFromNameFrameLocation();
+					    	          			}
+					    	          			
+					    	          			boolean notifyIncorrectValue = false;
+					    	          			Float leftVolumeValue = null;
+					    	          			try {
+					    	          				String leftVolumeString = leftVolumeInput.getText().toString();
+					    	          				if (leftVolumeString.contains("%")) {
+					    	          					leftVolumeValue = Float.valueOf(leftVolumeString.substring(0, 
+					    	          							leftVolumeString.indexOf("%"))).floatValue()/100;
+					    	          				} else {
+					    	          					leftVolumeValue = Float.valueOf(leftVolumeString).floatValue()/100;
+					    	          				}
+					    	          				
+					    	          				
+					    	          				if (leftVolumeValue >= 0 && leftVolumeValue <= 1 && leftVolumeValue != null) {
+					    	          					mPressedSound.setVolumeLeft(leftVolumeValue);
+					    		          			} else {
+					    		          				notifyIncorrectValue = true;
+					    		          			}
+					    	          			} catch(NumberFormatException nfe) {
+					    	          				notifyIncorrectValue = true;
+					    	          			}
+					    	          			
+					    	          			Float rightVolumeValue = null;
+					    	          			try {
+					    	          				String rightVolumeString = rightVolumeInput.getText().toString();
+					    	          				if (rightVolumeString.contains("%")) {
+					    	          				rightVolumeValue = Float.valueOf(rightVolumeString.substring(0, 
+					    	          						rightVolumeString.indexOf("%"))).floatValue()/100;
+					    	          				} else {
+					    	          					rightVolumeValue = Float.valueOf(rightVolumeString).floatValue()/100;
+					    	          				}
+					    	          				
+					    	          				if (rightVolumeValue >= 0 && rightVolumeValue <= 1 && rightVolumeValue != null) {
+					    	          					mPressedSound.setVolumeRight(rightVolumeValue);
+					    		          			} else {
+					    		          				notifyIncorrectValue = true;
+					    		          			}
+					    	          			} catch(NumberFormatException nfe) {
+					    	          				notifyIncorrectValue = true;
+					    	          			}
+					    	          			
+					    	          			if (notifyIncorrectValue == true) {
+					    	          				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
+					    	          			}
+					    	          			mBoardHistory.createHistoryCheckpoint(mGsb);
+					    	          		}
+					    	          	});
+	
+					    	          	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+					    		          	public void onClick(DialogInterface dialog, int whichButton) {
+					    	          	    }
+					    	          	});
+					    	          	
+					    	          	builder.show();
+					    	    	} else if (item ==5) {
+					    	    		SoundboardMenu.mCopiedSound = (GraphicalSound) mPressedSound.clone();
+					    	    		
+					    	    	} else if (item == 6) {
+					                	
+					                	LayoutInflater removeInflater = (LayoutInflater) 
+					                			BoardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
+					                	View removeLayout = removeInflater.inflate(
+					                			R.layout.graphical_soundboard_editor_alert_remove_sound,
+					                	        (ViewGroup) findViewById(R.id.alert_remove_sound_root));
+					              	  	
+					              	  	final CheckBox removeFileCheckBox = 
+					              	  		(CheckBox) removeLayout.findViewById(R.id.removeFile);
+					              	  	removeFileCheckBox.setText(" DELETE " + mPressedSound.getPath().getAbsolutePath());
+					              	  	
+					              	  	AlertDialog.Builder removeBuilder = new AlertDialog.Builder(
+					              	  		BoardEditor.this);
+					              	  	removeBuilder.setView(removeLayout);
+					              	  	removeBuilder.setTitle("Removing " + mPressedSound.getName());
+					          	  	
+					              	  	removeBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+					    	          	  	public void onClick(DialogInterface dialog, int whichButton) {
+					    	          	  		if (removeFileCheckBox.isChecked() == true) {
+					    	          	  			mPressedSound.getPath().delete();
+					    	          	  		}
+					    	          	  		mGsb.getSoundList().remove(mPressedSound);
+					    	          	  		mBoardHistory.createHistoryCheckpoint(mGsb);
+					    	          	    }
+					    	          	});
+	
+					              	  	removeBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+					    		          	public void onClick(DialogInterface dialog, int whichButton) {
+					    	          	    }
+					    	          	});
+					    	          	
+					              	  	removeBuilder.show();
+					    	    	} else if (item == 7) {
+					    	    		final CharSequence[] items = {"Ringtone", "Notification", "Alerts"};
+	
+					                	AlertDialog.Builder setAsBuilder = new AlertDialog.Builder(
+					                			BoardEditor.this);
+					                	setAsBuilder.setTitle("Set as...");
+					                	setAsBuilder.setItems(items, new DialogInterface.OnClickListener() {
+					                	    public void onClick(DialogInterface dialog, int item) {
+					                	    	String filePath = mPressedSound.getPath().getAbsolutePath();
+	
+					                	    	ContentValues values = new ContentValues();
+					                	    	values.put(MediaStore.MediaColumns.DATA, filePath);
+					                        	values.put(MediaStore.MediaColumns.TITLE, mPressedSound.getName());
+					                        	
+					                        	values.put(MediaStore.MediaColumns.MIME_TYPE, MimeTypeMap.getSingleton().getMimeTypeFromExtension(
+					                        			filePath.substring(filePath.lastIndexOf('.'+1))));
+					                        	values.put(MediaStore.Audio.Media.ARTIST, "Artist");
+					                	    	
+					                	    	int selectedAction = 0;
+					                	    	if (item == 0) {
+					                	    		selectedAction = RingtoneManager.TYPE_RINGTONE;
+					                	    		values.put(MediaStore.Audio.Media.IS_RINGTONE, true);
+					                            	values.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
+					                            	values.put(MediaStore.Audio.Media.IS_ALARM, false);
+					                            	values.put(MediaStore.Audio.Media.IS_MUSIC, false);
+					                	    	} else if (item == 1) {
+					                	    		selectedAction = RingtoneManager.TYPE_NOTIFICATION;
+					                	    		values.put(MediaStore.Audio.Media.IS_RINGTONE, false);
+					                            	values.put(MediaStore.Audio.Media.IS_NOTIFICATION, true);
+					                            	values.put(MediaStore.Audio.Media.IS_ALARM, false);
+					                            	values.put(MediaStore.Audio.Media.IS_MUSIC, false);
+					                	    	} else if (item == 2) {
+					                	    		selectedAction = RingtoneManager.TYPE_ALARM;
+					                	    		values.put(MediaStore.Audio.Media.IS_RINGTONE, false);
+					                            	values.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
+					                            	values.put(MediaStore.Audio.Media.IS_ALARM, true);
+					                            	values.put(MediaStore.Audio.Media.IS_MUSIC, false);
+					                	    	}
+					                        	
+					                        	Uri uri = MediaStore.Audio.Media.getContentUriForPath(filePath);
+					                        	getContentResolver().delete(uri, MediaStore.MediaColumns.DATA + "=\"" + filePath + "\"", null);
+					                        	Uri newUri = BoardEditor.this.getContentResolver().insert(uri, values);
+					                        	
+					                        	RingtoneManager.setActualDefaultRingtoneUri(BoardEditor.this, selectedAction, newUri);
+					                        	
+					                	    }
+					                	});
+					                	AlertDialog setAsAlert = setAsBuilder.create();
+					                	setAsAlert.show();
+					    	    	}
+					            	
+					    	    }
+					    	});
+					    	AlertDialog optionsAlert = optionsBuilder.create();
+					    	optionsAlert.show();
+					    	
+					    	invalidate();
+						} else if (mCurrentGesture == TouchGesture.DRAG) {
+							if (mGsb.getAutoArrange()) {
+								
+								int width = mPanel.getWidth();
+								int height = mPanel.getHeight();
+	      						
+	      						int column = -1, i = 0;
+	      						while (column == -1) {
+	      							if (event.getX() >= i*(width/mGsb.getAutoArrangeColumns()) && event.getX() <= (i+1)*(width/(mGsb.getAutoArrangeColumns()))) {
+	      								column = i;
+	        						}
+	      							if (i > 1000) {
+	      								Log.e(TAG, "column fail");
+	      								mPressedSound.getAutoArrangeColumn();
+	      								break;
+	      							}
+	      							i++;
+	      						}
+	      						i = 0;
+	      						int row = -1;
+	      						while (row == -1) {
+	      							if (event.getY() >= i*(height/mGsb.getAutoArrangeRows()) && event.getY() <= (i+1)*(height/(mGsb.getAutoArrangeRows()))) {
+	      								row = i;
+	        						}
+	      							if (i > 1000) {
+	      								Log.e(TAG, "row fail");
+	      								mPressedSound.getAutoArrangeRow();
+	      								break;
+	      							}
+	      							i++;
+	      						}
+	      						
+	      						GraphicalSound swapSound = null;
+	      						for (GraphicalSound sound : mGsb.getSoundList()) {
+	      							if (sound.getAutoArrangeColumn() == column && sound.getAutoArrangeRow() == row) {
+	      								swapSound = sound;
+	      							}
+	      						}
+	      						
+	      						if (column == mPressedSound.getAutoArrangeColumn() && row == mPressedSound.getAutoArrangeRow()) {
+	      							moveSound(event.getX(), event.getY());
+	      						} else {
+	      							try {
+	      								moveSoundToSlot(swapSound, mPressedSound.getAutoArrangeColumn(), mPressedSound.getAutoArrangeRow(), 
+	      										swapSound.getImageX(), swapSound.getImageY(), swapSound.getNameFrameX(), swapSound.getNameFrameY());
+	      							} catch (NullPointerException e) {}
+	      							moveSoundToSlot(mPressedSound, column, row, mInitialImageX, mInitialImageY, mInitialNameFrameX, mInitialNameFrameY);
+	      							mGsb.addSound(mPressedSound);
+	      						}
+	  							
+							} else {
+								mGsb.getSoundList().add(mPressedSound);
+							}
+							mBoardHistory.createHistoryCheckpoint(mGsb);
+							
+						} else if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == LISTEN_BOARD) {
+							playTouchedSound(mPressedSound);
 						}
-						mBoardHistory.createHistoryCheckpoint(mGsb);
 						
-					} else if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == LISTEN_BOARD) {
-						playTouchedSound(mPressedSound);
+						mCurrentGesture = null;
+						
+						if (mJoystickTimer != null) {
+							mJoystickTimer.cancel();
+							mJoystickTimer = null;
+						}
 					}
 				}
 				
@@ -2420,18 +2455,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						Log.e(TAG, "Unable to draw image " + mGsb.getBackgroundImagePath().getAbsolutePath());
 						mGsb.setBackgroundImage(BitmapFactory.decodeResource(getResources(), R.drawable.sound));
 					}
-				}
-				
-				if (mFineTuningSound != null) {
-					float joystickSide = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
-					
-					RectF imageRect = new RectF();
-				    imageRect.set(mJoystickX, 
-				    		mJoystickY, 
-				    		joystickSide + mJoystickX, 
-				    		joystickSide + mJoystickY);
-				    
-					canvas.drawBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.joystick), null, imageRect, mSoundImagePaint);
 				}
 				
 				try {
@@ -2535,6 +2558,17 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					}
 				} catch(ConcurrentModificationException cme) {
 					Log.w(TAG, "Sound list modification while iteration");
+				}
+				
+				if (mFineTuningSound != null && mCurrentGesture == TouchGesture.DRAG) {
+
+					RectF imageRect = new RectF();
+					imageRect.set(mJoystickX - mJoystickSide/2, 
+							mJoystickY - mJoystickSide/2, 
+							mJoystickX + mJoystickSide/2, 
+							mJoystickY + mJoystickSide/2);
+
+					canvas.drawBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.joystick), null, imageRect, mSoundImagePaint);
 				}
 			}
 
