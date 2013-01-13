@@ -126,6 +126,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	 */
 	private enum TouchGesture {PRESS_BLANK, PRESS_BOARD, DRAG, SWIPE, TAP};
 	private TouchGesture mCurrentGesture = null;
+	private final int DRAG_SWIPE_TIME = 300;
+	
 	
 	private Paint mSoundImagePaint;
 	private GraphicalSound mPressedSound = null;
@@ -1770,7 +1772,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						} else {
 							mCurrentGesture = TouchGesture.PRESS_BOARD;
 							vibrator.vibrate(15);
-							new Timer().schedule(new DragInitializeTimer(), 300);
+							new Timer().schedule(new DragInitializeTimer(), DRAG_SWIPE_TIME);
 						}
 
 						if (mCopyColor != 0) {
@@ -1782,7 +1784,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					if (mMoveBackground) {
 						mGsb.setBackgroundX(event.getX() - mBackgroundLeftDistance);
 						mGsb.setBackgroundY(event.getY() - mBackgroundTopDistance);
-					} else if ((mCurrentGesture == TouchGesture.PRESS_BOARD || mCurrentGesture == TouchGesture.PRESS_BLANK) 
+					} else if ((mCurrentGesture == TouchGesture.PRESS_BOARD ||  // PRESS_BOARD has timed gesture changing
+							(mCurrentGesture == TouchGesture.PRESS_BLANK && holdTime() < DRAG_SWIPE_TIME))
 							&& mFineTuningSound == null) {
 
 						float swipeTriggerDistance = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
