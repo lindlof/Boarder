@@ -786,6 +786,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			mGsbp.overrideBoard(lastGsb);
 		}
 		
+		refreshPageTitle();
+		
 		int boardId = gsb.getId();
 		BoardHistory boardHistory = mBoardHistoryProvider.getBoardHistory(boardId);
 		
@@ -794,6 +796,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		}
 		
 		this.mBoardHistory = boardHistory;
+	}
+	
+	public void refreshPageTitle() {
+		setTitle(mBoardName + " - " + (mGsb.getPageNumber()+1));
 	}
 	
 	public void loadBoard(GraphicalSoundboard gsb) {
