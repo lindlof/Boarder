@@ -6,6 +6,7 @@ import java.util.List;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 /**
+ * Holds list of saved boards. Allocates resources for new boards to be saved.
  * 
  * @author Jan Mikael Lindlöf
  */
@@ -21,7 +22,7 @@ public class GraphicalSoundboardHolder {
 		this.orientationMode = OrientationMode.ORIENTATION_MODE_PORTRAIT;
 		this.boardList = new ArrayList<GraphicalSoundboard>();
 		GraphicalSoundboard gsbTemplate = new GraphicalSoundboard();
-		allocateBoardId(gsbTemplate);
+		allocateBoardResources(gsbTemplate);
 	}
 	
 	/**
@@ -29,9 +30,11 @@ public class GraphicalSoundboardHolder {
 	 * @param gsbTemplate
 	 * @return Board with new id
 	 */
-	public GraphicalSoundboard allocateBoardId(GraphicalSoundboard gsbTemplate) {
+	public GraphicalSoundboard allocateBoardResources(GraphicalSoundboard gsbTemplate) {
 		int boardId = allocateBoardId();
-		gsbTemplate.setId(boardId+1);
+		int boardPageNumber = allocateBoardPage(gsbTemplate.getScreenOrientation());
+		gsbTemplate.setId(boardId);
+		gsbTemplate.setPageNumber(boardPageNumber);
 		
 		this.boardList.add(gsbTemplate);
 		return gsbTemplate;
@@ -42,7 +45,17 @@ public class GraphicalSoundboardHolder {
 		for (GraphicalSoundboard board : this.getBoardList()) {
 			highestId = (board.getId() > highestId) ? board.getId() : highestId;
 		}
-		return highestId;
+		return highestId + 1;
+	}
+	
+	private int allocateBoardPage(int screenOrientation) {
+		int highestPage = -1;
+		for (GraphicalSoundboard board : this.getBoardList()) {
+			if (board.getScreenOrientation() == screenOrientation) {
+				highestPage = (board.getPageNumber() > highestPage) ? board.getPageNumber() : highestPage;
+			}
+		}
+		return highestPage + 1;
 	}
 	
 	public OrientationMode getOrientationMode() {

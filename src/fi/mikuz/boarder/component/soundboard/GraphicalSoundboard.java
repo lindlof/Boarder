@@ -8,10 +8,8 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 
-import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-import fi.mikuz.boarder.util.XStreamUtil;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
 
 /**
@@ -23,6 +21,7 @@ public class GraphicalSoundboard {
 	
 	private int id;
 	private int version;
+	private int pageNumber;
 	
 	private ArrayList<GraphicalSound> soundList;
 	
@@ -61,6 +60,7 @@ public class GraphicalSoundboard {
 	private void init() {
 		id = 0;
 		version = 1;
+		setPageNumber(0);
 		soundList = new ArrayList<GraphicalSound>();
 		playSimultaneously = true;
 		boardVolume = (float) 1;
@@ -87,12 +87,21 @@ public class GraphicalSoundboard {
 	public void setId(int id) {
 		this.id = id;
 	}
+	
 	public int getVersion() {
 		return version;
 	}
 
 	public void setVersion(int version) {
 		this.version = version;
+	}
+	
+	public int getPageNumber() {
+		return pageNumber;
+	}
+
+	public void setPageNumber(int pageNumber) {
+		this.pageNumber = pageNumber;
 	}
 
 	public static GraphicalSoundboard copy(GraphicalSoundboard tempGsb) {
@@ -106,6 +115,7 @@ public class GraphicalSoundboard {
 		
 		gsb.setId(tempGsb.getId());
 		gsb.setVersion(tempGsb.getVersion());
+		gsb.setPageNumber(tempGsb.getPageNumber());
 		gsb.setSoundList(gsbSoundList);
 		gsb.setPlaySimultaneously(tempGsb.getPlaySimultaneously());
 		gsb.setBoardVolume(tempGsb.getBoardVolume());
@@ -290,4 +300,5 @@ public class GraphicalSoundboard {
 	public void setScreenWidth(int screenWidth) {
 		this.screenWidth = screenWidth;
 	}
+
 }

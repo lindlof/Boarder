@@ -65,9 +65,8 @@ public class GraphicalSoundboardProvider {
 			preferredOrientation = GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE;
 		}
 		
-		for (GraphicalSoundboard board : boardHolder.getBoardList()) {
-			if (board.getScreenOrientation() == preferredOrientation) return board;
-		}
+		GraphicalSoundboard startBoardPage = getStartBoardPage(preferredOrientation);
+		if (startBoardPage != null) return startBoardPage;
 		
 		if (boardHolder.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_PORTRAIT) {
 			Log.v(TAG, "No board in preferred orientation. Single orientation mode. Giving any board.");
@@ -81,9 +80,61 @@ public class GraphicalSoundboardProvider {
 			Log.v(TAG, "No board in preferred orientation. Hybrid orientation mode. Giving a new board.");
 		}
 		
-		GraphicalSoundboard gsbTemplate = new GraphicalSoundboard(preferredOrientation);
-		GraphicalSoundboard gsb = boardHolder.allocateBoardId(gsbTemplate);
+		GraphicalSoundboard gsb = addBoard(preferredOrientation);
 		return gsb;
+	}
+	
+	public GraphicalSoundboard addBoardPage(int preferredOrientation) {
+		return addBoard(preferredOrientation);
+	}
+	
+	private GraphicalSoundboard addBoard(int preferredOrientation) {
+		GraphicalSoundboard gsbTemplate = new GraphicalSoundboard(preferredOrientation);
+		GraphicalSoundboard gsb = boardHolder.allocateBoardResources(gsbTemplate);
+		return gsb;
+	}
+	
+	/**
+	 * 
+	 * @param current gsb
+	 * @return next board page or null
+	 */
+	public GraphicalSoundboard getNextBoardPage(GraphicalSoundboard lastGsb) {
+		int lastBoardPage = lastGsb.getPageNumber();
+		int orientation = lastGsb.getScreenOrientation();
+		
+		GraphicalSoundboard selectedBoard = null;
+		
+		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
+			if (gsb.getScreenOrientation() == orientation) {
+				if (gsb.getPageNumber() > lastBoardPage && 
+						(selectedBoard == null || gsb.getPageNumber() < selectedBoard.getPageNumber())) {
+					// Find next higher page.
+					selectedBoard = gsb;
+				}
+			}
+		}
+		
+		// If higher page can't be found then let's choose the smallest.
+		getStartBoardPage(orientation);
+		
+		return selectedBoard;
+	}
+	
+	private GraphicalSoundboard getStartBoardPage(int preferredOrientation) {
+		GraphicalSoundboard selectedBoard = null;
+		
+		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
+			if (gsb.getScreenOrientation() == preferredOrientation) {
+				if (selectedBoard == null) {
+					selectedBoard = gsb;
+				} else if (gsb.getPageNumber() < selectedBoard.getPageNumber()) {
+					selectedBoard = gsb;
+				}
+			}
+		}
+		
+		return selectedBoard;
 	}
 	
 	private GraphicalSoundboardHolder.OrientationMode screenOrientationToOrientationMode(int screenOrientation) {

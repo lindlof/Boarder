@@ -28,6 +28,8 @@
 		android:title="@string/menu_save_board" />
 	<item android:id="@+id/menu_notification" 
 		android:title="@string/menu_notification" />
+	<item android:id="@+id/menu_page_options"
+		android:title="Page options" />
 	<item android:id="@+id/menu_convert_board"
 		android:title="@string/menu_convert_board" />
 	<item android:id="@+id/menu_take_screenshot"

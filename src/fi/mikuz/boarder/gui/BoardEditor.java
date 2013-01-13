@@ -285,7 +285,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			}
 		}
 			
-		initBoard(newGsb);
+		changeBoard(newGsb);
 	}
 	
 	@Override
@@ -355,6 +355,30 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             case R.id.menu_save_board:
             	save();
                 return true;
+
+            case R.id.menu_page_options:
+
+            	CharSequence[] pageItems = {"Add page", "Move current page"};
+            	
+            	int rotation = getWindowManager().getDefaultDisplay().getRotation();
+            	final int curentOrientation = EditorOrientation.convertRotation(rotation);
+
+            	AlertDialog.Builder pageBuilder = new AlertDialog.Builder(BoardEditor.this);
+            	pageBuilder.setTitle("Page options");
+            	pageBuilder.setItems(pageItems, new DialogInterface.OnClickListener() {
+            	    public void onClick(DialogInterface dialog, int item) {
+            	    	if (item == 0) {
+            	    		GraphicalSoundboard swapGsb = mGsbp.addBoardPage(curentOrientation);
+            	    		changeBoard(swapGsb);
+            	    	} else if (item == 1) {
+            	    		
+            	    	}
+            	    }
+            	});
+            	AlertDialog pageAlert = pageBuilder.create();
+            	pageAlert.show();
+
+            	return true;
                 
             case R.id.menu_convert_board:
             	
@@ -752,8 +776,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         }
     }
 
-	public void initBoard(GraphicalSoundboard gsb) {
+	public void changeBoard(GraphicalSoundboard gsb) {
+		GraphicalSoundboard lastGsb = mGsb;
 		loadBoard(gsb);
+		if (lastGsb != null) {
+			GraphicalSoundboard.unloadImages(lastGsb);
+			mGsbp.overrideBoard(lastGsb);
+		}
 		
 		int boardId = gsb.getId();
 		BoardHistory boardHistory = mBoardHistoryProvider.getBoardHistory(boardId);
@@ -1162,10 +1191,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     	int currentOrientation = editorOrientation.getCurrentOrientation();
 
     	if (!(originalOrientation == currentOrientation)) {
-    		GraphicalSoundboard.unloadImages(mGsb);
-    		mGsbp.overrideBoard(mGsb);
     		GraphicalSoundboard newOrientationGsb = mGsbp.getBoardForRotation(rotation);
-    		initBoard(newOrientationGsb);
+    		changeBoard(newOrientationGsb);
     		
     		// Set resolution handling stuff for the new orientation
     		if (mResolutionAlert != null) {
@@ -1766,7 +1793,14 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						synchronized (mGestureLock) {
 							if (distanceFromInit > swipeTriggerDistance) {
 								mCurrentGesture = TouchGesture.SWIPE;
-								Log.v(TAG, "SWIPING!!!");
+								GraphicalSoundboard lastGsb = mGsb;
+								GraphicalSoundboard swapGsb = mGsbp.getNextBoardPage(mGsb);
+								
+								if (swapGsb == null) {
+									Toast.makeText(getApplicationContext(), "No page there", Toast.LENGTH_SHORT).show();
+								} else {
+									changeBoard(swapGsb);
+								}
 							}
 						}
 
