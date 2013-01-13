@@ -1793,8 +1793,14 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						synchronized (mGestureLock) {
 							if (distanceFromInit > swipeTriggerDistance) {
 								mCurrentGesture = TouchGesture.SWIPE;
-								GraphicalSoundboard lastGsb = mGsb;
-								GraphicalSoundboard swapGsb = mGsbp.getNextBoardPage(mGsb);
+								
+								GraphicalSoundboard swapGsb = null;
+								
+								if (event.getX() < mInitTouchEventX) {
+									swapGsb = mGsbp.getNextBoardPage(mGsb);
+								} else {
+									swapGsb = mGsbp.getPreviousBoardPage(mGsb);
+								}
 								
 								if (swapGsb == null) {
 									Toast.makeText(getApplicationContext(), "No page there", Toast.LENGTH_SHORT).show();
