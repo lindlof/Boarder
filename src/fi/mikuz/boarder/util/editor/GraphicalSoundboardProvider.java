@@ -65,7 +65,7 @@ public class GraphicalSoundboardProvider {
 			preferredOrientation = GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE;
 		}
 		
-		GraphicalSoundboard startBoardPage = getStartBoardPage(preferredOrientation);
+		GraphicalSoundboard startBoardPage = getPage(preferredOrientation, 0);
 		if (startBoardPage != null) return startBoardPage;
 		
 		if (boardHolder.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_PORTRAIT) {
@@ -94,45 +94,30 @@ public class GraphicalSoundboardProvider {
 		return gsb;
 	}
 	
+	public GraphicalSoundboard getPage(int orientation, int pageNumber) {
+		
+		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
+			if (gsb.getScreenOrientation() == orientation &&
+					gsb.getPageNumber() == pageNumber) {
+				return gsb;
+			}
+		}
+		
+		return null;
+	}
+	
 	/**
 	 * 
 	 * @param current gsb
 	 * @return next board page or null
 	 */
 	public GraphicalSoundboard getNextBoardPage(GraphicalSoundboard lastGsb) {
-		int lastBoardPage = lastGsb.getPageNumber();
 		int orientation = lastGsb.getScreenOrientation();
-		
 		GraphicalSoundboard selectedBoard = null;
 		
-		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
-			if (gsb.getScreenOrientation() == orientation) {
-				if (gsb.getPageNumber() > lastBoardPage && 
-						(selectedBoard == null || gsb.getPageNumber() < selectedBoard.getPageNumber())) {
-					// Find next higher page.
-					selectedBoard = gsb;
-				}
-			}
-		}
+		selectedBoard = getPage(orientation, lastGsb.getPageNumber() + 1);
 		
-		// If higher page can't be found then let's choose the smallest.
-		if (selectedBoard == null) selectedBoard = getStartBoardPage(orientation);
-		
-		return selectedBoard;
-	}
-	
-	private GraphicalSoundboard getStartBoardPage(int preferredOrientation) {
-		GraphicalSoundboard selectedBoard = null;
-		
-		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
-			if (gsb.getScreenOrientation() == preferredOrientation) {
-				if (selectedBoard == null) {
-					selectedBoard = gsb;
-				} else if (gsb.getPageNumber() < selectedBoard.getPageNumber()) {
-					selectedBoard = gsb;
-				}
-			}
-		}
+		if (selectedBoard == null) selectedBoard = getPage(orientation, 0); // Last page, go to first page.
 		
 		return selectedBoard;
 	}
@@ -142,29 +127,18 @@ public class GraphicalSoundboardProvider {
 	 * @param current gsb
 	 * @return next board page or null
 	 */
-	public GraphicalSoundboard getPreviousBoardPage(GraphicalSoundboard lastGsb) {
-		int lastBoardPage = lastGsb.getPageNumber();
+	public GraphicalSoundboard getPreviousPage(GraphicalSoundboard lastGsb) {
 		int orientation = lastGsb.getScreenOrientation();
-		
 		GraphicalSoundboard selectedBoard = null;
 		
-		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
-			if (gsb.getScreenOrientation() == orientation) {
-				if (gsb.getPageNumber() < lastBoardPage && 
-						(selectedBoard == null || gsb.getPageNumber() > selectedBoard.getPageNumber())) {
-					// Find next higher page.
-					selectedBoard = gsb;
-				}
-			}
-		}
+		selectedBoard = getPage(orientation, lastGsb.getPageNumber() - 1);
 		
-		// If higher page can't be found then let's choose the highest.
-		if (selectedBoard == null) selectedBoard = getLastBoardPage(orientation);
+		if (selectedBoard == null) selectedBoard = getLastPage(orientation); // First page, go to last page.
 		
 		return selectedBoard;
 	}
 	
-	private GraphicalSoundboard getLastBoardPage(int preferredOrientation) {
+	private GraphicalSoundboard getLastPage(int preferredOrientation) {
 		GraphicalSoundboard selectedBoard = null;
 		
 		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
@@ -178,6 +152,20 @@ public class GraphicalSoundboardProvider {
 		}
 		
 		return selectedBoard;
+	}
+	
+	public void deletePage(GraphicalSoundboard deleteGsb) {
+		Log.v(TAG, "Going to delete page " + deleteGsb.getPageNumber());
+		deleteBoardId(deleteGsb.getId());
+		
+		Log.v(TAG, "Reducing following page numbers.");
+		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
+			if (gsb.getScreenOrientation() == deleteGsb.getScreenOrientation() && 
+					gsb.getPageNumber() > deleteGsb.getPageNumber()) {
+				gsb.setPageNumber(gsb.getPageNumber() - 1);
+				boardHolder.overrideBoard(gsb);
+			}
+		}
 	}
 	
 	private GraphicalSoundboardHolder.OrientationMode screenOrientationToOrientationMode(int screenOrientation) {
@@ -215,8 +203,22 @@ public class GraphicalSoundboardProvider {
 		while (iterator.hasNext()) {
 			GraphicalSoundboard gsb = iterator.next();
 			if (gsb.getScreenOrientation() == orientation) {
-				Log.v(TAG, "Deleting board id " + gsb.getId() + " since it's orientation is " + orientation);
+				Log.v(TAG, "Deleting board id " + gsb.getId() + " since its orientation is " + orientation);
 				iterator.remove();
+			}
+		}
+	}
+	
+	public void deleteBoardId(int boardId) {
+		List<GraphicalSoundboard> gsbList = boardHolder.getBoardList();
+		ListIterator<GraphicalSoundboard> iterator = gsbList.listIterator();
+		
+		while (iterator.hasNext()) {
+			GraphicalSoundboard gsb = iterator.next();
+			if (gsb.getId() == boardId) {
+				Log.v(TAG, "Deleting board id " + gsb.getId());
+				iterator.remove();
+				break;
 			}
 		}
 	}

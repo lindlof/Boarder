@@ -360,20 +360,23 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
             case R.id.menu_page_options:
 
-            	CharSequence[] pageItems = {"Add page", "Move current page"};
+            	CharSequence[] pageItems = {"Add page", "Delete this page", "Move this page"};
             	
             	int rotation = getWindowManager().getDefaultDisplay().getRotation();
-            	final int curentOrientation = EditorOrientation.convertRotation(rotation);
+            	final int currentOrientation = EditorOrientation.convertRotation(rotation);
 
             	AlertDialog.Builder pageBuilder = new AlertDialog.Builder(BoardEditor.this);
             	pageBuilder.setTitle("Page options");
             	pageBuilder.setItems(pageItems, new DialogInterface.OnClickListener() {
             	    public void onClick(DialogInterface dialog, int item) {
             	    	if (item == 0) {
-            	    		GraphicalSoundboard swapGsb = mGsbp.addBoardPage(curentOrientation);
+            	    		GraphicalSoundboard swapGsb = mGsbp.addBoardPage(currentOrientation);
             	    		changeBoard(swapGsb);
             	    	} else if (item == 1) {
-            	    		
+            	    		GraphicalSoundboard deleteGsb = mGsb;
+            	    		mGsbp.deletePage(deleteGsb);
+            	    		mGsb = mGsbp.getPage(deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
+            	    		GraphicalSoundboard.unloadImages(deleteGsb);
             	    	}
             	    }
             	});
@@ -1808,7 +1811,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 								if (event.getX() < mInitTouchEventX) {
 									swapGsb = mGsbp.getNextBoardPage(mGsb);
 								} else {
-									swapGsb = mGsbp.getPreviousBoardPage(mGsb);
+									swapGsb = mGsbp.getPreviousPage(mGsb);
 								}
 								
 								if (swapGsb == null) {
