@@ -3,10 +3,16 @@
 
 	<item android:id="@+id/menu_play_pause" 
 		android:title="@string/menu_play_pause" />
+	
+	<group android:id="@+id/move_page_mode">
+	    <item android:id="@+id/menu_move_page_here" 
+			android:title="Move page here" />
+	</group>
+	
 	<item android:id="@+id/menu_board_settings" 
 		android:title="@string/menu_board_settings" />
     
-    <group android:id="@+id/listen_mode">
+    <group android:id="@+id/edit_mode">
         <item android:id="@+id/menu_undo"
 	          android:title="Undo" />
         <item android:id="@+id/menu_redo"
@@ -15,7 +21,7 @@
 	          android:title="@string/menu_listen_mode" />
 	</group>
     
-    <group android:id="@+id/edit_mode">
+    <group android:id="@+id/listen_mode">
     	<item android:id="@+id/menu_edit_mode"
 	          android:title="@string/menu_edit_mode" />
 	</group>

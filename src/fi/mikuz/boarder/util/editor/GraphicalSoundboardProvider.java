@@ -106,6 +106,29 @@ public class GraphicalSoundboardProvider {
 		return null;
 	}
 	
+	public void movePage(int orientation, int fromPageNumber, int toPageNumber) {
+		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
+			int pageNumber = gsb.getPageNumber();
+			
+			if (pageNumber == fromPageNumber) {
+				gsb.setPageNumber(toPageNumber);
+				boardHolder.overrideBoard(gsb);
+			} else if (fromPageNumber > toPageNumber) {
+				if (pageNumber >= toPageNumber &&
+						pageNumber < fromPageNumber ) {
+					gsb.setPageNumber(pageNumber + 1);
+					boardHolder.overrideBoard(gsb);
+				}
+			} else if (fromPageNumber < toPageNumber) {
+				if (pageNumber <= toPageNumber &&
+						pageNumber > fromPageNumber) {
+					gsb.setPageNumber(pageNumber - 1);
+					boardHolder.overrideBoard(gsb);
+				}
+			}
+		}
+	}
+	
 	/**
 	 * 
 	 * @param current gsb

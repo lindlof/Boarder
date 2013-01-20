@@ -102,6 +102,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private static final int EDIT_BOARD = 1;
 	private int mMode = LISTEN_BOARD;
 	
+	private boolean mMovePageMode = false;
+	private int mMoveFromPageNumber = -1;
+	private int mMovePageOrientation = -1;
+	
 	private static final int DRAG_TEXT = 0;
 	private static final int DRAG_IMAGE = 1;
 	private int mDragTarget = DRAG_TEXT;
@@ -296,11 +300,15 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		mMenu = menu;
 		MenuInflater inflater = getMenuInflater();
 	    inflater.inflate(R.menu.board_editor_bottom, menu);
-	    
-	    if (mMode == EDIT_BOARD) {
-	    	menu.setGroupVisible(R.id.edit_mode, false);
-	    } else {
+    	
+    	if (mMode == EDIT_BOARD) {
 	    	menu.setGroupVisible(R.id.listen_mode, false);
+	    } else {
+	    	menu.setGroupVisible(R.id.edit_mode, false);
+	    }
+	    
+	    if (!mMovePageMode) {
+	    	menu.setGroupVisible(R.id.move_page_mode, false);
 	    }
 	    
 	    return super.onCreateOptionsMenu(menu);
@@ -377,12 +385,32 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	    		mGsbp.deletePage(deleteGsb);
             	    		mGsb = mGsbp.getPage(deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
             	    		GraphicalSoundboard.unloadImages(deleteGsb);
+            	    	} else if (item == 2) {
+            	    		mMovePageMode = true;
+            	    		mMoveFromPageNumber = mGsb.getPageNumber();
+            	    		mMovePageOrientation = mGsb.getScreenOrientation();
+            	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
             	    	}
             	    }
             	});
             	AlertDialog pageAlert = pageBuilder.create();
             	pageAlert.show();
 
+            	return true;
+            
+            case R.id.menu_move_page_here:
+            	if (mGsb.getScreenOrientation() != mMovePageOrientation) {
+            		Toast.makeText(getApplicationContext(), "Wrong orientation!", Toast.LENGTH_SHORT).show();
+            		return true;
+            	}
+            	GraphicalSoundboard currentGsb = mGsb;
+            	int toPageNumber = currentGsb.getPageNumber();
+            	mGsbp.overrideBoard(currentGsb);
+            	mGsbp.movePage(mMovePageOrientation, mMoveFromPageNumber, toPageNumber);
+            	mGsb = mGsbp.getPage(mMovePageOrientation, toPageNumber);
+            	GraphicalSoundboard.unloadImages(currentGsb);
+            	mMovePageMode = false;
+	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
             	return true;
                 
             case R.id.menu_convert_board:
