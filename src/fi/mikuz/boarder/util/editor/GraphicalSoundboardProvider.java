@@ -110,20 +110,22 @@ public class GraphicalSoundboardProvider {
 		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
 			int pageNumber = gsb.getPageNumber();
 			
-			if (pageNumber == fromPageNumber) {
-				gsb.setPageNumber(toPageNumber);
-				boardHolder.overrideBoard(gsb);
-			} else if (fromPageNumber > toPageNumber) {
-				if (pageNumber >= toPageNumber &&
-						pageNumber < fromPageNumber ) {
-					gsb.setPageNumber(pageNumber + 1);
+			if (gsb.getScreenOrientation() == orientation) {
+				if (pageNumber == fromPageNumber) {
+					gsb.setPageNumber(toPageNumber);
 					boardHolder.overrideBoard(gsb);
-				}
-			} else if (fromPageNumber < toPageNumber) {
-				if (pageNumber <= toPageNumber &&
-						pageNumber > fromPageNumber) {
-					gsb.setPageNumber(pageNumber - 1);
-					boardHolder.overrideBoard(gsb);
+				} else if (fromPageNumber > toPageNumber) {
+					if (pageNumber >= toPageNumber &&
+							pageNumber < fromPageNumber ) {
+						gsb.setPageNumber(pageNumber + 1);
+						boardHolder.overrideBoard(gsb);
+					}
+				} else if (fromPageNumber < toPageNumber) {
+					if (pageNumber <= toPageNumber &&
+							pageNumber > fromPageNumber) {
+						gsb.setPageNumber(pageNumber - 1);
+						boardHolder.overrideBoard(gsb);
+					}
 				}
 			}
 		}

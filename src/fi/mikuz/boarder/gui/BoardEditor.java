@@ -80,6 +80,7 @@ import fi.mikuz.boarder.util.editor.EditorOrientation;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
 import fi.mikuz.boarder.util.editor.Joystick;
+import fi.mikuz.boarder.util.editor.Pagination;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
 /**
@@ -98,13 +99,11 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private BoardHistory mBoardHistory;
 	private BoardHistoryProvider mBoardHistoryProvider;
 	
+	private Pagination mPagination;
+	
 	private static final int LISTEN_BOARD = 0;
 	private static final int EDIT_BOARD = 1;
 	private int mMode = LISTEN_BOARD;
-	
-	private boolean mMovePageMode = false;
-	private int mMoveFromPageNumber = -1;
-	private int mMovePageOrientation = -1;
 	
 	private static final int DRAG_TEXT = 0;
 	private static final int DRAG_IMAGE = 1;
@@ -131,7 +130,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private enum TouchGesture {PRESS_BLANK, PRESS_BOARD, DRAG, SWIPE, TAP};
 	private TouchGesture mCurrentGesture = null;
 	private final int DRAG_SWIPE_TIME = 300;
-	
 	
 	private Paint mSoundImagePaint;
 	private GraphicalSound mPressedSound = null;
@@ -187,6 +185,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         
         mBoardHistoryProvider = new BoardHistoryProvider();
+        mPagination = new Pagination();
         
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
@@ -307,7 +306,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	    	menu.setGroupVisible(R.id.edit_mode, false);
 	    }
 	    
-	    if (!mMovePageMode) {
+	    if (!mPagination.isMovePageMode()) {
 	    	menu.setGroupVisible(R.id.move_page_mode, false);
 	    }
 	    
@@ -386,9 +385,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	    		mGsb = mGsbp.getPage(deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
             	    		GraphicalSoundboard.unloadImages(deleteGsb);
             	    	} else if (item == 2) {
-            	    		mMovePageMode = true;
-            	    		mMoveFromPageNumber = mGsb.getPageNumber();
-            	    		mMovePageOrientation = mGsb.getScreenOrientation();
+            	    		mPagination.initMove(mGsb.getScreenOrientation(), mGsb.getPageNumber());
             	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
             	    	}
             	    }
@@ -399,17 +396,17 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	return true;
             
             case R.id.menu_move_page_here:
-            	if (mGsb.getScreenOrientation() != mMovePageOrientation) {
+            	if (mGsb.getScreenOrientation() != mPagination.getMovePageOrientation()) {
             		Toast.makeText(getApplicationContext(), "Wrong orientation!", Toast.LENGTH_SHORT).show();
             		return true;
             	}
             	GraphicalSoundboard currentGsb = mGsb;
             	int toPageNumber = currentGsb.getPageNumber();
             	mGsbp.overrideBoard(currentGsb);
-            	mGsbp.movePage(mMovePageOrientation, mMoveFromPageNumber, toPageNumber);
-            	mGsb = mGsbp.getPage(mMovePageOrientation, toPageNumber);
+            	mGsbp.movePage(mPagination.getMovePageOrientation(), mPagination.getMoveFromPageNumber(), toPageNumber);
+            	mGsb = mGsbp.getPage(currentGsb.getScreenOrientation(), toPageNumber);
             	GraphicalSoundboard.unloadImages(currentGsb);
-            	mMovePageMode = false;
+            	mPagination.resetMove();
 	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
             	return true;
                 
