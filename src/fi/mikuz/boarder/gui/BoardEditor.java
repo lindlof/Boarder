@@ -80,6 +80,7 @@ import fi.mikuz.boarder.util.editor.EditorOrientation;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
 import fi.mikuz.boarder.util.editor.Joystick;
+import fi.mikuz.boarder.util.editor.PageDrawer;
 import fi.mikuz.boarder.util.editor.Pagination;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
@@ -131,7 +132,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private TouchGesture mCurrentGesture = null;
 	private final int DRAG_SWIPE_TIME = 300;
 	
-	private Paint mSoundImagePaint;
 	private GraphicalSound mPressedSound = null;
 	private float mInitialNameFrameX = 0;
 	private float mInitialNameFrameY = 0;
@@ -248,11 +248,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		  	alert.show();
 		  	
 		}
-        
-        mSoundImagePaint = new Paint();
-        mSoundImagePaint.setColor(Color.WHITE);
-        mSoundImagePaint.setAntiAlias(true);
-        mSoundImagePaint.setTextAlign(Align.LEFT);
         
         File icon = new File(mSbDir, mBoardName + "/icon.png");
         if (icon.exists()) {
@@ -1680,6 +1675,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	class DrawingPanel extends SurfaceView implements SurfaceHolder.Callback {
 		
+		private PageDrawer mPageDrawer = null;
+		
 		private float mInitTouchEventX = 0;
 		private float mInitTouchEventY = 0;
 		private long mClickTime = 0;
@@ -1687,7 +1684,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		private float mLatestEventX = 0;
 		private float mLatestEventY = 0;
 		
-		Joystick mJoystick = new Joystick(getApplicationContext());
+		Joystick mJoystick = null;
 		Timer mJoystickTimer = null;
 		
 		Object mGestureLock = new Object();
@@ -1696,6 +1693,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			super(context);
             getHolder().addCallback(this);
             mThread = new DrawingThread(getHolder(), this);
+            mJoystick = new Joystick(context);
+            mPageDrawer = new PageDrawer(context, mJoystick);
 		}
 		
 		private GraphicalSound findPressedSound(MotionEvent pressInitEvent) {
@@ -1747,8 +1746,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		
 		private void dragEvent(float eventX, float eventY) {
 			if (mFineTuningSound != null) {
-				eventX = mInitTouchEventX + mJoystick.dragDistanceX(eventX);
-				eventY = mInitTouchEventY + mJoystick.dragDistanceY(eventY);
+				eventX = mJoystick.dragDistanceX(eventX);
+				eventY = mJoystick.dragDistanceY(eventY);
 			}
 
 			moveSound(eventX, eventY);
@@ -2483,130 +2482,14 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				mNullCanvasCount = 0;
 				super.dispatchDraw(canvas);
 				
+				GraphicalSound pressedSound = null;
+				GraphicalSound fineTuningSound = null;
+				if (mCurrentGesture == TouchGesture.DRAG) pressedSound = mPressedSound;
+				if (mFineTuningSound != null && mCurrentGesture == TouchGesture.DRAG) fineTuningSound = mFineTuningSound;
+				
 				canvas.drawColor(mGsb.getBackgroundColor());
 				
-				if (mGsb.getUseBackgroundImage() == true && mGsb.getBackgroundImagePath().exists()) {
-					RectF bitmapRect = new RectF();
-					bitmapRect.set(mGsb.getBackgroundX(), mGsb.getBackgroundY(), 
-							mGsb.getBackgroundWidth() + mGsb.getBackgroundX(), mGsb.getBackgroundHeight() + mGsb.getBackgroundY());
-					
-					Paint bgImage = new Paint();
-					bgImage.setColor(mGsb.getBackgroundColor());
-					
-					try {
-						canvas.drawBitmap(mGsb.getBackgroundImage(), null, bitmapRect, bgImage);
-					} catch(NullPointerException npe) {
-						Log.e(TAG, "Unable to draw image " + mGsb.getBackgroundImagePath().getAbsolutePath());
-						mGsb.setBackgroundImage(BitmapFactory.decodeResource(getResources(), R.drawable.sound));
-					}
-				}
-				
-				try {
-					ArrayList<GraphicalSound> drawList = new ArrayList<GraphicalSound>();
-					drawList.addAll(mGsb.getSoundList());
-					if (mCurrentGesture == TouchGesture.DRAG) drawList.add(mPressedSound);
-					
-					for (GraphicalSound sound : drawList) {
-						Paint barPaint = new Paint();
-						barPaint.setColor(sound.getNameFrameInnerColor());
-						String soundPath = sound.getPath().getAbsolutePath();
-						if (soundPath.equals(SoundboardMenu.mTopBlackBarSoundFilePath)) {
-							canvas.drawRect(0, 0, canvas.getWidth(), sound.getNameFrameY(), barPaint);
-						} else if (soundPath.equals(SoundboardMenu.mBottomBlackBarSoundFilePath)) {
-							canvas.drawRect(0, sound.getNameFrameY(), canvas.getWidth(), canvas.getHeight(), barPaint);
-						} else if (soundPath.equals(SoundboardMenu.mLeftBlackBarSoundFilePath)) {
-							canvas.drawRect(0, 0, sound.getNameFrameX(), canvas.getHeight(), barPaint);
-						} else if (soundPath.equals(SoundboardMenu.mRightBlackBarSoundFilePath)) {
-							canvas.drawRect(sound.getNameFrameX(), 0, canvas.getWidth(), canvas.getHeight(), barPaint);
-						} else {
-							if (sound.getHideImageOrText() != GraphicalSound.HIDE_TEXT) {
-								float NAME_DRAWING_SCALE = SoundNameDrawing.NAME_DRAWING_SCALE;
-								
-								
-								canvas.scale(1/NAME_DRAWING_SCALE, 1/NAME_DRAWING_SCALE);
-								SoundNameDrawing soundNameDrawing = new SoundNameDrawing(sound);
-								
-								Paint nameTextPaint = soundNameDrawing.getBigCanvasNameTextPaint();
-								Paint borderPaint = soundNameDrawing.getBorderPaint();
-								Paint innerPaint = soundNameDrawing.getInnerPaint();
-								
-								RectF bigCanvasNameFrameRect = soundNameDrawing.getBigCanvasNameFrameRect();
-								
-								if (sound.getShowNameFrameInnerPaint() == true) {
-							    	canvas.drawRoundRect(bigCanvasNameFrameRect, 2*NAME_DRAWING_SCALE, 2*NAME_DRAWING_SCALE, innerPaint);
-							    }
-								
-								if (sound.getShowNameFrameBorderPaint()) {
-									canvas.drawRoundRect(bigCanvasNameFrameRect, 2*NAME_DRAWING_SCALE, 2*NAME_DRAWING_SCALE, borderPaint);
-								}
-							    
-								int i = 0;
-							    for (String row : sound.getName().split("\n")) {
-						    		canvas.drawText(row, (sound.getNameFrameX()+2)*NAME_DRAWING_SCALE, 
-						    				sound.getNameFrameY()*NAME_DRAWING_SCALE+(i+1)*sound.getNameSize()*NAME_DRAWING_SCALE, nameTextPaint);
-						    		i++;
-							    }
-							    canvas.scale(NAME_DRAWING_SCALE, NAME_DRAWING_SCALE);
-							}
-						    
-						    if (sound.getHideImageOrText() != GraphicalSound.HIDE_IMAGE) {
-							    RectF imageRect = new RectF();
-							    imageRect.set(sound.getImageX(), 
-										sound.getImageY(), 
-										sound.getImageWidth() + sound.getImageX(), 
-										sound.getImageHeight() + sound.getImageY());
-								
-							    try {
-							    	if (SoundPlayerControl.isPlaying(sound.getPath()) && sound.getActiveImage() != null) {
-							    		try {
-							    			canvas.drawBitmap(sound.getActiveImage(), null, imageRect, mSoundImagePaint);
-							    		} catch(NullPointerException npe) {
-							    			Log.e(TAG, "Unable to draw active image for sound " + sound.getName());
-											sound.setActiveImage(null);
-							    			canvas.drawBitmap(sound.getImage(), null, imageRect, mSoundImagePaint);
-							    		}
-							    		
-							    	} else {
-							    		canvas.drawBitmap(sound.getImage(), null, imageRect, mSoundImagePaint);
-							    	}
-								} catch(NullPointerException npe) {
-									Log.e(TAG, "Unable to draw image for sound " + sound.getName());
-									BugSenseHandler.log(TAG, npe);
-									sound.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.sound));
-								}
-						    }
-						    
-						    if (mGsb.getAutoArrange() && sound == mPressedSound) {
-						    	int width = mPanel.getWidth();
-								int height = mPanel.getHeight();
-								
-								Paint linePaint = new Paint();
-								Paint outerLinePaint = new Paint(); {
-								linePaint.setColor(Color.WHITE);
-								outerLinePaint.setColor(Color.YELLOW);
-								outerLinePaint.setStrokeWidth(3);
-								}
-								
-						    	for (int i = 1; i < mGsb.getAutoArrangeColumns(); i++) {
-						    		float X = i*(width/mGsb.getAutoArrangeColumns());
-						    		canvas.drawLine(X, 0, X, height, outerLinePaint);
-						    		canvas.drawLine(X, 0, X, height, linePaint);
-						    	}
-						    	for (int i = 1; i < mGsb.getAutoArrangeRows(); i++) {
-						    		float Y = i*(height/mGsb.getAutoArrangeRows());
-						    		canvas.drawLine(0, Y, width, Y, outerLinePaint);
-						    		canvas.drawLine(0, Y, width, Y, linePaint);
-						    	}
-						    }
-						}
-					}
-				} catch(ConcurrentModificationException cme) {
-					Log.w(TAG, "Sound list modification while iteration");
-				}
-				
-				if (mFineTuningSound != null && mCurrentGesture == TouchGesture.DRAG) {
-					canvas.drawBitmap(mJoystick.getJoystickImage(), null, mJoystick.getJoystickImageRect(), mSoundImagePaint);
-				}
+				mPageDrawer.drawPage(canvas, mPanel, mGsb, pressedSound, fineTuningSound);
 			}
 
 		}

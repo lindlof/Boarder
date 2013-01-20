@@ -59,8 +59,9 @@ public class Joystick {
 		}
 
 		joystickDistanceX = joystickDistanceX + moveX;
+		float dragDistance = joystickX + joystickDistanceX;
 
-		return joystickDistanceX;
+		return dragDistance;
 	}
 	
 	/**
@@ -79,9 +80,11 @@ public class Joystick {
 			float joystickDistanceCancel = (eventY - joystickY < 0) ? halfJoystickSide*(-1) : halfJoystickSide;
 			moveY = (eventY - joystickY - joystickDistanceCancel)/joystickReferenceDistance;
 		}
+		
 		joystickDistanceY = joystickDistanceY + moveY;
+		float dragDistance = joystickY + joystickDistanceY;
 
-		return joystickDistanceY;
+		return dragDistance;
 	}
 
 	public Bitmap getJoystickImage() {
