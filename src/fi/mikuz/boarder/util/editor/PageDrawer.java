@@ -60,10 +60,10 @@ public class PageDrawer {
 		FadingPage lastFadingPage = null;
 		
 		for (FadingPage listedPage : fadingPages) {
-			if (listedPage.getGsb() == newGsb) {
+			if (listedPage.getGsb().getId() == newGsb.getId()) {
 				newFadingPage = listedPage;
 				newFadingPage.setFadeState(FadeState.FADING_IN);
-			} else if (listedPage.getGsb() == lastGsb) {
+			} else if (listedPage.getGsb().getId() == lastGsb.getId()) {
 				lastFadingPage = listedPage;
 				lastFadingPage.setFadeState(FadeState.FADING_OUT);
 			}
