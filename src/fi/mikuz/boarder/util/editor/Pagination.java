@@ -1,5 +1,10 @@
 package fi.mikuz.boarder.util.editor;
 
+/**
+ * Knows current status of pages.
+ * 
+ * @author Jan Mikael Lindlöf
+ */
 public class Pagination {
 	private boolean movePageMode;
 	private int moveFromPageNumber;

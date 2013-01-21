@@ -28,6 +28,11 @@ import fi.mikuz.boarder.gui.SoundboardMenu;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.editor.FadingPage.FadeState;
 
+/**
+ * Draws pages and page related animations.
+ * 
+ * @author Jan Mikael Lindlöf
+ */
 public class PageDrawer {
 	
 	public static final String TAG = PageDrawer.class.getSimpleName();
