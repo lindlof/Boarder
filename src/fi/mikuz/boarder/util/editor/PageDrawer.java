@@ -12,8 +12,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
+import android.view.Display;
+import android.view.WindowManager;
 
 import com.bugsense.trace.BugSenseHandler;
 
@@ -33,6 +37,9 @@ public class PageDrawer {
 	
 	private GraphicalSoundboard topGsb;
 	private List<FadingPage> fadingPages;
+	private boolean initialPage;
+	
+	private final static Bitmap.Config BITMAP_CONF = Bitmap.Config.ARGB_8888;
 	
 	private Paint soundImagePaint;
 	
@@ -42,6 +49,7 @@ public class PageDrawer {
 		
 		this.topGsb = null;
 		fadingPages = new ArrayList<FadingPage>();
+		initialPage = true;
 		
 		soundImagePaint = new Paint();
         soundImagePaint.setColor(Color.WHITE);
@@ -54,83 +62,110 @@ public class PageDrawer {
 	}
 	
 	public void switchPage(GraphicalSoundboard newGsb) {
+		boolean initialPage = this.initialPage;
+		this.initialPage = false;
+		
 		GraphicalSoundboard lastGsb = topGsb;
-		
-		FadingPage newFadingPage = null;
-		FadingPage lastFadingPage = null;
-		
+		topGsb = newGsb;
+
+		Bitmap newPageDrawCache = null;
+		Bitmap lastPageDrawCache = null;
+
 		for (FadingPage listedPage : fadingPages) {
 			if (listedPage.getGsb().getId() == newGsb.getId()) {
-				newFadingPage = listedPage;
-				newFadingPage.setFadeState(FadeState.FADING_IN);
+				newPageDrawCache = listedPage.getDrawCache();
 			} else if (listedPage.getGsb().getId() == lastGsb.getId()) {
-				lastFadingPage = listedPage;
-				lastFadingPage.setFadeState(FadeState.FADING_OUT);
+				lastPageDrawCache = listedPage.getDrawCache();
 			}
 		}
 		
-		if (newFadingPage == null) {
-			newFadingPage = new FadingPage(newGsb, FadeState.FADING_IN);
-			fadingPages.add(newFadingPage);
+		if (fadingPages.size() > 3) {
+			try {
+				fadingPages.remove(fadingPages.size()-1);
+				Log.w(TAG, "Removed last fading page because of flood");
+			} catch (IndexOutOfBoundsException e) {}
 		}
-		if (lastFadingPage == null) {
-			if (lastGsb != null) {  // Should be on initialization.
-				lastFadingPage = new FadingPage(lastGsb, FadeState.FADING_OUT);
-				fadingPages.add(lastFadingPage);
-			}
+
+		FadingPage newFadingPage = new FadingPage(newGsb, FadeState.FADING_IN);
+		if (newPageDrawCache != null) newFadingPage.setDrawCache(newPageDrawCache);
+		fadingPages.add(newFadingPage);
+
+		if (!initialPage) {
+			FadingPage lastFadingPage = new FadingPage(lastGsb, FadeState.FADING_OUT);
+			if (lastPageDrawCache == null) lastPageDrawCache = genPageCache(lastGsb, null, null);
+			lastFadingPage.setDrawCache(lastPageDrawCache);
+			fadingPages.add(lastFadingPage);
 		}
-		
-		topGsb = newGsb;
 	}
 	
 	public Canvas drawSurface(Canvas canvas, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
-		
-		Bitmap.Config conf = Bitmap.Config.ARGB_8888;
-		canvas.drawColor(topGsb.getBackgroundColor());
-		
+		Paint paint = new Paint();
+		canvas.drawColor(Color.BLACK);
+
 		boolean topGsgFading = false;
-		
-		for (FadingPage listedPage : fadingPages) {
-			if (listedPage.getGsb() == topGsb) {
-				topGsgFading = true;
-			}
-		}
-		
-		if (!topGsgFading) {
-			drawPage(canvas, topGsb, pressedSound, fineTuningSound);
-		}
-		
+
 		Iterator<FadingPage> iter = fadingPages.iterator();
+		Rect screenRect = null;
 		while (iter.hasNext()) {
 			FadingPage listedPage = (FadingPage) iter.next();
-			
-			Bitmap pageBitmap = listedPage.getDrawCache();
-			if (pageBitmap == null) {
-				pageBitmap = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), conf);
-				Canvas pageCanvas = new Canvas(pageBitmap);
-				drawPage(pageCanvas, listedPage.getGsb(), null, null);
-				
-				listedPage.setDrawCache(pageBitmap);
-			}
-			
 
-			Paint paint = new Paint();
-			int fadeAlpha = (int) ((float)listedPage.getFadeProgress()/100f*255f);
-			paint.setAlpha(fadeAlpha);
-			canvas.drawBitmap(pageBitmap, 0, 0, paint);
+			if (screenRect == null) {
+				screenRect = new Rect(0, 0, canvas.getWidth(), canvas.getHeight());
+			}
 
 			listedPage.updateFadeProgress();
 			if (listedPage.getFadeProgress() >= 100 || 
 					listedPage.getFadeProgress() <= 0) {
 				iter.remove();
+			} else {
+				Bitmap pageBitmap = listedPage.getDrawCache();
+				if (pageBitmap == null) {
+					pageBitmap = genPageCache(listedPage.getGsb(), null, null);
+					listedPage.setDrawCache(pageBitmap);
+				}
+
+				if (listedPage.getGsb() == topGsb) {
+					topGsgFading = true;
+				}
+
+				float fadeProgress = (float) listedPage.getFadeProgress();
+				float fadePercentage = fadeProgress/100;
+
+				float xDistance = canvas.getWidth()/2 * (1-fadePercentage);
+				float yDistance = canvas.getHeight()/2 * (1-fadePercentage);
+				RectF fadeRect = new RectF(xDistance, yDistance, 
+						canvas.getWidth() - xDistance, canvas.getHeight() - yDistance);
+
+				int fadeAlpha = (int) (fadePercentage*255f);
+				paint.setAlpha(fadeAlpha);
+				canvas.drawBitmap(pageBitmap, screenRect, fadeRect, paint);
 			}
 		}
-		
-		//drawPage(canvas, topGsb, pressedSound, fineTuningSound);
+
+		if (!topGsgFading) {
+			// Drawing directly to SurfaceView canvas is a lot faster.
+			drawPage(canvas, topGsb, pressedSound, fineTuningSound);
+		}
+
 		return canvas;
 	}
 	
+	private Bitmap genPageCache(GraphicalSoundboard gsb, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
+		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		Display display = wm.getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+		
+		Bitmap pageBitmap = Bitmap.createBitmap(size.x, size.y, BITMAP_CONF);
+		Canvas pageCanvas = new Canvas(pageBitmap);
+		drawPage(pageCanvas, gsb, pressedSound, fineTuningSound);
+		
+		return pageBitmap;
+	}
+	
 	private Canvas drawPage(Canvas canvas, GraphicalSoundboard drawGsb, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
+		
+		canvas.drawColor(drawGsb.getBackgroundColor());
 		
 		if (drawGsb.getUseBackgroundImage() == true && drawGsb.getBackgroundImagePath().exists()) {
 			RectF bitmapRect = new RectF();
@@ -218,6 +253,7 @@ public class PageDrawer {
 					    	}
 						} catch(NullPointerException npe) {
 							Log.e(TAG, "Unable to draw image for sound " + sound.getName());
+							npe.printStackTrace();
 							BugSenseHandler.log(TAG, npe);
 							sound.setImage(BitmapFactory.decodeResource(context.getResources(), R.drawable.sound));
 						}
