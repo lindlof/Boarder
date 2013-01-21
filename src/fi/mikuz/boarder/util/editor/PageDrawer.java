@@ -2,8 +2,11 @@ package fi.mikuz.boarder.util.editor;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.List;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,7 +14,6 @@ import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.RectF;
 import android.util.Log;
-import android.view.View;
 
 import com.bugsense.trace.BugSenseHandler;
 
@@ -20,6 +22,7 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.gui.SoundboardMenu;
 import fi.mikuz.boarder.util.SoundPlayerControl;
+import fi.mikuz.boarder.util.editor.FadingPage.FadeState;
 
 public class PageDrawer {
 	
@@ -28,19 +31,106 @@ public class PageDrawer {
 	private Context context;
 	private Joystick joystick;
 	
-	private Paint mSoundImagePaint;
+	private GraphicalSoundboard topGsb;
+	private List<FadingPage> fadingPages;
+	
+	private Paint soundImagePaint;
 	
 	public PageDrawer(Context context, Joystick joystick) {
 		this.context = context;
 		this.joystick = joystick;
 		
-		mSoundImagePaint = new Paint();
-        mSoundImagePaint.setColor(Color.WHITE);
-        mSoundImagePaint.setAntiAlias(true);
-        mSoundImagePaint.setTextAlign(Align.LEFT);
+		this.topGsb = null;
+		fadingPages = new ArrayList<FadingPage>();
+		
+		soundImagePaint = new Paint();
+        soundImagePaint.setColor(Color.WHITE);
+        soundImagePaint.setAntiAlias(true);
+        soundImagePaint.setTextAlign(Align.LEFT);
 	}
 	
-	public Canvas drawPage(Canvas canvas, View panel, GraphicalSoundboard drawGsb, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
+	public boolean needAnimationRefreshSpeed() {
+		return (fadingPages.size() > 0);
+	}
+	
+	public void switchPage(GraphicalSoundboard newGsb) {
+		GraphicalSoundboard lastGsb = topGsb;
+		
+		FadingPage newFadingPage = null;
+		FadingPage lastFadingPage = null;
+		
+		for (FadingPage listedPage : fadingPages) {
+			if (listedPage.getGsb() == newGsb) {
+				newFadingPage = listedPage;
+				newFadingPage.setFadeState(FadeState.FADING_IN);
+			} else if (listedPage.getGsb() == lastGsb) {
+				lastFadingPage = listedPage;
+				lastFadingPage.setFadeState(FadeState.FADING_OUT);
+			}
+		}
+		
+		if (newFadingPage == null) {
+			newFadingPage = new FadingPage(newGsb, FadeState.FADING_IN);
+			fadingPages.add(newFadingPage);
+		}
+		if (lastFadingPage == null) {
+			if (lastGsb != null) {  // Should be on initialization.
+				lastFadingPage = new FadingPage(lastGsb, FadeState.FADING_OUT);
+				fadingPages.add(lastFadingPage);
+			}
+		}
+		
+		topGsb = newGsb;
+	}
+	
+	public Canvas drawSurface(Canvas canvas, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
+		
+		Bitmap.Config conf = Bitmap.Config.ARGB_8888;
+		canvas.drawColor(topGsb.getBackgroundColor());
+		
+		boolean topGsgFading = false;
+		
+		for (FadingPage listedPage : fadingPages) {
+			if (listedPage.getGsb() == topGsb) {
+				topGsgFading = true;
+			}
+		}
+		
+		if (!topGsgFading) {
+			drawPage(canvas, topGsb, pressedSound, fineTuningSound);
+		}
+		
+		Iterator<FadingPage> iter = fadingPages.iterator();
+		while (iter.hasNext()) {
+			FadingPage listedPage = (FadingPage) iter.next();
+			
+			Bitmap pageBitmap = listedPage.getDrawCache();
+			if (pageBitmap == null) {
+				pageBitmap = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), conf);
+				Canvas pageCanvas = new Canvas(pageBitmap);
+				drawPage(pageCanvas, listedPage.getGsb(), null, null);
+				
+				listedPage.setDrawCache(pageBitmap);
+			}
+			
+
+			Paint paint = new Paint();
+			int fadeAlpha = (int) ((float)listedPage.getFadeProgress()/100f*255f);
+			paint.setAlpha(fadeAlpha);
+			canvas.drawBitmap(pageBitmap, 0, 0, paint);
+
+			listedPage.updateFadeProgress();
+			if (listedPage.getFadeProgress() >= 100 || 
+					listedPage.getFadeProgress() <= 0) {
+				iter.remove();
+			}
+		}
+		
+		//drawPage(canvas, topGsb, pressedSound, fineTuningSound);
+		return canvas;
+	}
+	
+	private Canvas drawPage(Canvas canvas, GraphicalSoundboard drawGsb, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
 		
 		if (drawGsb.getUseBackgroundImage() == true && drawGsb.getBackgroundImagePath().exists()) {
 			RectF bitmapRect = new RectF();
@@ -116,15 +206,15 @@ public class PageDrawer {
 					    try {
 					    	if (SoundPlayerControl.isPlaying(sound.getPath()) && sound.getActiveImage() != null) {
 					    		try {
-					    			canvas.drawBitmap(sound.getActiveImage(), null, imageRect, mSoundImagePaint);
+					    			canvas.drawBitmap(sound.getActiveImage(), null, imageRect, soundImagePaint);
 					    		} catch(NullPointerException npe) {
 					    			Log.e(TAG, "Unable to draw active image for sound " + sound.getName());
 									sound.setActiveImage(null);
-					    			canvas.drawBitmap(sound.getImage(), null, imageRect, mSoundImagePaint);
+					    			canvas.drawBitmap(sound.getImage(), null, imageRect, soundImagePaint);
 					    		}
 					    		
 					    	} else {
-					    		canvas.drawBitmap(sound.getImage(), null, imageRect, mSoundImagePaint);
+					    		canvas.drawBitmap(sound.getImage(), null, imageRect, soundImagePaint);
 					    	}
 						} catch(NullPointerException npe) {
 							Log.e(TAG, "Unable to draw image for sound " + sound.getName());
@@ -134,8 +224,8 @@ public class PageDrawer {
 				    }
 				    
 				    if (drawGsb.getAutoArrange() && sound == pressedSound) {
-				    	int width = panel.getWidth();
-						int height = panel.getHeight();
+				    	int width = canvas.getWidth();
+						int height = canvas.getHeight();
 						
 						Paint linePaint = new Paint();
 						Paint outerLinePaint = new Paint(); {
@@ -162,7 +252,7 @@ public class PageDrawer {
 		}
 		
 		if (fineTuningSound != null) {
-			canvas.drawBitmap(joystick.getJoystickImage(), null, joystick.getJoystickImageRect(), mSoundImagePaint);
+			canvas.drawBitmap(joystick.getJoystickImage(), null, joystick.getJoystickImageRect(), soundImagePaint);
 		}
 		
 		return canvas;

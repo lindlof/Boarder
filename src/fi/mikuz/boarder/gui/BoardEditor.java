@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.ConcurrentModificationException;
 import java.util.ListIterator;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -21,10 +20,6 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Paint.Align;
-import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -59,7 +54,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bugsense.trace.BugSenseHandler;
 import com.thoughtworks.xstream.XStream;
 
 import fi.mikuz.boarder.R;
@@ -101,6 +95,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private BoardHistoryProvider mBoardHistoryProvider;
 	
 	private Pagination mPagination;
+	private PageDrawer mPageDrawer;
+	private Joystick mJoystick = null;
 	
 	private static final int LISTEN_BOARD = 0;
 	private static final int EDIT_BOARD = 1;
@@ -285,6 +281,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			}
 		}
 			
+		mPageDrawer = new PageDrawer(this.getApplicationContext(), mJoystick);
 		changeBoard(newGsb);
 	}
 	
@@ -804,6 +801,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	public void changeBoard(GraphicalSoundboard gsb) {
 		GraphicalSoundboard lastGsb = mGsb;
 		loadBoard(gsb);
+		mPageDrawer.switchPage(gsb);
 		if (lastGsb != null) {
 			GraphicalSoundboard.unloadImages(lastGsb);
 			mGsbp.overrideBoard(lastGsb);
@@ -1675,8 +1673,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	class DrawingPanel extends SurfaceView implements SurfaceHolder.Callback {
 		
-		private PageDrawer mPageDrawer = null;
-		
 		private float mInitTouchEventX = 0;
 		private float mInitTouchEventY = 0;
 		private long mClickTime = 0;
@@ -1684,7 +1680,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		private float mLatestEventX = 0;
 		private float mLatestEventY = 0;
 		
-		Joystick mJoystick = null;
 		Timer mJoystickTimer = null;
 		
 		Object mGestureLock = new Object();
@@ -1694,7 +1689,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             getHolder().addCallback(this);
             mThread = new DrawingThread(getHolder(), this);
             mJoystick = new Joystick(context);
-            mPageDrawer = new PageDrawer(context, mJoystick);
 		}
 		
 		private GraphicalSound findPressedSound(MotionEvent pressInitEvent) {
@@ -2487,9 +2481,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				if (mCurrentGesture == TouchGesture.DRAG) pressedSound = mPressedSound;
 				if (mFineTuningSound != null && mCurrentGesture == TouchGesture.DRAG) fineTuningSound = mFineTuningSound;
 				
-				canvas.drawColor(mGsb.getBackgroundColor());
-				
-				mPageDrawer.drawPage(canvas, mPanel, mGsb, pressedSound, fineTuningSound);
+				mPageDrawer.drawSurface(canvas, pressedSound, fineTuningSound);
 			}
 
 		}
@@ -2551,7 +2543,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
                     }
                 }
                 try {
-            		if (mMode == EDIT_BOARD && (mCurrentGesture == TouchGesture.DRAG || mMoveBackground )) {
+                	if (mPageDrawer.needAnimationRefreshSpeed()) {
+                		Thread.sleep(1);
+                	} else if (mMode == EDIT_BOARD && (mCurrentGesture == TouchGesture.DRAG || mMoveBackground )) {
             			Thread.sleep(10);
             		} else if (mMode == EDIT_BOARD && mCurrentGesture != TouchGesture.DRAG && mMoveBackground == false) {
             			
