@@ -10,6 +10,7 @@ import android.graphics.Color;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
+import fi.mikuz.boarder.util.Handlers.ToastHandler;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
 
 /**
@@ -142,12 +143,12 @@ public class GraphicalSoundboard {
 		return gsb;
 	}
 	
-	static public void loadImages(Context context, GraphicalSoundboard gsb) {
+	static public void loadImages(Context context, ToastHandler toastHandler, GraphicalSoundboard gsb) {
 		if (gsb.getBackgroundImage() == null && gsb.getBackgroundImagePath() != null) {
-			gsb.setBackgroundImage(ImageDrawing.decodeFile(context, gsb.getBackgroundImagePath()));
+			gsb.setBackgroundImage(ImageDrawing.decodeFile(toastHandler, gsb.getBackgroundImagePath()));
 		}
 		for (GraphicalSound sound : gsb.getSoundList()) {
-			GraphicalSound.loadImages(context, sound);
+			GraphicalSound.loadImages(context, toastHandler, sound);
 		}
 	}
 	

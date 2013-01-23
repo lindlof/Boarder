@@ -252,7 +252,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         
         File icon = new File(mSbDir, mBoardName + "/icon.png");
         if (icon.exists()) {
-			Bitmap bitmap = ImageDrawing.decodeFile(this.getApplicationContext(), icon);
+			Bitmap bitmap = ImageDrawing.decodeFile(mToastHandler, icon);
             Drawable drawable = new BitmapDrawable(getResources(), IconUtils.resizeIcon(this, bitmap, (40/6)));
         	this.getActionBar().setLogo(drawable);
         }
@@ -825,7 +825,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	}
 	
 	public void loadBoard(GraphicalSoundboard gsb) {
-		GraphicalSoundboard.loadImages(this.getApplicationContext(), gsb);
+		GraphicalSoundboard.loadImages(this.getApplicationContext(), mToastHandler, gsb);
 		mGsb = gsb;
 	}
 	
@@ -1004,7 +1004,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	Bundle extras = intent.getExtras();
 		        	File background = new File(extras.getString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE));
 		        	mGsb.setBackgroundImagePath(background);
-		        	mGsb.setBackgroundImage(ImageDrawing.decodeFile(this.getApplicationContext(), mGsb.getBackgroundImagePath()));
+		        	mGsb.setBackgroundImage(ImageDrawing.decodeFile(mToastHandler, mGsb.getBackgroundImagePath()));
 		        	mGsb.setBackgroundWidth(mGsb.getBackgroundImage().getWidth());
 		        	mGsb.setBackgroundHeight(mGsb.getBackgroundImage().getHeight());
 		        	mGsb.setBackgroundX(0);
@@ -1025,7 +1025,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE));
 		        	mPressedSound.setImagePath(image);
-		        	mPressedSound.setImage(ImageDrawing.decodeFile(this.getApplicationContext(), mPressedSound.getImagePath()));
+		        	mPressedSound.setImage(ImageDrawing.decodeFile(mToastHandler, mPressedSound.getImagePath()));
 	        	}
 	        	if (mSoundImageDialog != null) {
 	        		mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
@@ -1041,7 +1041,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE));
 		        	mPressedSound.setActiveImagePath(image);
-		        	mPressedSound.setActiveImage(ImageDrawing.decodeFile(this.getApplicationContext(), mPressedSound.getActiveImagePath()));
+		        	mPressedSound.setActiveImage(ImageDrawing.decodeFile(mToastHandler, mPressedSound.getActiveImagePath()));
 	        	}
 	        	break;
 	        	

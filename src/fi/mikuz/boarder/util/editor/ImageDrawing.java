@@ -4,14 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import fi.mikuz.boarder.gui.SoundboardMenu;
-
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
+import fi.mikuz.boarder.util.Handlers.ToastHandler;
 
 /**
  * 
@@ -28,15 +24,15 @@ public class ImageDrawing {
 	 * @param image file
 	 * @return image bitmap
 	 */
-	public static Bitmap decodeFile(Context context, File f) { // TODO Could a same bitmap in memory be reused elegantly here?
+	public static Bitmap decodeFile(ToastHandler toasthandler, File f) { // TODO Could a same bitmap in memory be reused elegantly here?
 	    Bitmap b = null;
 	    
 	    // Bitmaps can take large amounts of memory.
 	    // To avoid unexpected stuff bitmaps won't be decoded if memory is running very low.
 	    if (underFivePercentOfMemoryLeft()) {
-	    	String errorMessage = "Memory is running very low, won't decode image " + f.getAbsolutePath();
+	    	String errorMessage = "Not enough memory, won't decode image " + f.getAbsolutePath();
 	    	Log.e(TAG, errorMessage);
-	    	Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show();
+	    	toasthandler.toast("Not enough memory");
 	    	return null;
 	    }
 	    
@@ -72,7 +68,7 @@ public class ImageDrawing {
 	    } catch (OutOfMemoryError ome2) {
 	    	String errorMessage = "Unable to decode image, out of memory";
 	    	Log.e(TAG, errorMessage, ome2);
-	    	Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show();
+	    	toasthandler.toast("Out of memory");
 	    }
 	    
 	    return b;

@@ -10,6 +10,7 @@ import android.graphics.Color;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.util.Handlers.ToastHandler;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
@@ -79,16 +80,16 @@ public class GraphicalSound implements Cloneable {
 		this.setShowNameFrameBorderPaint(true);
 	}
 	
-	static public void loadImages(Context context, GraphicalSound sound) {
+	static public void loadImages(Context context, ToastHandler toastHandler, GraphicalSound sound) {
 		if (sound.getImage() == null) {
 			if (sound.getImagePath() == null) {
 				sound.setImage(BitmapFactory.decodeResource(context.getResources(), R.drawable.sound));
 			} else {
-				sound.setImage(ImageDrawing.decodeFile(context, sound.getImagePath()));
+				sound.setImage(ImageDrawing.decodeFile(toastHandler, sound.getImagePath()));
 			}
 		}
 		if (sound.getActiveImage() == null && sound.getActiveImagePath() != null) {
-			sound.setActiveImage(ImageDrawing.decodeFile(context, sound.getActiveImagePath()));
+			sound.setActiveImage(ImageDrawing.decodeFile(toastHandler, sound.getActiveImagePath()));
 		}
 	}
 	
