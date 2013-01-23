@@ -46,14 +46,13 @@ public class Pagination {
 		this.movePageOrientation = -1;
 	}
 	
-	public void movePage(ToastHandler handler, GraphicalSoundboard toGsb) {
+	public void movePage(ToastHandler toastHandler, GraphicalSoundboard toGsb) {
 		int orientation = this.movePageOrientation;
 		int fromPageNumber = this.moveFromPageNumber;
 		int toPageNumber = toGsb.getPageNumber();
 		
 		if (toGsb.getScreenOrientation() != orientation) {
-			Message toast = handler.wrapMessage("Wrong orientation!");
-			handler.dispatchMessage(toast);
+			toastHandler.toast("Wrong orientation!");
     		return;
     	}
 		resetMove();
