@@ -1,6 +1,7 @@
 package fi.mikuz.boarder.util.editor;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -104,79 +105,6 @@ public class GraphicalSoundboardProvider {
 		}
 		
 		return null;
-	}
-	
-	public void movePage(int orientation, int fromPageNumber, int toPageNumber) {
-		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
-			int pageNumber = gsb.getPageNumber();
-			
-			if (gsb.getScreenOrientation() == orientation) {
-				if (pageNumber == fromPageNumber) {
-					gsb.setPageNumber(toPageNumber);
-					boardHolder.overrideBoard(gsb);
-				} else if (fromPageNumber > toPageNumber) {
-					if (pageNumber >= toPageNumber &&
-							pageNumber < fromPageNumber ) {
-						gsb.setPageNumber(pageNumber + 1);
-						boardHolder.overrideBoard(gsb);
-					}
-				} else if (fromPageNumber < toPageNumber) {
-					if (pageNumber <= toPageNumber &&
-							pageNumber > fromPageNumber) {
-						gsb.setPageNumber(pageNumber - 1);
-						boardHolder.overrideBoard(gsb);
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 * 
-	 * @param current gsb
-	 * @return next board page or null
-	 */
-	public GraphicalSoundboard getNextBoardPage(GraphicalSoundboard lastGsb) {
-		int orientation = lastGsb.getScreenOrientation();
-		GraphicalSoundboard selectedBoard = null;
-		
-		selectedBoard = getPage(orientation, lastGsb.getPageNumber() + 1);
-		
-		if (selectedBoard == null) selectedBoard = getPage(orientation, 0); // Last page, go to first page.
-		
-		return selectedBoard;
-	}
-	
-	/**
-	 * 
-	 * @param current gsb
-	 * @return next board page or null
-	 */
-	public GraphicalSoundboard getPreviousPage(GraphicalSoundboard lastGsb) {
-		int orientation = lastGsb.getScreenOrientation();
-		GraphicalSoundboard selectedBoard = null;
-		
-		selectedBoard = getPage(orientation, lastGsb.getPageNumber() - 1);
-		
-		if (selectedBoard == null) selectedBoard = getLastPage(orientation); // First page, go to last page.
-		
-		return selectedBoard;
-	}
-	
-	private GraphicalSoundboard getLastPage(int preferredOrientation) {
-		GraphicalSoundboard selectedBoard = null;
-		
-		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
-			if (gsb.getScreenOrientation() == preferredOrientation) {
-				if (selectedBoard == null) {
-					selectedBoard = gsb;
-				} else if (gsb.getPageNumber() > selectedBoard.getPageNumber()) {
-					selectedBoard = gsb;
-				}
-			}
-		}
-		
-		return selectedBoard;
 	}
 	
 	public void deletePage(GraphicalSoundboard deleteGsb) {

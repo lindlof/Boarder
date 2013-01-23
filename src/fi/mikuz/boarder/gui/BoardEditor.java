@@ -65,6 +65,7 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
 import fi.mikuz.boarder.util.AutoArrange;
 import fi.mikuz.boarder.util.FileProcessor;
+import fi.mikuz.boarder.util.Handlers.ToastHandler;
 import fi.mikuz.boarder.util.IconUtils;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.XStreamUtil;
@@ -83,7 +84,7 @@ import fi.mikuz.boarder.util.editor.SoundNameDrawing;
  * @author Jan Mikael Lindlöf
  */
 public class BoardEditor extends BoarderActivity { //TODO destroy god object
-	private String TAG = "GraphicalSoundboardEditor";
+	private static final String TAG = BoardEditor.class.getSimpleName();
 	
 	Vibrator vibrator;
 	
@@ -152,6 +153,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	private GraphicalSound mFineTuningSound = null;
 	
+	private ToastHandler mToastHandler;
 	final Handler mHandler = new Handler();
 	ProgressDialog mWaitDialog;
 	boolean mClearBoardDir = false;
@@ -180,8 +182,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         
+        mToastHandler = new ToastHandler(getApplicationContext());
+        
         mBoardHistoryProvider = new BoardHistoryProvider();
-        mPagination = new Pagination();
         
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
@@ -244,6 +247,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		  	alert.show();
 		  	
 		}
+		
+		mPagination = new Pagination(mGsbp);
         
         File icon = new File(mSbDir, mBoardName + "/icon.png");
         if (icon.exists()) {
@@ -282,7 +287,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		}
 			
 		mPageDrawer = new PageDrawer(this.getApplicationContext(), mJoystick);
-		changeBoard(newGsb);
+		changeBoard(newGsb, true);
 	}
 	
 	@Override
@@ -370,14 +375,15 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	    public void onClick(DialogInterface dialog, int item) {
             	    	if (item == 0) {
             	    		GraphicalSoundboard swapGsb = mGsbp.addBoardPage(currentOrientation);
-            	    		changeBoard(swapGsb);
+            	    		changeBoard(swapGsb, true);
             	    	} else if (item == 1) {
             	    		GraphicalSoundboard deleteGsb = mGsb;
             	    		mGsbp.deletePage(deleteGsb);
-            	    		mGsb = mGsbp.getPage(deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
-            	    		GraphicalSoundboard.unloadImages(deleteGsb);
+            	    		GraphicalSoundboard gsb = mGsbp.getPage(deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
+            	    		if (gsb == null) gsb = mGsbp.getBoard(deleteGsb.getScreenOrientation());
+            	    		changeBoard(gsb, false);
             	    	} else if (item == 2) {
-            	    		mPagination.initMove(mGsb.getScreenOrientation(), mGsb.getPageNumber());
+            	    		mPagination.initMove(mGsb);
             	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
             	    	}
             	    }
@@ -388,17 +394,12 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	return true;
             
             case R.id.menu_move_page_here:
-            	if (mGsb.getScreenOrientation() != mPagination.getMovePageOrientation()) {
-            		Toast.makeText(getApplicationContext(), "Wrong orientation!", Toast.LENGTH_SHORT).show();
-            		return true;
-            	}
             	GraphicalSoundboard currentGsb = mGsb;
             	int toPageNumber = currentGsb.getPageNumber();
             	mGsbp.overrideBoard(currentGsb);
-            	mGsbp.movePage(mPagination.getMovePageOrientation(), mPagination.getMoveFromPageNumber(), toPageNumber);
-            	mGsb = mGsbp.getPage(currentGsb.getScreenOrientation(), toPageNumber);
-            	GraphicalSoundboard.unloadImages(currentGsb);
-            	mPagination.resetMove();
+            	mPagination.movePage(mToastHandler, mGsb);
+            	GraphicalSoundboard gsb = mGsbp.getPage(currentGsb.getScreenOrientation(), toPageNumber);
+            	changeBoard(gsb, false);
 	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
             	return true;
                 
@@ -798,11 +799,11 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         }
     }
 
-	public void changeBoard(GraphicalSoundboard gsb) {
+	public void changeBoard(GraphicalSoundboard gsb, boolean overrideCurrentBoard) {
 		GraphicalSoundboard lastGsb = mGsb;
 		loadBoard(gsb);
 		mPageDrawer.switchPage(gsb);
-		if (lastGsb != null) {
+		if (lastGsb != null && overrideCurrentBoard) {
 			GraphicalSoundboard.unloadImages(lastGsb);
 			mGsbp.overrideBoard(lastGsb);
 		}
@@ -1221,7 +1222,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
     	if (!(originalOrientation == currentOrientation)) {
     		GraphicalSoundboard newOrientationGsb = mGsbp.getBoardForRotation(rotation);
-    		changeBoard(newOrientationGsb);
+    		changeBoard(newOrientationGsb, true);
     		
     		// Set resolution handling stuff for the new orientation
     		if (mResolutionAlert != null) {
@@ -1827,15 +1828,15 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 								GraphicalSoundboard swapGsb = null;
 								
 								if (event.getX() < mInitTouchEventX) {
-									swapGsb = mGsbp.getNextBoardPage(mGsb);
+									swapGsb = mPagination.getNextBoardPage(mGsb);
 								} else {
-									swapGsb = mGsbp.getPreviousPage(mGsb);
+									swapGsb = mPagination.getPreviousPage(mGsb);
 								}
 								
 								if (swapGsb == null) {
 									Toast.makeText(getApplicationContext(), "No page there", Toast.LENGTH_SHORT).show();
 								} else {
-									changeBoard(swapGsb);
+									changeBoard(swapGsb, true);
 								}
 							}
 						}
