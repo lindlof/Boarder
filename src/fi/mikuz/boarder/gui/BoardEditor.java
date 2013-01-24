@@ -182,8 +182,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         
-        mToastHandler = new ToastHandler(getApplicationContext());
-        
         mBoardHistoryProvider = new BoardHistoryProvider();
         
 		Bundle extras = getIntent().getExtras();
@@ -1237,6 +1235,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     @Override
     protected void onResume() {
     	super.onResume();
+    	mToastHandler = new ToastHandler(getApplicationContext());
     	setContentView(mPanel);
     }
 	

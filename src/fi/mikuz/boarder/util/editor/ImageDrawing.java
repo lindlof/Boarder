@@ -32,7 +32,7 @@ public class ImageDrawing {
 	    if (underFivePercentOfMemoryLeft()) {
 	    	String errorMessage = "Not enough memory, won't decode image " + f.getAbsolutePath();
 	    	Log.e(TAG, errorMessage);
-	    	toasthandler.toast("Not enough memory");
+	    	if (toasthandler != null) toasthandler.toast("Not enough memory");
 	    	return null;
 	    }
 	    
