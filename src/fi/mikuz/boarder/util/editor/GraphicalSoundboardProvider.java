@@ -56,7 +56,7 @@ public class GraphicalSoundboardProvider {
 		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
 			if (gsb.getScreenOrientation() == orientation &&
 					gsb.getPageNumber() == pageNumber) {
-				return gsb;
+				return GraphicalSoundboard.copy(gsb);
 			}
 		}
 		
