@@ -299,7 +299,6 @@ public class FileProcessor {
 	}
 	
 	private static void changeBoardDirectoryReferences(GraphicalSoundboardHolder holder, File oldLocation, File newLocation) throws IOException {
-		List<GraphicalSoundboard> boardList = new ArrayList<GraphicalSoundboard>();
 		
 		for (GraphicalSoundboard board : holder.getBoardList()) {
 			board.setBackgroundImagePath(replaceBoardPath(board.getBackgroundImagePath(), oldLocation, newLocation));
@@ -311,10 +310,7 @@ public class FileProcessor {
 				sound.setActiveImagePath(replaceBoardPath(sound.getActiveImagePath(), oldLocation, newLocation));
 				soundList.add(sound);
 			}
-			
-			boardList.add(board);
 		}
-		holder.setBoardList(boardList);
 	}
 	
 	private static File replaceBoardPath(File file, File originalBoard, File newBoard) {

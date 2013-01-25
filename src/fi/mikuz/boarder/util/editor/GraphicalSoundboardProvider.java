@@ -1,14 +1,12 @@
 package fi.mikuz.boarder.util.editor;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
 import android.util.Log;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
-import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder.OrientationMode;
 import fi.mikuz.boarder.util.FileProcessor;
 
 /**
@@ -30,14 +28,6 @@ public class GraphicalSoundboardProvider {
 		}
 	}
 	
-	public boolean orientationChangeAllowed() {
-		if (boardHolder.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_HYBRID) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
 	public GraphicalSoundboardHolder.OrientationMode getOrientationMode() {
 		return boardHolder.getOrientationMode();
 	}
@@ -49,40 +39,6 @@ public class GraphicalSoundboardProvider {
 	public void setOrientationMode(int screenOrientation) {
 		GraphicalSoundboardHolder.OrientationMode orientationMode = screenOrientationToOrientationMode(screenOrientation);
 		setOrientationMode(orientationMode);
-	}
-	
-	public GraphicalSoundboard getBoardForRotation(int preferredRotation) {
-		
-		int preferredOrientation = EditorOrientation.convertRotation(preferredRotation);
-		
-		return getBoard(preferredOrientation);
-	}
-	
-	public GraphicalSoundboard getBoard(int preferredOrientation) {
-		
-		if (boardHolder.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_PORTRAIT) {
-			preferredOrientation = GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT;
-		} else if (boardHolder.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_LANDSCAPE) {
-			preferredOrientation = GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE;
-		}
-		
-		GraphicalSoundboard startBoardPage = getPage(preferredOrientation, 0);
-		if (startBoardPage != null) return startBoardPage;
-		
-		if (boardHolder.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_PORTRAIT) {
-			Log.v(TAG, "No board in preferred orientation. Single orientation mode. Giving any board.");
-			for (GraphicalSoundboard board : boardHolder.getBoardList()) {
-				OrientationMode orientationMode = screenOrientationToOrientationMode(board.getScreenOrientation());
-				boardHolder.setOrientationMode(orientationMode);
-				return board;
-			}
-			Log.v(TAG, "No boards found. Giving a new board.");
-		} else if (boardHolder.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_HYBRID) {
-			Log.v(TAG, "No board in preferred orientation. Hybrid orientation mode. Giving a new board.");
-		}
-		
-		GraphicalSoundboard gsb = addBoard(preferredOrientation);
-		return gsb;
 	}
 	
 	public GraphicalSoundboard addBoardPage(int preferredOrientation) {
@@ -116,7 +72,7 @@ public class GraphicalSoundboardProvider {
 			if (gsb.getScreenOrientation() == deleteGsb.getScreenOrientation() && 
 					gsb.getPageNumber() > deleteGsb.getPageNumber()) {
 				gsb.setPageNumber(gsb.getPageNumber() - 1);
-				boardHolder.overrideBoard(gsb);
+				overrideBoard(gsb);
 			}
 		}
 	}
@@ -139,7 +95,14 @@ public class GraphicalSoundboardProvider {
  		GraphicalSoundboard gsb = GraphicalSoundboard.copy(tempGsb);
 		GraphicalSoundboard.unloadImages(gsb);
 		
-		boardHolder.overrideBoard(gsb);
+		List<GraphicalSoundboard> boardList = boardHolder.getBoardList();
+		for (int i = 0; i < boardList.size(); i++) {
+			GraphicalSoundboard existingGsb = boardList.get(i);
+			if (gsb.getId() == existingGsb.getId()) {
+				boardList.set(i, gsb);
+				break;
+			}
+		}
 	}
 	
 	public boolean boardWithOrientationExists(final int screenOrientation) {
@@ -174,6 +137,15 @@ public class GraphicalSoundboardProvider {
 				break;
 			}
 		}
+	}
+	
+	public boolean isPaginationSynchronizedBetweenOrientations() {
+		return boardHolder.paginationSynchronizedBetweenOrientations;
+	}
+
+	public void setPaginationSynchronizedBetweenOrientations(
+			boolean paginationSynchronizedBetweenOrientations) {
+		boardHolder.paginationSynchronizedBetweenOrientations = paginationSynchronizedBetweenOrientations;
 	}
 	
 }

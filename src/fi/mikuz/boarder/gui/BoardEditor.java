@@ -38,7 +38,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -67,11 +66,11 @@ import fi.mikuz.boarder.util.AutoArrange;
 import fi.mikuz.boarder.util.FileProcessor;
 import fi.mikuz.boarder.util.Handlers.ToastHandler;
 import fi.mikuz.boarder.util.IconUtils;
+import fi.mikuz.boarder.util.OrientationUtil;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.XStreamUtil;
 import fi.mikuz.boarder.util.dbadapter.MenuDbAdapter;
 import fi.mikuz.boarder.util.editor.BoardHistoryProvider;
-import fi.mikuz.boarder.util.editor.EditorOrientation;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
 import fi.mikuz.boarder.util.editor.Joystick;
@@ -88,7 +87,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	Vibrator vibrator;
 	
-	private static EditorOrientation editorOrientation;
+	private int mCurrentOrientation;
 	
 	public GraphicalSoundboard mGsb;
 	private GraphicalSoundboardProvider mGsbp;
@@ -190,6 +189,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			setTitle(mBoardName);
 			
 			mGsbp = new GraphicalSoundboardProvider(mBoardName);
+			mPagination = new Pagination(mGsbp);
 			initEditorBoard();
 			
 			if (mGsb.getSoundList().isEmpty()) {
@@ -222,6 +222,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		  					finish();
 		  				} else {
 		  					mGsbp = new GraphicalSoundboardProvider(mBoardName);
+		  					mPagination = new Pagination(mGsbp);
 			  				initEditorBoard();
 			  				
 			  				setTitle(mBoardName);
@@ -245,8 +246,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		  	alert.show();
 		  	
 		}
-		
-		mPagination = new Pagination(mGsbp);
         
         File icon = new File(mSbDir, mBoardName + "/icon.png");
         if (icon.exists()) {
@@ -269,23 +268,21 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	}
 	
 	public void initEditorBoard() {
-		int rotation = getWindowManager().getDefaultDisplay().getRotation();
-		GraphicalSoundboard newGsb = mGsbp.getBoardForRotation(rotation);
-		editorOrientation = new EditorOrientation();
-		editorOrientation.setCurrentOrientation(rotation);
 		
-		if (!mGsbp.orientationChangeAllowed()) {
-			if (newGsb.getScreenOrientation() == GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT) {
-				this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-			} else if (newGsb.getScreenOrientation() == GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE) {
-				this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-			} else {
-				Log.wtf(TAG, "Unknown screen orientation");
-			}
+		if (mGsbp.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_PORTRAIT) {
+			this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		} else if (mGsbp.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_LANDSCAPE) {
+			this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		}
+		
+		Configuration config = getResources().getConfiguration();
+		int orientation = OrientationUtil.getBoarderOrientation(config);
+		this.mCurrentOrientation = orientation;
+		
+		GraphicalSoundboard newGsb = mPagination.getBoard(orientation);
 			
 		mPageDrawer = new PageDrawer(this.getApplicationContext(), mJoystick);
-		changeBoard(newGsb, true);
+		changeBoard(newGsb, false);
 	}
 	
 	@Override
@@ -364,8 +361,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
             	CharSequence[] pageItems = {"Add page", "Delete this page", "Move this page"};
             	
-            	int rotation = getWindowManager().getDefaultDisplay().getRotation();
-            	final int currentOrientation = EditorOrientation.convertRotation(rotation);
+            	Configuration config = getResources().getConfiguration();
+            	final int currentOrientation = OrientationUtil.getBoarderOrientation(config);
 
             	AlertDialog.Builder pageBuilder = new AlertDialog.Builder(BoardEditor.this);
             	pageBuilder.setTitle("Page options");
@@ -378,7 +375,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	    		GraphicalSoundboard deleteGsb = mGsb;
             	    		mGsbp.deletePage(deleteGsb);
             	    		GraphicalSoundboard gsb = mGsbp.getPage(deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
-            	    		if (gsb == null) gsb = mGsbp.getBoard(deleteGsb.getScreenOrientation());
+            	    		if (gsb == null) gsb = mPagination.getBoard(deleteGsb.getScreenOrientation());
             	    		changeBoard(gsb, false);
             	    	} else if (item == 2) {
             	    		mPagination.initMove(mGsb);
@@ -801,7 +798,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		GraphicalSoundboard lastGsb = mGsb;
 		loadBoard(gsb);
 		mPageDrawer.switchPage(gsb);
-		if (lastGsb != null && overrideCurrentBoard) {
+		if (overrideCurrentBoard) {
 			GraphicalSoundboard.unloadImages(lastGsb);
 			mGsbp.overrideBoard(lastGsb);
 		}
@@ -924,7 +921,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	  	orientationWarningBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				//mThread.setRunning(false); // TODO handle board deleting better
-				mGsb = mGsbp.getBoard(screenOrientation);
+				mGsb = mPagination.getBoard(screenOrientation);
 				mGsbp.deleteBoardWithOrientation(oppositeOrientation);
 				mGsbp.setOrientationMode(screenOrientation);
 	    		finishBoard();
@@ -1206,20 +1203,11 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
-    	int originalOrientation = editorOrientation.getCurrentOrientation();
-    	
-    	int rotation = -1;
-    	if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-    		rotation = Surface.ROTATION_0;
-		} else if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-			rotation = Surface.ROTATION_90;
-		}
-    	
-    	editorOrientation.setCurrentOrientation(rotation);
-    	int currentOrientation = editorOrientation.getCurrentOrientation();
+    	int newOrientation = OrientationUtil.getBoarderOrientation(newConfig);
 
-    	if (!(originalOrientation == currentOrientation)) {
-    		GraphicalSoundboard newOrientationGsb = mGsbp.getBoardForRotation(rotation);
+    	if (newOrientation != this.mCurrentOrientation) {
+    		this.mCurrentOrientation = newOrientation;
+    		GraphicalSoundboard newOrientationGsb = mPagination.getBoard(newOrientation);
     		changeBoard(newOrientationGsb, true);
     		
     		// Set resolution handling stuff for the new orientation

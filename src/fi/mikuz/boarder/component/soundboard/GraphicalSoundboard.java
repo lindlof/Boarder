@@ -26,8 +26,8 @@ public class GraphicalSoundboard {
 	
 	private ArrayList<GraphicalSound> soundList;
 	
-	public static final int SCREEN_ORIENTATION_PORTRAIT = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
-	public static final int SCREEN_ORIENTATION_LANDSCAPE = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+	public static final int SCREEN_ORIENTATION_PORTRAIT = 1;
+	public static final int SCREEN_ORIENTATION_LANDSCAPE = 0;
 	private int screenOrientation;
 	
 	private boolean playSimultaneously;

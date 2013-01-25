@@ -3,7 +3,7 @@ package fi.mikuz.boarder.util.editor;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.os.Message;
+import android.util.Log;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.util.Handlers.ToastHandler;
 
@@ -13,6 +13,7 @@ import fi.mikuz.boarder.util.Handlers.ToastHandler;
  * @author Jan Mikael Lindlöf
  */
 public class Pagination {
+	public static final String TAG = Pagination.class.getSimpleName();
 	
 	GraphicalSoundboardProvider gsbp;
 	
@@ -20,10 +21,6 @@ public class Pagination {
 	private int moveFromPageNumber;
 	private int movePageOrientation;
 	
-	/**
-	 * Page events have effect in both orientations.
-	 */
-	private boolean orientationSynchronizedPagination;
 	private int pageNumberPortrait;
 	private int pageNumberLandscape;
 	
@@ -44,6 +41,17 @@ public class Pagination {
 		this.movePageMode = false;
 		this.moveFromPageNumber = -1;
 		this.movePageOrientation = -1;
+	}
+	
+	public GraphicalSoundboard getBoard(int orientation) {
+		
+		int pageNumber = getPageNumberForOrientation(orientation);
+		GraphicalSoundboard gsb = gsbp.getPage(orientation, pageNumber);
+		if (gsb != null) return gsb;
+		
+		Log.v(TAG, "No pages in this orientation. Adding page.");
+		gsb = gsbp.addBoardPage(orientation);
+		return gsb;
 	}
 	
 	public void movePage(ToastHandler toastHandler, GraphicalSoundboard toGsb) {
@@ -135,9 +143,9 @@ public class Pagination {
 			int pageNumber = gsb.getPageNumber();
 			int orientation = gsb.getScreenOrientation();
 			if (orientation == GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT) {
-				pageNumberPortrait = pageNumber;
+				setPageNumberPortrait(pageNumber);
 			} else if (orientation == GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE) {
-				pageNumberLandscape = pageNumber;
+				setPageNumberLandscape(pageNumber);
 			}
 		}
 	}
@@ -145,16 +153,25 @@ public class Pagination {
 	public boolean isMovePageMode() {
 		return movePageMode;
 	}
-	public int getPageNumberPortrait() {
-		return pageNumberPortrait;
+	public int getPageNumberForOrientation(int orientation) {
+		if (orientation == GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT) {
+			return pageNumberPortrait;
+		} else if (orientation == GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE) {
+			return pageNumberLandscape;
+		} else {
+			return -1;
+		}
 	}
 	public void setPageNumberPortrait(int pageNumberPortrait) {
 		this.pageNumberPortrait = pageNumberPortrait;
-	}
-	public int getPageNumberLandscape() {
-		return pageNumberLandscape;
+		if (gsbp.isPaginationSynchronizedBetweenOrientations()) {
+			this.pageNumberLandscape = pageNumberPortrait;
+		}
 	}
 	public void setPageNumberLandscape(int pageNumberLandscape) {
 		this.pageNumberLandscape = pageNumberLandscape;
+		if (gsbp.isPaginationSynchronizedBetweenOrientations()) {
+			this.pageNumberPortrait = pageNumberLandscape;
+		}
 	}
 }

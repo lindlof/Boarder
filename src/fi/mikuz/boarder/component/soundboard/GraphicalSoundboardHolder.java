@@ -18,14 +18,15 @@ public class GraphicalSoundboardHolder {
 	private OrientationMode orientationMode;
 	
 	/**
-	 * Does page change affect both orientations in hybrid mode?
+	 * Page events have effect in both orientations.
 	 */
-	private boolean pageScrollingSynchronized;
+	public boolean paginationSynchronizedBetweenOrientations;
+	
 	private List<GraphicalSoundboard> boardList;
 	
 	public GraphicalSoundboardHolder() {
 		this.orientationMode = OrientationMode.ORIENTATION_MODE_PORTRAIT;
-		this.pageScrollingSynchronized = true;
+		this.paginationSynchronizedBetweenOrientations = true;
 		this.boardList = new ArrayList<GraphicalSoundboard>();
 		GraphicalSoundboard gsbTemplate = new GraphicalSoundboard();
 		allocateBoardResources(gsbTemplate);
@@ -74,32 +75,6 @@ public class GraphicalSoundboardHolder {
 
 	public List<GraphicalSoundboard> getBoardList() {
 		return boardList;
-	}
-
-	public void setBoardList(List<GraphicalSoundboard> boardList) {
-		this.boardList = boardList;
-	}
-	
-	public void overrideBoard(GraphicalSoundboard gsb) {
-		for (int i = 0; i < boardList.size(); i++) {
-			GraphicalSoundboard existingGsb = boardList.get(i);
-			if (gsb.getId() == existingGsb.getId()) {
-				boardList.set(i, gsb);
-				break;
-			}
-		}
-	}
-	
-	public void deleteBoard(int id) {
-		boardList.remove(id);
-	}
-
-	public boolean isPageScrollingSynchronized() {
-		return pageScrollingSynchronized;
-	}
-
-	public void setPageScrollingSynchronized(boolean pageScrollingSynchronized) {
-		this.pageScrollingSynchronized = pageScrollingSynchronized;
 	}
 
 }
