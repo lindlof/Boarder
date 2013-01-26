@@ -48,6 +48,10 @@ public class Pagination {
 		int pageNumber = getPageNumberForOrientation(orientation);
 		GraphicalSoundboard gsb = gsbp.getPage(orientation, pageNumber);
 		if (gsb != null) return gsb;
+		Log.w(TAG, "Can not find expected page. Giving last page available.");
+		pageNumber = getLastPageNumber(orientation);
+		gsb = gsbp.getPage(orientation, pageNumber);
+		if (gsb != null) return gsb;
 		
 		Log.v(TAG, "No pages in this orientation. Adding page.");
 		gsb = gsbp.addBoardPage(orientation);
