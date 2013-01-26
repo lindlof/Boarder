@@ -796,23 +796,30 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
 	public void changeBoard(GraphicalSoundboard gsb, boolean overrideCurrentBoard) {
 		GraphicalSoundboard lastGsb = mGsb;
-		loadBoard(gsb);
-		mPageDrawer.switchPage(gsb);
-		if (overrideCurrentBoard) {
-			GraphicalSoundboard.unloadImages(lastGsb);
-			mGsbp.overrideBoard(lastGsb);
+		boolean samePage = lastGsb != null && 
+				(gsb.getPageNumber() == lastGsb.getPageNumber() && gsb.getScreenOrientation() == lastGsb.getScreenOrientation()); 
+		
+		if (!samePage) {
+			loadBoard(gsb);
+			mPageDrawer.switchPage(gsb);
+			if (overrideCurrentBoard) {
+				GraphicalSoundboard.unloadImages(lastGsb);
+				mGsbp.overrideBoard(lastGsb);
+			}
+			
+			refreshPageTitle();
+			
+			int boardId = gsb.getId();
+			BoardHistory boardHistory = mBoardHistoryProvider.getBoardHistory(boardId);
+			
+			if (boardHistory == null) {
+				boardHistory = mBoardHistoryProvider.createBoardHistory(boardId, gsb);
+			}
+			
+			this.mBoardHistory = boardHistory;
+		} else {
+			Log.v(TAG, "Won't change page to same page.");
 		}
-		
-		refreshPageTitle();
-		
-		int boardId = gsb.getId();
-		BoardHistory boardHistory = mBoardHistoryProvider.getBoardHistory(boardId);
-		
-		if (boardHistory == null) {
-			boardHistory = mBoardHistoryProvider.createBoardHistory(boardId, gsb);
-		}
-		
-		this.mBoardHistory = boardHistory;
 	}
 	
 	public void refreshPageTitle() {
