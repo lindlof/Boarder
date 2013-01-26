@@ -269,16 +269,19 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	public void initEditorBoard() {
 		
-		if (mGsbp.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_PORTRAIT) {
-			this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-		} else if (mGsbp.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_LANDSCAPE) {
-			this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-		}
-		
 		Configuration config = getResources().getConfiguration();
 		int orientation = OrientationUtil.getBoarderOrientation(config);
-		this.mCurrentOrientation = orientation;
 		
+		if (mGsbp.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_PORTRAIT) {
+			this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+			orientation = GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT;
+		} else if (mGsbp.getOrientationMode() == GraphicalSoundboardHolder.OrientationMode.ORIENTATION_MODE_LANDSCAPE) {
+			this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+			orientation = GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE;
+		}
+		
+		
+		this.mCurrentOrientation = orientation;
 		GraphicalSoundboard newGsb = mPagination.getBoard(orientation);
 			
 		mPageDrawer = new PageDrawer(this.getApplicationContext(), mJoystick);
