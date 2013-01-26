@@ -1249,7 +1249,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     		try {
     			GraphicalSoundboard gsb = GraphicalSoundboard.copy(mGsb);
     			if (mPressedSound != null && mCurrentGesture == TouchGesture.DRAG) gsb.getSoundList().add(mPressedSound); // Sound is being dragged
-        		mGsbp.saveBoard(mBoardName, gsb);
+    			mGsbp.overrideBoard(gsb);
+        		mGsbp.saveBoard(mBoardName);
         		Log.v(TAG, "Board " + mBoardName + " saved");
     		} catch (IOException e) {
     			Log.e(TAG, "Unable to save " + mBoardName, e);

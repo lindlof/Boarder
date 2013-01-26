@@ -20,16 +20,29 @@ public class GraphicalSoundboardHolder {
 	/**
 	 * Page events have effect in both orientations.
 	 */
-	public boolean paginationSynchronizedBetweenOrientations;
+	private boolean paginationSynchronizedBetweenOrientations;
 	
 	private List<GraphicalSoundboard> boardList;
 	
 	public GraphicalSoundboardHolder() {
 		this.orientationMode = OrientationMode.ORIENTATION_MODE_PORTRAIT;
-		this.paginationSynchronizedBetweenOrientations = true;
+		this.setPaginationSynchronizedBetweenOrientations(true);
 		this.boardList = new ArrayList<GraphicalSoundboard>();
-		GraphicalSoundboard gsbTemplate = new GraphicalSoundboard();
-		allocateBoardResources(gsbTemplate);
+	}
+	
+	public static GraphicalSoundboardHolder copy(GraphicalSoundboardHolder tempHolder) {
+		
+		GraphicalSoundboardHolder holder = new GraphicalSoundboardHolder();
+		holder.setOrientationMode(tempHolder.getOrientationMode());
+		holder.setPaginationSynchronizedBetweenOrientations(
+				tempHolder.isPaginationSynchronizedBetweenOrientations());
+		
+		for (GraphicalSoundboard gsb : tempHolder.boardList) {
+			GraphicalSoundboard gsbCopy = GraphicalSoundboard.copy(gsb);
+			holder.boardList.add(gsbCopy);
+		}
+		
+		return holder;
 	}
 	
 	/**
@@ -75,6 +88,15 @@ public class GraphicalSoundboardHolder {
 
 	public List<GraphicalSoundboard> getBoardList() {
 		return boardList;
+	}
+
+	public boolean isPaginationSynchronizedBetweenOrientations() {
+		return paginationSynchronizedBetweenOrientations;
+	}
+
+	public void setPaginationSynchronizedBetweenOrientations(
+			boolean paginationSynchronizedBetweenOrientations) {
+		this.paginationSynchronizedBetweenOrientations = paginationSynchronizedBetweenOrientations;
 	}
 
 }

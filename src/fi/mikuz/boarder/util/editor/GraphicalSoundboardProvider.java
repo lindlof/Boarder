@@ -23,8 +23,10 @@ public class GraphicalSoundboardProvider {
 		try {
 			boardHolder = FileProcessor.loadGraphicalSoundboardHolder(boardName);
 		} catch (IOException e) {
-			Log.w(TAG, "Error importing board", e);
+			Log.w(TAG, "Unable to load board holder", e);
 			boardHolder = new GraphicalSoundboardHolder();
+			GraphicalSoundboard initialGsb = new GraphicalSoundboard();
+			boardHolder.allocateBoardResources(initialGsb);
 		}
 	}
 	
@@ -86,9 +88,10 @@ public class GraphicalSoundboardProvider {
 		return null;
 	}
 	
-	public void saveBoard(String boardName, GraphicalSoundboard tempGsb) throws IOException {
-		overrideBoard(tempGsb);
-		FileProcessor.saveGraphicalSoundboardHolder(boardName, boardHolder);
+	public void saveBoard(String boardName) throws IOException {
+		// Since file paths may be altered while saving we need a separate cop for saving
+		GraphicalSoundboardHolder savedHolder = GraphicalSoundboardHolder.copy(boardHolder);
+		FileProcessor.saveGraphicalSoundboardHolder(boardName, savedHolder);
 	}
 	
 	public void overrideBoard(GraphicalSoundboard tempGsb) {
@@ -140,12 +143,11 @@ public class GraphicalSoundboardProvider {
 	}
 	
 	public boolean isPaginationSynchronizedBetweenOrientations() {
-		return boardHolder.paginationSynchronizedBetweenOrientations;
+		return boardHolder.isPaginationSynchronizedBetweenOrientations();
 	}
 
-	public void setPaginationSynchronizedBetweenOrientations(
-			boolean paginationSynchronizedBetweenOrientations) {
-		boardHolder.paginationSynchronizedBetweenOrientations = paginationSynchronizedBetweenOrientations;
+	public void setPaginationSynchronizedBetweenOrientations(boolean paginationSynchronizedBetweenOrientations) {
+		boardHolder.setPaginationSynchronizedBetweenOrientations(paginationSynchronizedBetweenOrientations);
 	}
 	
 }
