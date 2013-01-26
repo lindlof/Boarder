@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import com.bugsense.trace.BugSenseHandler;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -69,6 +71,13 @@ public class ImageDrawing {
 	    	String errorMessage = "Unable to decode image, out of memory";
 	    	Log.e(TAG, errorMessage, ome2);
 	    	toasthandler.toast("Out of memory");
+	    }
+	    
+	    if (b == null) {
+	    	Exception e = new IOException("Unable to decode image " + f.getAbsolutePath());
+	    	Log.e(TAG, e.getMessage(), e);
+	    	if (toasthandler != null) toasthandler.toast(e.getMessage());
+	    	BugSenseHandler.log(TAG, e);
 	    }
 	    
 	    return b;
