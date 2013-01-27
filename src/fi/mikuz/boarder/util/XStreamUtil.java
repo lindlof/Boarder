@@ -36,7 +36,7 @@ public class XStreamUtil {
 	public static Bundle getSoundBundle(GraphicalSound tempSound, GraphicalSoundboard tempGsb) {
 		
 		GraphicalSound sound = (GraphicalSound) tempSound.clone();
-		GraphicalSound.unloadImages(sound);
+		sound.unloadImages();
 		GraphicalSoundboard gsb = GraphicalSoundboard.copy(tempGsb);
 		gsb.setSoundList(new ArrayList<GraphicalSound>());
 		GraphicalSoundboard.unloadImages(gsb);

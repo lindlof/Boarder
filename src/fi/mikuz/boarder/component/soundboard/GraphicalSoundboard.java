@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 
 import android.content.Context;
-import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 
@@ -145,17 +144,18 @@ public class GraphicalSoundboard {
 	
 	static public void loadImages(Context context, ToastHandler toastHandler, GraphicalSoundboard gsb) {
 		if (gsb.getBackgroundImage() == null && gsb.getBackgroundImagePath() != null) {
-			gsb.setBackgroundImage(ImageDrawing.decodeFile(toastHandler, gsb.getBackgroundImagePath()));
+			gsb.setBackgroundImage(ImageDrawing.decodeFile(toastHandler, gsb.getBackgroundImagePath(), 
+					gsb.getBackgroundWidth(), gsb.getBackgroundHeight()));
 		}
 		for (GraphicalSound sound : gsb.getSoundList()) {
-			GraphicalSound.loadImages(context, toastHandler, sound);
+			sound.loadImages(context, toastHandler);
 		}
 	}
 	
 	static public void unloadImages(GraphicalSoundboard gsb) {
 		gsb.setBackgroundImage(null);
 		for (GraphicalSound sound : gsb.getSoundList()) {
-			GraphicalSound.unloadImages(sound);
+			sound.unloadImages();
 		}
 	}
 	

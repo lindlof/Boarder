@@ -249,7 +249,7 @@ public class PageDrawer {
 					    			canvas.drawBitmap(sound.getActiveImage(), null, imageRect, soundImagePaint);
 					    		} catch(NullPointerException npe) {
 					    			Log.e(TAG, "Unable to draw active image for sound " + sound.getName());
-									sound.setActiveImage(null);
+									sound.setDefaultActiveImage();
 					    			canvas.drawBitmap(sound.getImage(), null, imageRect, soundImagePaint);
 					    		}
 					    		
@@ -260,7 +260,7 @@ public class PageDrawer {
 							Log.e(TAG, "Unable to draw image for sound " + sound.getName());
 							npe.printStackTrace();
 							BugSenseHandler.log(TAG, npe);
-							sound.setImage(BitmapFactory.decodeResource(context.getResources(), R.drawable.sound));
+							sound.setDefaultImage();
 						}
 				    }
 				    

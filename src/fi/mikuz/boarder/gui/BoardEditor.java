@@ -18,7 +18,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -988,7 +987,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	XStream xstream = XStreamUtil.graphicalBoardXStream();
 		        	
 		        	GraphicalSound sound = (GraphicalSound) xstream.fromXML(extras.getString(FileExplorer.ACTION_ADD_GRAPHICAL_SOUND));
-		        	sound.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.sound));
+		        	sound.setDefaultImage();
 		        	sound.setAutoArrangeColumn(0);
 		        	sound.setAutoArrangeRow(0);
 		        	if (mGsb.getAutoArrange()) {
@@ -1009,7 +1008,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	Bundle extras = intent.getExtras();
 		        	File background = new File(extras.getString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE));
 		        	mGsb.setBackgroundImagePath(background);
-		        	mGsb.setBackgroundImage(ImageDrawing.decodeFile(mToastHandler, mGsb.getBackgroundImagePath()));
+		        	mGsb.setBackgroundImage(ImageDrawing.decodeFile(mToastHandler, mGsb.getBackgroundImagePath(), 
+		        			mGsb.getBackgroundWidth(), mGsb.getBackgroundHeight()));
 		        	mGsb.setBackgroundWidth(mGsb.getBackgroundImage().getWidth());
 		        	mGsb.setBackgroundHeight(mGsb.getBackgroundImage().getHeight());
 		        	mGsb.setBackgroundX(0);
@@ -1030,7 +1030,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE));
 		        	mPressedSound.setImagePath(image);
-		        	mPressedSound.setImage(ImageDrawing.decodeFile(mToastHandler, mPressedSound.getImagePath()));
+		        	mPressedSound.loadImages(getApplicationContext(), mToastHandler);
 	        	}
 	        	if (mSoundImageDialog != null) {
 	        		mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
@@ -1046,7 +1046,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE));
 		        	mPressedSound.setActiveImagePath(image);
-		        	mPressedSound.setActiveImage(ImageDrawing.decodeFile(mToastHandler, mPressedSound.getActiveImagePath()));
+		        	mPressedSound.loadImages(getApplicationContext(), mToastHandler);
 	        	}
 	        	break;
 	        	
@@ -1488,11 +1488,16 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				
 				final int windowWidth = mPanel.getWidth();
 				final int windowHeight = mPanel.getHeight();
+				final float allowedResolutionDifference = 0.03f;
+				final ToastHandler toastHandler = mToastHandler;
 
 				if (mGsb.getScreenHeight() == 0 || mGsb.getScreenWidth() == 0) {
 					mGsb.setScreenWidth(windowWidth);
 					mGsb.setScreenHeight(windowHeight);
-				} else if (mGsb.getScreenWidth() != windowWidth || mGsb.getScreenHeight() != windowHeight) {
+				} else if ((Math.abs(mGsb.getScreenHeight() - windowHeight) > mGsb.getScreenHeight()*allowedResolutionDifference) || 
+						(Math.abs(mGsb.getScreenWidth() - windowWidth) > mGsb.getScreenWidth()*allowedResolutionDifference)) {
+					// Small resolution changes are not noticed since those can constantly occur on same device
+					
 					Log.v(TAG, "Soundoard resolution has changed. X: " + mGsb.getScreenWidth() + " -> " + windowWidth + " - Y: " + mGsb.getScreenHeight() + " -> " + windowHeight);
 
 					AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
@@ -1529,8 +1534,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
 								sound.setImageX(sound.getImageX()*xScale);
 								sound.setImageY(sound.getImageY()*yScale);
-								sound.setImageWidth(sound.getImageWidth()*avarageScale);
-								sound.setImageHeight(sound.getImageHeight()*avarageScale);
+								sound.setImageWidthHeight(getApplicationContext(), toastHandler, sound.getImageWidth()*avarageScale, sound.getImageHeight()*avarageScale);
 
 								if (sound.getLinkNameAndImage()) sound.generateNameFrameXYFromImageLocation();
 							}
@@ -1594,8 +1598,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 									sound.setImageY(sound.getImageY()*applicableScale);
 								}
 
-								sound.setImageWidth(sound.getImageWidth()*applicableScale);
-								sound.setImageHeight(sound.getImageHeight()*applicableScale);
+								sound.setImageWidthHeight(getApplicationContext(), toastHandler, sound.getImageWidth()*applicableScale, sound.getImageHeight()*applicableScale);
 
 								if (sound.getLinkNameAndImage()) sound.generateNameFrameXYFromImageLocation();
 							}
@@ -2103,10 +2106,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					              	  	final Button resetSoundImageButton = (Button) layout.findViewById(R.id.resetSoundImageButton);
 					              	  	resetSoundImageButton.setOnClickListener(new OnClickListener() {
 					    					public void onClick(View v) {
-					    						Bitmap defaultSound = BitmapFactory.decodeResource(getResources(), R.drawable.sound);
-					    						String soundWidth = Integer.toString(defaultSound.getWidth());
-					    						String soundHeight = Integer.toString(defaultSound.getHeight());
-					    						mPressedSound.setImage(defaultSound);
+					    						mPressedSound.setDefaultImage();
+					    						String soundWidth = Integer.toString(mPressedSound.getImage().getWidth());
+					    						String soundHeight = Integer.toString(mPressedSound.getImage().getHeight());
+					    						mPressedSound.setDefaultImage();
 					    						mPressedSound.setImagePath(null);
 					    						mSoundImageWidthInput.setText(soundWidth);
 					              	  			mSoundImageHeightInput.setText(soundHeight);
@@ -2125,7 +2128,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					              	  	final Button resetSoundActiveImageButton = (Button) layout.findViewById(R.id.resetSoundActiveImageButton);
 					              	  	resetSoundActiveImageButton.setOnClickListener(new OnClickListener() {
 					    					public void onClick(View v) {
-					    						mPressedSound.setActiveImage(null);
+					    						mPressedSound.setDefaultActiveImage();
 					    						mPressedSound.setActiveImagePath(null);
 					    					}
 					              	  	});
@@ -2146,10 +2149,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          			}
 					    	          			
 					    	          			try {
-					    	          				mPressedSound.setImageWidth(Float.valueOf(
-					    	          						mSoundImageWidthInput.getText().toString()).floatValue());
-					    	          				mPressedSound.setImageHeight(Float.valueOf(
-					    	          						mSoundImageHeightInput.getText().toString()).floatValue());	
+					    	          				mPressedSound.setImageWidthHeight(getApplicationContext(), mToastHandler,
+					    	          						Float.valueOf(mSoundImageWidthInput.getText().toString()).floatValue(),
+					    	          						Float.valueOf(mSoundImageHeightInput.getText().toString()).floatValue());	
 					    	          			} catch(NumberFormatException nfe) {
 					    	          				notifyIncorrectValue = true;
 					    	          			}

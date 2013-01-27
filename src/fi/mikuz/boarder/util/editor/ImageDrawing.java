@@ -9,6 +9,7 @@ import com.bugsense.trace.BugSenseHandler;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
+import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.util.Handlers.ToastHandler;
 
 /**
@@ -19,6 +20,25 @@ public class ImageDrawing {
 	public static final String TAG = "ImageDrawing";
 	
 	static final int IMAGE_MAX_SIZE = 4000;
+	
+	public static Bitmap decodeSoundImage(ToastHandler toastHandler, GraphicalSound sound) {
+		return decodeFile(toastHandler, sound.getImagePath(), sound.getImageWidth(), sound.getImageHeight());
+	}
+	
+	public static Bitmap decodeSoundActiveImage(ToastHandler toastHandler, GraphicalSound sound) {
+		return decodeFile(toastHandler, sound.getActiveImagePath(), sound.getActiveImageWidth(), sound.getActiveImageHeight());
+	}
+	
+	public static Bitmap decodeFile(ToastHandler toasthandler, File f) {
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeFile(f.getAbsolutePath(), options);
+		return decodeFile(toasthandler, f, options.outWidth, options.outHeight);
+	}
+	
+	public static Bitmap decodeFile(ToastHandler toasthandler, File f, float width, float height) {
+		return decodeFile(toasthandler, f, (int) Math.ceil(width), (int) Math.ceil(height));
+	}
 
 	/**
 	 * Custom bitmap decoder to avoid and improve memory errors with enormous images and large amount of huge images.
@@ -26,7 +46,7 @@ public class ImageDrawing {
 	 * @param image file
 	 * @return image bitmap
 	 */
-	public static Bitmap decodeFile(ToastHandler toasthandler, File f) { // TODO Could a same bitmap in memory be reused elegantly here?
+	public static Bitmap decodeFile(ToastHandler toasthandler, File f, int width, int height) { // TODO Could a same bitmap in memory be reused elegantly here?
 	    Bitmap b = null;
 	    
 	    // Bitmaps can take large amounts of memory.
@@ -40,7 +60,15 @@ public class ImageDrawing {
 	    
 	    try {
 	    	try {
-		    	b = BitmapFactory.decodeFile(f.getAbsolutePath());
+	    		
+	    		BitmapFactory.Options options = new BitmapFactory.Options();
+	    		options.inJustDecodeBounds = true;
+	    		BitmapFactory.decodeFile(f.getAbsolutePath(), options);
+	    		
+	    		options.inSampleSize = calculateInSampleSize(options, width, height);
+	    		options.inJustDecodeBounds = false;
+	    		b = BitmapFactory.decodeFile(f.getAbsolutePath(), options);
+	    		
 		    } catch (OutOfMemoryError ome) {
 		    	Log.w(TAG, "Image " + f.getAbsolutePath() + " is enormous! It has to be decoded to smaller resolution.");
 		    	try {
@@ -84,6 +112,27 @@ public class ImageDrawing {
 	    
 	}
 	
+	public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+		// Raw height and width of image
+		final int height = options.outHeight;
+		final int width = options.outWidth;
+		int inSampleSize = 1;
+
+		if (height > reqHeight || width > reqWidth) {
+
+			// Calculate ratios of height and width to requested height and width
+			final int heightRatio = Math.round((float) height / (float) reqHeight);
+			final int widthRatio = Math.round((float) width / (float) reqWidth);
+
+			// Choose the smallest ratio as inSampleSize value, this will guarantee
+			// a final image with both dimensions larger than or equal to the
+			// requested height and width.
+			inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
+		}
+
+		return inSampleSize;
+	}
+
 	private static boolean underFivePercentOfMemoryLeft() {
 	    Runtime runtime = Runtime.getRuntime();
 	    long usedMemory = (runtime.totalMemory() - runtime.freeMemory());

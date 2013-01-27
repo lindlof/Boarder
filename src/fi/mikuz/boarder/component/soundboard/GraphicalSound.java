@@ -21,6 +21,8 @@ import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 @XStreamAlias("graphical-sound")
 public class GraphicalSound implements Cloneable {
 	
+	private static Bitmap defaultSoundImage;
+	
 	public static final int SHOW_ALL = 0;
 	public static final int HIDE_IMAGE = 1;
 	public static final int HIDE_TEXT = 2;
@@ -67,8 +69,8 @@ public class GraphicalSound implements Cloneable {
 		this.setNameFrameY(50);
 		
 		this.setImagePath(null);
-		this.setImageWidth(50);
-		this.setImageHeight(50);
+		this.imageWidth = 50;
+		this.imageHeight = 50;
 		this.setHideImageOrText(GraphicalSound.SHOW_ALL);
 		this.generateImageXYFromNameFrameLocation();
 		this.setLinkNameAndImage(true);
@@ -80,22 +82,47 @@ public class GraphicalSound implements Cloneable {
 		this.setShowNameFrameBorderPaint(true);
 	}
 	
-	static public void loadImages(Context context, ToastHandler toastHandler, GraphicalSound sound) {
-		if (sound.getImage() == null) {
-			if (sound.getImagePath() == null) {
-				sound.setImage(BitmapFactory.decodeResource(context.getResources(), R.drawable.sound));
+	public void loadImages(Context context, ToastHandler toastHandler) {
+		if (this.image == null) {
+			if (getImagePath() == null) {
+				if (defaultSoundImage == null) {
+					defaultSoundImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.sound);
+				}
+				this.image = defaultSoundImage;
 			} else {
-				sound.setImage(ImageDrawing.decodeFile(toastHandler, sound.getImagePath()));
+				this.image = ImageDrawing.decodeSoundImage(toastHandler, this);
 			}
 		}
-		if (sound.getActiveImage() == null && sound.getActiveImagePath() != null) {
-			sound.setActiveImage(ImageDrawing.decodeFile(toastHandler, sound.getActiveImagePath()));
+		if (getActiveImage() == null && getActiveImagePath() != null) {
+			this.activeImage = ImageDrawing.decodeSoundActiveImage(toastHandler, this);
 		}
 	}
 	
-	static public void unloadImages(GraphicalSound sound) {
-		sound.setActiveImage(null);
-		sound.setImage(null);
+	private void reloadImages(Context context, ToastHandler toastHandler) {
+		if (getImagePath() == null) {
+			if (defaultSoundImage == null && context != null) { // context null for loadGraphicalSoundboardHolder
+				defaultSoundImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.sound);
+			}
+			this.image = defaultSoundImage;
+		} else {
+			this.image = ImageDrawing.decodeSoundImage(toastHandler, this);
+		}
+		if (getActiveImagePath() != null) {
+			this.activeImage = ImageDrawing.decodeSoundActiveImage(toastHandler, this);
+		}
+	}
+	
+	public void unloadImages() {
+		this.image = null;
+		this.activeImage = null;
+	}
+	
+	public void setDefaultImage() {
+		this.image = defaultSoundImage;
+	}
+	
+	public void setDefaultActiveImage() {
+		this.activeImage = null;
 	}
 	
 	public int getAutoArrangeColumn() {
@@ -199,20 +226,16 @@ public class GraphicalSound implements Cloneable {
 	public float getImageWidth() {
 		return imageWidth;
 	}
-	public void setImageWidth(float imageWidth) {
+	public void setImageWidthHeight(Context context, ToastHandler toastHandler, float imageWidth, float imageHeight) {
 		this.imageWidth = imageWidth;
+		this.imageHeight = imageHeight;
+		reloadImages(context, toastHandler);
 	}
 	public float getImageHeight() {
 		return imageHeight;
 	}
-	public void setImageHeight(float imageHeight) {
-		this.imageHeight = imageHeight;
-	}
 	public Bitmap getImage() {
 		return image;
-	}
-	public void setImage(Bitmap image) {
-		this.image = image;
 	}
 	public String getName() {
 		return name;
@@ -266,8 +289,11 @@ public class GraphicalSound implements Cloneable {
 	public Bitmap getActiveImage() {
 		return activeImage;
 	}
-	public void setActiveImage(Bitmap activateImage) {
-		this.activeImage = activateImage;
+	public float getActiveImageWidth() {
+		return imageWidth;
+	}
+	public float getActiveImageHeight() {
+		return imageHeight;
 	}
 	public void setSecondClickAction(int secondClickAction) {
 		this.secondClickAction = secondClickAction;

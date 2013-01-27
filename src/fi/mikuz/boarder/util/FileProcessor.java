@@ -111,8 +111,9 @@ public class FileProcessor {
 
 		    	sound.setImageX(Float.valueOf(line.substring(line.indexOf("¤10¤") + 4, line.indexOf("¤11¤"))).floatValue());
 		    	sound.setImageY(Float.valueOf(line.substring(line.indexOf("¤11¤") + 4, line.indexOf("¤12¤"))).floatValue());
-		    	sound.setImageWidth(Float.valueOf(line.substring(line.indexOf("¤12¤") + 4, line.indexOf("¤13¤"))).floatValue());
-		    	sound.setImageHeight(Float.valueOf(line.substring(line.indexOf("¤13¤") + 4, line.indexOf("¤14¤"))).floatValue());
+		    	sound.setImageWidthHeight(null, null, 
+		    			Float.valueOf(line.substring(line.indexOf("¤12¤") + 4, line.indexOf("¤13¤"))).floatValue(),
+		    			Float.valueOf(line.substring(line.indexOf("¤13¤") + 4, line.indexOf("¤14¤"))).floatValue());
 		    	sound.setHideImageOrText(Integer.valueOf(line.substring(line.indexOf("¤14¤") + 4, line.indexOf("¤15¤"))));
 		    	sound.setNameTextColorInt(Integer.valueOf(line.substring(line.indexOf("¤15¤") + 4, line.indexOf("¤16¤"))));
 		    	sound.setNameFrameInnerColorInt(Integer.valueOf(line.substring(line.indexOf("¤16¤") + 4, line.indexOf("¤17¤"))));
