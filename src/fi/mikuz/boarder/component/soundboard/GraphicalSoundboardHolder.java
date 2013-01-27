@@ -3,6 +3,8 @@ package fi.mikuz.boarder.component.soundboard;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.Context;
+
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 /**
@@ -30,7 +32,7 @@ public class GraphicalSoundboardHolder {
 		this.boardList = new ArrayList<GraphicalSoundboard>();
 	}
 	
-	public static GraphicalSoundboardHolder copy(GraphicalSoundboardHolder tempHolder) {
+	public static GraphicalSoundboardHolder copy(Context context, GraphicalSoundboardHolder tempHolder) {
 		
 		GraphicalSoundboardHolder holder = new GraphicalSoundboardHolder();
 		holder.setOrientationMode(tempHolder.getOrientationMode());
@@ -38,7 +40,7 @@ public class GraphicalSoundboardHolder {
 				tempHolder.isPaginationSynchronizedBetweenOrientations());
 		
 		for (GraphicalSoundboard gsb : tempHolder.boardList) {
-			GraphicalSoundboard gsbCopy = GraphicalSoundboard.copy(gsb);
+			GraphicalSoundboard gsbCopy = GraphicalSoundboard.copy(context, gsb);
 			holder.boardList.add(gsbCopy);
 		}
 		

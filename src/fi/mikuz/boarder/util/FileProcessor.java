@@ -75,8 +75,9 @@ public class FileProcessor {
 		    gsb.setBackgroundImagePath(backgroundImagePath);
 		    gsb.setBackgroundX(Float.valueOf(line.substring(line.indexOf("¤5¤") + 3, line.indexOf("¤6¤"))).floatValue());
 		    gsb.setBackgroundY(Float.valueOf(line.substring(line.indexOf("¤6¤") + 3, line.indexOf("¤7¤"))).floatValue());
-		    gsb.setBackgroundWidth(Float.valueOf(line.substring(line.indexOf("¤7¤") + 3, line.indexOf("¤8¤"))).floatValue());
-		    gsb.setBackgroundHeight(Float.valueOf(line.substring(line.indexOf("¤8¤") + 3, line.indexOf("¤9¤"))).floatValue());
+		    gsb.setBackgroundWidthHeight(null, 
+		    		Float.valueOf(line.substring(line.indexOf("¤7¤") + 3, line.indexOf("¤8¤"))).floatValue(),
+		    		Float.valueOf(line.substring(line.indexOf("¤8¤") + 3, line.indexOf("¤9¤"))).floatValue());
 		    gsb.setScreenOrientation(Integer.valueOf(line.substring(line.indexOf("¤9¤") + 3, line.indexOf("¤10¤"))).intValue());
 		    gsb.setAutoArrange(Boolean.parseBoolean(line.substring(line.indexOf("¤10¤") + 4, line.indexOf("¤11¤"))));
 		    gsb.setAutoArrangeColumns(Integer.valueOf(line.substring(line.indexOf("¤11¤") + 4, line.indexOf("¤12¤"))).intValue());
@@ -111,7 +112,7 @@ public class FileProcessor {
 
 		    	sound.setImageX(Float.valueOf(line.substring(line.indexOf("¤10¤") + 4, line.indexOf("¤11¤"))).floatValue());
 		    	sound.setImageY(Float.valueOf(line.substring(line.indexOf("¤11¤") + 4, line.indexOf("¤12¤"))).floatValue());
-		    	sound.setImageWidthHeight(null, null, 
+		    	sound.setImageWidthHeight(null, 
 		    			Float.valueOf(line.substring(line.indexOf("¤12¤") + 4, line.indexOf("¤13¤"))).floatValue(),
 		    			Float.valueOf(line.substring(line.indexOf("¤13¤") + 4, line.indexOf("¤14¤"))).floatValue());
 		    	sound.setHideImageOrText(Integer.valueOf(line.substring(line.indexOf("¤14¤") + 4, line.indexOf("¤15¤"))));

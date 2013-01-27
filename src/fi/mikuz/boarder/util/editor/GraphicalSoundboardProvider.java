@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
 
+import android.content.Context;
 import android.util.Log;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
@@ -53,19 +54,19 @@ public class GraphicalSoundboardProvider {
 		return gsb;
 	}
 	
-	public GraphicalSoundboard getPage(int orientation, int pageNumber) {
+	public GraphicalSoundboard getPage(Context context, int orientation, int pageNumber) {
 		
 		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
 			if (gsb.getScreenOrientation() == orientation &&
 					gsb.getPageNumber() == pageNumber) {
-				return GraphicalSoundboard.copy(gsb);
+				return GraphicalSoundboard.copy(context, gsb);
 			}
 		}
 		
 		return null;
 	}
 	
-	public void deletePage(GraphicalSoundboard deleteGsb) {
+	public void deletePage(Context context, GraphicalSoundboard deleteGsb) {
 		Log.v(TAG, "Going to delete page " + deleteGsb.getPageNumber());
 		deleteBoardId(deleteGsb.getId());
 		
@@ -74,7 +75,7 @@ public class GraphicalSoundboardProvider {
 			if (gsb.getScreenOrientation() == deleteGsb.getScreenOrientation() && 
 					gsb.getPageNumber() > deleteGsb.getPageNumber()) {
 				gsb.setPageNumber(gsb.getPageNumber() - 1);
-				overrideBoard(gsb);
+				overrideBoard(context, gsb);
 			}
 		}
 	}
@@ -88,14 +89,14 @@ public class GraphicalSoundboardProvider {
 		return null;
 	}
 	
-	public void saveBoard(String boardName) throws IOException {
+	public void saveBoard(Context context, String boardName) throws IOException {
 		// Since file paths may be altered while saving we need a separate cop for saving
-		GraphicalSoundboardHolder savedHolder = GraphicalSoundboardHolder.copy(boardHolder);
+		GraphicalSoundboardHolder savedHolder = GraphicalSoundboardHolder.copy(context, boardHolder);
 		FileProcessor.saveGraphicalSoundboardHolder(boardName, savedHolder);
 	}
 	
-	public void overrideBoard(GraphicalSoundboard tempGsb) {
- 		GraphicalSoundboard gsb = GraphicalSoundboard.copy(tempGsb);
+	public void overrideBoard(Context context, GraphicalSoundboard tempGsb) {
+ 		GraphicalSoundboard gsb = GraphicalSoundboard.copy(context, tempGsb);
 		GraphicalSoundboard.unloadImages(gsb);
 		
 		List<GraphicalSoundboard> boardList = boardHolder.getBoardList();

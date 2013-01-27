@@ -4,13 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import com.bugsense.trace.BugSenseHandler;
-
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
+
+import com.bugsense.trace.BugSenseHandler;
+
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
-import fi.mikuz.boarder.util.Handlers.ToastHandler;
+import fi.mikuz.boarder.util.ContextUtils;
 
 /**
  * 
@@ -21,23 +23,23 @@ public class ImageDrawing {
 	
 	static final int IMAGE_MAX_SIZE = 4000;
 	
-	public static Bitmap decodeSoundImage(ToastHandler toastHandler, GraphicalSound sound) {
-		return decodeFile(toastHandler, sound.getImagePath(), sound.getImageWidth(), sound.getImageHeight());
+	public static Bitmap decodeSoundImage(Context context, GraphicalSound sound) {
+		return decodeFile(context, sound.getImagePath(), sound.getImageWidth(), sound.getImageHeight());
 	}
 	
-	public static Bitmap decodeSoundActiveImage(ToastHandler toastHandler, GraphicalSound sound) {
-		return decodeFile(toastHandler, sound.getActiveImagePath(), sound.getActiveImageWidth(), sound.getActiveImageHeight());
+	public static Bitmap decodeSoundActiveImage(Context context, GraphicalSound sound) {
+		return decodeFile(context, sound.getActiveImagePath(), sound.getActiveImageWidth(), sound.getActiveImageHeight());
 	}
 	
-	public static Bitmap decodeFile(ToastHandler toasthandler, File f) {
+	public static Bitmap decodeFile(Context context, File f) {
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
 		BitmapFactory.decodeFile(f.getAbsolutePath(), options);
-		return decodeFile(toasthandler, f, options.outWidth, options.outHeight);
+		return decodeFile(context, f, options.outWidth, options.outHeight);
 	}
 	
-	public static Bitmap decodeFile(ToastHandler toasthandler, File f, float width, float height) {
-		return decodeFile(toasthandler, f, (int) Math.ceil(width), (int) Math.ceil(height));
+	public static Bitmap decodeFile(Context context, File f, float width, float height) {
+		return decodeFile(context, f, (int) Math.ceil(width), (int) Math.ceil(height));
 	}
 
 	/**
@@ -46,7 +48,7 @@ public class ImageDrawing {
 	 * @param image file
 	 * @return image bitmap
 	 */
-	public static Bitmap decodeFile(ToastHandler toasthandler, File f, int width, int height) { // TODO Could a same bitmap in memory be reused elegantly here?
+	public static Bitmap decodeFile(Context context, File f, int width, int height) { // TODO Could a same bitmap in memory be reused elegantly here?
 	    Bitmap b = null;
 	    
 	    // Bitmaps can take large amounts of memory.
@@ -54,7 +56,7 @@ public class ImageDrawing {
 	    if (underFivePercentOfMemoryLeft()) {
 	    	String errorMessage = "Not enough memory, won't decode image " + f.getAbsolutePath();
 	    	Log.e(TAG, errorMessage);
-	    	if (toasthandler != null) toasthandler.toast("Not enough memory");
+	    	if (context != null) ContextUtils.toast(context, "Not enough memory");
 	    	return null;
 	    }
 	    
@@ -98,13 +100,13 @@ public class ImageDrawing {
 	    } catch (OutOfMemoryError ome2) {
 	    	String errorMessage = "Unable to decode image, out of memory";
 	    	Log.e(TAG, errorMessage, ome2);
-	    	toasthandler.toast("Out of memory");
+	    	if (context != null) ContextUtils.toast(context, "Out of memory");
 	    }
 	    
 	    if (b == null) {
 	    	Exception e = new IOException("Unable to decode image " + f.getAbsolutePath());
 	    	Log.e(TAG, e.getMessage(), e);
-	    	if (toasthandler != null) toasthandler.toast(e.getMessage());
+	    	if (context != null) ContextUtils.toast(context, e.getMessage());
 	    	BugSenseHandler.log(TAG, e);
 	    }
 	    

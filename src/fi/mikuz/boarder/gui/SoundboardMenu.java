@@ -68,7 +68,6 @@ import fi.mikuz.boarder.util.BoardLocal;
 import fi.mikuz.boarder.util.ExternalIntent;
 import fi.mikuz.boarder.util.FileProcessor;
 import fi.mikuz.boarder.util.GlobalSettings;
-import fi.mikuz.boarder.util.Handlers.ToastHandler;
 import fi.mikuz.boarder.util.IconUtils;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.dbadapter.GlobalVariablesDbAdapter;
@@ -99,7 +98,6 @@ public class SoundboardMenu extends BoarderListActivity {
 	Intent mIntent;
     String mAction;
     
-    private static ToastHandler mToastHandler;
     private final Handler mHandler = new Handler();
     ProgressDialog mWaitDialog;
 	
@@ -217,7 +215,6 @@ public class SoundboardMenu extends BoarderListActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mToastHandler = new ToastHandler(getApplicationContext());
         initializeBoardUpdateThread();
     }
     
@@ -230,7 +227,7 @@ public class SoundboardMenu extends BoarderListActivity {
     	
     	File icon = new File(mSbDir, boardToLaunch + "/icon.png");
     	if (icon.exists()) {
-    		Bitmap bitmap = ImageDrawing.decodeFile(mToastHandler, icon);
+    		Bitmap bitmap = ImageDrawing.decodeFile(context, icon);
     		views.setImageViewBitmap(R.id.icon, bitmap);
     	} else {
     		views.setImageViewResource(R.id.icon, R.drawable.board_icon);
@@ -455,7 +452,7 @@ public class SoundboardMenu extends BoarderListActivity {
         		icon.setImageResource(android.R.color.transparent);
             	Thread t = new Thread() {
             		public void run() {
-            			Bitmap bitmap = ImageDrawing.decodeFile(mToastHandler, iconPath);
+            			Bitmap bitmap = ImageDrawing.decodeFile(context, iconPath);
             			int viewSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, (float) 48, getResources().getDisplayMetrics());
 
             			UpdateBoardImage update = new UpdateBoardImage(icon, bitmap, viewSize);
@@ -844,7 +841,7 @@ public class SoundboardMenu extends BoarderListActivity {
             
             File icon = new File(mSbDir, boardName + "/icon.png");
             if (icon.exists()) {
-				Bitmap bitmap = ImageDrawing.decodeFile(mToastHandler, icon);
+				Bitmap bitmap = ImageDrawing.decodeFile(getApplicationContext(), icon);
 				intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, IconUtils.resizeIcon(this, bitmap, (40/12)));
             } else {
 	            Parcelable iconResource = Intent.ShortcutIconResource.fromContext(this,  R.drawable.board_icon);

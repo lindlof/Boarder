@@ -5,11 +5,12 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-import fi.mikuz.boarder.util.Handlers.ToastHandler;
+import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
 
 /**
@@ -104,7 +105,7 @@ public class GraphicalSoundboard {
 		this.pageNumber = pageNumber;
 	}
 
-	public static GraphicalSoundboard copy(GraphicalSoundboard tempGsb) {
+	public static GraphicalSoundboard copy(Context context, GraphicalSoundboard tempGsb) {
 		GraphicalSoundboard gsb = new GraphicalSoundboard();
 		
 		ArrayList<GraphicalSound> gsbSoundList = new ArrayList<GraphicalSound>();
@@ -122,11 +123,11 @@ public class GraphicalSoundboard {
 		gsb.setUseBackgroundImage(tempGsb.getUseBackgroundImage());
 		gsb.setBackgroundColor(tempGsb.getBackgroundColor());
 		gsb.setBackgroundImagePath(tempGsb.getBackgroundImagePath());
-		gsb.setBackgroundImage(tempGsb.getBackgroundImage());
 		gsb.setBackgroundX(tempGsb.getBackgroundX());
 		gsb.setBackgroundY(tempGsb.getBackgroundY());
 		gsb.setBackgroundWidth(tempGsb.getBackgroundWidth());
 		gsb.setBackgroundHeight(tempGsb.getBackgroundHeight());
+		if (tempGsb.getBackgroundImage() != null) gsb.loadBackgroundImage(context);
 		gsb.setAutoArrange(tempGsb.getAutoArrange());
 		gsb.setAutoArrangeColumns(tempGsb.getAutoArrangeColumns());
 		gsb.setAutoArrangeRows(tempGsb.getAutoArrangeRows());
@@ -142,21 +143,48 @@ public class GraphicalSoundboard {
 		return gsb;
 	}
 	
-	static public void loadImages(Context context, ToastHandler toastHandler, GraphicalSoundboard gsb) {
+	static public void loadImages(Context context, GraphicalSoundboard gsb) {
 		if (gsb.getBackgroundImage() == null && gsb.getBackgroundImagePath() != null) {
-			gsb.setBackgroundImage(ImageDrawing.decodeFile(toastHandler, gsb.getBackgroundImagePath(), 
-					gsb.getBackgroundWidth(), gsb.getBackgroundHeight()));
+			gsb.loadBackgroundImage(context);
 		}
 		for (GraphicalSound sound : gsb.getSoundList()) {
-			sound.loadImages(context, toastHandler);
+			sound.loadImages(context);
 		}
 	}
 	
 	static public void unloadImages(GraphicalSoundboard gsb) {
-		gsb.setBackgroundImage(null);
+		gsb.unloadBackgroundImage();
 		for (GraphicalSound sound : gsb.getSoundList()) {
 			sound.unloadImages();
 		}
+	}
+	
+	public void loadBackgroundImage(Context context) {
+		if (this.backgroundImage == null) {
+			if (this.backgroundImagePath != null) {
+				this.backgroundImage = ImageDrawing.decodeFile(context, getBackgroundImagePath(), getBackgroundWidth(), getBackgroundHeight());
+			} else {
+				this.backgroundImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.sound);
+			}
+		}
+	}
+	
+	public void reloadBackgroundImage(Context context) {
+		if (this.backgroundImage != null) {
+			if (this.backgroundImagePath != null) {
+				this.backgroundImage = ImageDrawing.decodeFile(context, getBackgroundImagePath(), getBackgroundWidth(), getBackgroundHeight());
+			} else {
+				this.backgroundImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.sound);
+			}
+		}
+	}
+	
+	public void loadPlaceholderBackgroundImage(Context context) {
+		this.backgroundImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.sound);
+	}
+	
+	public void unloadBackgroundImage() {
+		this.backgroundImage = null;
 	}
 	
 	public boolean getAutoArrange() {
@@ -223,16 +251,21 @@ public class GraphicalSoundboard {
 	public void setBackgroundY(float backgroundY) {
 		this.backgroundY = backgroundY;
 	}
+	public void setBackgroundWidthHeight(Context context, float backgroundWidth, float backgroundHeight) {
+		this.backgroundWidth = backgroundWidth;
+		this.backgroundHeight = backgroundHeight;
+		reloadBackgroundImage(context);
+	}
 	public float getBackgroundWidth() {
 		return backgroundWidth;
 	}
-	public void setBackgroundWidth(float backgroundWidth) {
+	private void setBackgroundWidth(float backgroundWidth) {
 		this.backgroundWidth = backgroundWidth;
 	}
 	public float getBackgroundHeight() {
 		return backgroundHeight;
 	}
-	public void setBackgroundHeight(float backgroundHeight) {
+	private void setBackgroundHeight(float backgroundHeight) {
 		this.backgroundHeight = backgroundHeight;
 	}
 	public boolean getUseBackgroundImage() {
@@ -258,9 +291,6 @@ public class GraphicalSoundboard {
 	}
 	public Bitmap getBackgroundImage() {
 		return backgroundImage;
-	}
-	public void setBackgroundImage(Bitmap backgroundImage) {
-		this.backgroundImage = backgroundImage;
 	}
 	public Float getBoardVolume() {
 		return boardVolume;

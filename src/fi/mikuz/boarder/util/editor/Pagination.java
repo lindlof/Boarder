@@ -3,9 +3,10 @@ package fi.mikuz.boarder.util.editor;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.Context;
 import android.util.Log;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
-import fi.mikuz.boarder.util.Handlers.ToastHandler;
+import fi.mikuz.boarder.util.ContextUtils;
 
 /**
  * Knows current status of pages. Provides pagination functionality.
@@ -43,14 +44,14 @@ public class Pagination {
 		this.movePageOrientation = -1;
 	}
 	
-	public GraphicalSoundboard getBoard(int orientation) {
+	public GraphicalSoundboard getBoard(Context context, int orientation) {
 		
 		int pageNumber = getPageNumberForOrientation(orientation);
-		GraphicalSoundboard gsb = gsbp.getPage(orientation, pageNumber);
+		GraphicalSoundboard gsb = gsbp.getPage(context, orientation, pageNumber);
 		if (gsb != null) return gsb;
 		Log.w(TAG, "Can not find expected page. Giving last page available.");
-		pageNumber = getLastPageNumber(orientation);
-		gsb = gsbp.getPage(orientation, pageNumber);
+		pageNumber = getLastPageNumber(context, orientation);
+		gsb = gsbp.getPage(context, orientation, pageNumber);
 		if (gsb != null) return gsb;
 		
 		Log.v(TAG, "No pages in this orientation. Adding page.");
@@ -58,13 +59,13 @@ public class Pagination {
 		return gsb;
 	}
 	
-	public void movePage(ToastHandler toastHandler, GraphicalSoundboard toGsb) {
+	public void movePage(Context context, GraphicalSoundboard toGsb) {
 		int orientation = this.movePageOrientation;
 		int fromPageNumber = this.moveFromPageNumber;
 		int toPageNumber = toGsb.getPageNumber();
 		
 		if (toGsb.getScreenOrientation() != orientation) {
-			toastHandler.toast("Wrong orientation!");
+			ContextUtils.toast(context, "Wrong orientation!");
     		return;
     	}
 		resetMove();
@@ -75,7 +76,7 @@ public class Pagination {
 		int endPageNumber = beginPageNumber + Math.abs(fromPageNumber-toPageNumber);
 		
 		for (int i = beginPageNumber; i <= endPageNumber; i++) {
-			GraphicalSoundboard gsb = gsbp.getPage(orientation, i);
+			GraphicalSoundboard gsb = gsbp.getPage(context, orientation, i);
 			pages.add(gsb);
 		}
 		
@@ -84,13 +85,13 @@ public class Pagination {
 
 			if (pageNumber == fromPageNumber) {
 				gsb.setPageNumber(toPageNumber);
-				gsbp.overrideBoard(gsb);
+				gsbp.overrideBoard(context, gsb);
 			} else if (fromPageNumber > toPageNumber) {
 				gsb.setPageNumber(pageNumber + 1);
-				gsbp.overrideBoard(gsb);
+				gsbp.overrideBoard(context, gsb);
 			} else if (fromPageNumber < toPageNumber) {
 				gsb.setPageNumber(pageNumber - 1);
-				gsbp.overrideBoard(gsb);
+				gsbp.overrideBoard(context, gsb);
 			}
 		}
 	}
@@ -100,13 +101,13 @@ public class Pagination {
 	 * @param current gsb
 	 * @return next board page or null
 	 */
-	public GraphicalSoundboard getNextBoardPage(GraphicalSoundboard lastGsb) {
+	public GraphicalSoundboard getNextBoardPage(Context context, GraphicalSoundboard lastGsb) {
 		int orientation = lastGsb.getScreenOrientation();
 		GraphicalSoundboard selectedBoard = null;
 		
-		selectedBoard = gsbp.getPage(orientation, lastGsb.getPageNumber() + 1);
+		selectedBoard = gsbp.getPage(context, orientation, lastGsb.getPageNumber() + 1);
 		
-		if (selectedBoard == null) selectedBoard = gsbp.getPage(orientation, 0); // Last page, go to first page.
+		if (selectedBoard == null) selectedBoard = gsbp.getPage(context, orientation, 0); // Last page, go to first page.
 		
 		updatePageNumber(selectedBoard);
 		return selectedBoard;
@@ -117,25 +118,25 @@ public class Pagination {
 	 * @param current gsb
 	 * @return next board page or null
 	 */
-	public GraphicalSoundboard getPreviousPage(GraphicalSoundboard lastGsb) {
+	public GraphicalSoundboard getPreviousPage(Context context, GraphicalSoundboard lastGsb) {
 		int orientation = lastGsb.getScreenOrientation();
 		GraphicalSoundboard selectedBoard = null;
 		
-		selectedBoard = gsbp.getPage(orientation, lastGsb.getPageNumber() - 1);
+		selectedBoard = gsbp.getPage(context, orientation, lastGsb.getPageNumber() - 1);
 		
 		if (selectedBoard == null) {
-			int lastPage = getLastPageNumber(orientation); // First page, go to last page.
-			selectedBoard = gsbp.getPage(orientation, lastPage);
+			int lastPage = getLastPageNumber(context, orientation); // First page, go to last page.
+			selectedBoard = gsbp.getPage(context, orientation, lastPage);
 		}
 		
 		updatePageNumber(selectedBoard);
 		return selectedBoard;
 	}
 	
-	private int getLastPageNumber(int orientation) {
+	private int getLastPageNumber(Context context, int orientation) {
 		int lastPage = -1;
 		
-		while (gsbp.getPage(orientation, lastPage + 1) != null) {
+		while (gsbp.getPage(context, orientation, lastPage + 1) != null) {
 			lastPage++;
 		}
 		

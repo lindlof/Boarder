@@ -3,6 +3,7 @@ package fi.mikuz.boarder.util.editor;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.Context;
 import android.util.Log;
 import fi.mikuz.boarder.component.soundboard.BoardHistory;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
@@ -20,11 +21,11 @@ public class BoardHistoryProvider {
 		this.historyList = new ArrayList<BoardHistory>();
 	}
 	
-	public BoardHistory createBoardHistory(int boardId, GraphicalSoundboard initialHistoryCheckpoint) {
+	public BoardHistory createBoardHistory(Context context, int boardId, GraphicalSoundboard initialHistoryCheckpoint) {
 		Log.v(TAG, "Creating a new history for board id " + boardId);
 		
 		BoardHistory history = new BoardHistory(boardId);
-		history.createHistoryCheckpoint(initialHistoryCheckpoint);
+		history.createHistoryCheckpoint(context, initialHistoryCheckpoint);
 		
 		historyList.add(history);
 		

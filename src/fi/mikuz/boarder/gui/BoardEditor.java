@@ -63,7 +63,6 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
 import fi.mikuz.boarder.util.AutoArrange;
 import fi.mikuz.boarder.util.FileProcessor;
-import fi.mikuz.boarder.util.Handlers.ToastHandler;
 import fi.mikuz.boarder.util.IconUtils;
 import fi.mikuz.boarder.util.OrientationUtil;
 import fi.mikuz.boarder.util.SoundPlayerControl;
@@ -151,7 +150,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	private GraphicalSound mFineTuningSound = null;
 	
-	private ToastHandler mToastHandler;
 	final Handler mHandler = new Handler();
 	ProgressDialog mWaitDialog;
 	boolean mClearBoardDir = false;
@@ -248,7 +246,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         
         File icon = new File(mSbDir, mBoardName + "/icon.png");
         if (icon.exists()) {
-			Bitmap bitmap = ImageDrawing.decodeFile(mToastHandler, icon);
+			Bitmap bitmap = ImageDrawing.decodeFile(getApplicationContext(), icon);
             Drawable drawable = new BitmapDrawable(getResources(), IconUtils.resizeIcon(this, bitmap, (40/6)));
         	this.getActionBar().setLogo(drawable);
         }
@@ -281,7 +279,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		
 		
 		this.mCurrentOrientation = orientation;
-		GraphicalSoundboard newGsb = mPagination.getBoard(orientation);
+		GraphicalSoundboard newGsb = mPagination.getBoard(getApplicationContext(), orientation);
 			
 		mPageDrawer = new PageDrawer(this.getApplicationContext(), mJoystick);
 		changeBoard(newGsb, false);
@@ -322,12 +320,12 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         		return true;
         		
         	case R.id.menu_undo:
-        		mBoardHistory.undo(this);
+        		mBoardHistory.undo(getApplicationContext(), this);
         		mFineTuningSound = null;
         		return true;
         	
         	case R.id.menu_redo:
-        		mBoardHistory.redo(this);
+        		mBoardHistory.redo(getApplicationContext(), this);
         		mFineTuningSound = null;
         		return true;
         		
@@ -351,7 +349,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         				placeToFreeSpace(pasteSound);
         				mGsb.getSoundList().add(pasteSound);
         			}
-        			mBoardHistory.createHistoryCheckpoint(mGsb);
+        			mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
         		}
             	return true;
             	
@@ -375,9 +373,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	    		changeBoard(swapGsb, true);
             	    	} else if (item == 1) {
             	    		GraphicalSoundboard deleteGsb = mGsb;
-            	    		mGsbp.deletePage(deleteGsb);
-            	    		GraphicalSoundboard gsb = mGsbp.getPage(deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
-            	    		if (gsb == null) gsb = mPagination.getBoard(deleteGsb.getScreenOrientation());
+            	    		mGsbp.deletePage(getApplicationContext(), deleteGsb);
+            	    		GraphicalSoundboard gsb = mGsbp.getPage(getApplicationContext(), deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
+            	    		if (gsb == null) gsb = mPagination.getBoard(getApplicationContext(), deleteGsb.getScreenOrientation());
             	    		changeBoard(gsb, false);
             	    	} else if (item == 2) {
             	    		mPagination.initMove(mGsb);
@@ -393,9 +391,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             case R.id.menu_move_page_here:
             	GraphicalSoundboard currentGsb = mGsb;
             	int toPageNumber = currentGsb.getPageNumber();
-            	mGsbp.overrideBoard(currentGsb);
-            	mPagination.movePage(mToastHandler, mGsb);
-            	GraphicalSoundboard gsb = mGsbp.getPage(currentGsb.getScreenOrientation(), toPageNumber);
+            	mGsbp.overrideBoard(getApplicationContext(), currentGsb);
+            	mPagination.movePage(getApplicationContext(), mGsb);
+            	GraphicalSoundboard gsb = mGsbp.getPage(getApplicationContext(), currentGsb.getScreenOrientation(), toPageNumber);
             	changeBoard(gsb, false);
 	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
             	return true;
@@ -524,7 +522,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
                 				public void onClick(View v) {
                 					Intent i = new Intent(BoardEditor.this, ColorChanger.class);
                 			    	i.putExtra("parentKey", "changeBackgroundColor");
-                			    	i.putExtras(XStreamUtil.getSoundboardBundle(mGsb));
+                			    	i.putExtras(XStreamUtil.getSoundboardBundle(getApplicationContext(), mGsb));
                 			    	startActivityForResult(i, CHANGE_BACKGROUND_COLOR);
                 				}
                       		});
@@ -623,8 +621,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	          			mGsb.setUseBackgroundImage(checkUseBackgroundImage.isChecked());
             	          			
             	          			try {
-            	          				mGsb.setBackgroundWidth(Float.valueOf(mBackgroundWidthInput.getText().toString()).floatValue());
-            	          				mGsb.setBackgroundHeight(Float.valueOf(mBackgroundHeightInput.getText().toString()).floatValue());
+            	          				mGsb.setBackgroundWidthHeight(getApplicationContext(), 
+            	          						Float.valueOf(mBackgroundWidthInput.getText().toString()).floatValue(),
+            	          						Float.valueOf(mBackgroundHeightInput.getText().toString()).floatValue());
             	          			} catch(NumberFormatException nfe) {
             	          				notifyIncorrectValue = true;
             	          			}
@@ -633,7 +632,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	          				Toast.makeText(getApplicationContext(), "Incorrect value", 
             	          						Toast.LENGTH_SHORT).show();
             	          			}
-            	          			mBoardHistory.createHistoryCheckpoint(mGsb);
+            	          			mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
             	          		}
             	          	});
 
@@ -737,7 +736,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         	          					Toast.makeText(getApplicationContext(), "Not enought slots", 
             	          						Toast.LENGTH_SHORT).show();
         	          				}
-        	          				mBoardHistory.createHistoryCheckpoint(mGsb);
+        	          				mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
         	          			} catch(NumberFormatException nfe) {
         	          				Toast.makeText(getApplicationContext(), "Incorrect value", 
         	          						Toast.LENGTH_SHORT).show();
@@ -770,13 +769,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		                	    	if (item == 0) { // Background
 		                	    		mGsb.setBackgroundX(0);
 		                	    		mGsb.setBackgroundY(0);
-		                	    		mBoardHistory.createHistoryCheckpoint(mGsb);
+		                	    		mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 		                	    	} else { // Sound
 		                	    		GraphicalSound sound = mGsb.getSoundList().get(item - extraItemCount);
 			                	    	sound.setNameFrameX(50);
 			        	    			sound.setNameFrameY(50);
 			        	    			sound.generateImageXYFromNameFrameLocation();
-			        	    			mBoardHistory.createHistoryCheckpoint(mGsb);
+			        	    			mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 		                	    	}
 		                	    }
 		                	});
@@ -806,7 +805,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			mPageDrawer.switchPage(gsb);
 			if (overrideCurrentBoard) {
 				GraphicalSoundboard.unloadImages(lastGsb);
-				mGsbp.overrideBoard(lastGsb);
+				mGsbp.overrideBoard(getApplicationContext(), lastGsb);
 			}
 			
 			refreshPageTitle();
@@ -815,7 +814,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			BoardHistory boardHistory = mBoardHistoryProvider.getBoardHistory(boardId);
 			
 			if (boardHistory == null) {
-				boardHistory = mBoardHistoryProvider.createBoardHistory(boardId, gsb);
+				boardHistory = mBoardHistoryProvider.createBoardHistory(getApplicationContext(), boardId, gsb);
 			}
 			
 			this.mBoardHistory = boardHistory;
@@ -829,7 +828,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	}
 	
 	public void loadBoard(GraphicalSoundboard gsb) {
-		GraphicalSoundboard.loadImages(this.getApplicationContext(), mToastHandler, gsb);
+		GraphicalSoundboard.loadImages(this.getApplicationContext(), gsb);
 		mGsb = gsb;
 	}
 	
@@ -930,7 +929,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	  	orientationWarningBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				//mThread.setRunning(false); // TODO handle board deleting better
-				mGsb = mPagination.getBoard(screenOrientation);
+				mGsb = mPagination.getBoard(getApplicationContext(), screenOrientation);
 				mGsbp.deleteBoardWithOrientation(oppositeOrientation);
 				mGsbp.setOrientationMode(screenOrientation);
 	    		finishBoard();
@@ -998,7 +997,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        		placeToFreeSpace(sound);
 		        		mGsb.getSoundList().add(sound);
 		        	}
-		        	mBoardHistory.createHistoryCheckpoint(mGsb);
+		        	mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 	        	}
 	        	break;
 	        	
@@ -1008,13 +1007,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	Bundle extras = intent.getExtras();
 		        	File background = new File(extras.getString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE));
 		        	mGsb.setBackgroundImagePath(background);
-		        	mGsb.setBackgroundImage(ImageDrawing.decodeFile(mToastHandler, mGsb.getBackgroundImagePath(), 
-		        			mGsb.getBackgroundWidth(), mGsb.getBackgroundHeight()));
-		        	mGsb.setBackgroundWidth(mGsb.getBackgroundImage().getWidth());
-		        	mGsb.setBackgroundHeight(mGsb.getBackgroundImage().getHeight());
+		        	mGsb.setBackgroundWidthHeight(getApplicationContext(),
+		        			mGsb.getBackgroundImage().getWidth(),
+		        			mGsb.getBackgroundImage().getHeight());
+		        	mGsb.loadBackgroundImage(getApplicationContext());
 		        	mGsb.setBackgroundX(0);
 					mGsb.setBackgroundY(0);
-					mBoardHistory.createHistoryCheckpoint(mGsb);
+					mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 	        	}
 	        	if (mBackgroundDialog != null && mGsb.getBackgroundImage() != null) {
 	        		mBackgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
@@ -1030,7 +1029,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE));
 		        	mPressedSound.setImagePath(image);
-		        	mPressedSound.loadImages(getApplicationContext(), mToastHandler);
+		        	mPressedSound.loadImages(getApplicationContext());
 	        	}
 	        	if (mSoundImageDialog != null) {
 	        		mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
@@ -1046,7 +1045,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		        	Bundle extras = intent.getExtras();
 		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE));
 		        	mPressedSound.setActiveImagePath(image);
-		        	mPressedSound.loadImages(getApplicationContext(), mToastHandler);
+		        	mPressedSound.loadImages(getApplicationContext());
 	        	}
 	        	break;
 	        	
@@ -1091,7 +1090,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	        	if (resultCode == RESULT_OK) {
 	        		Bundle extras = intent.getExtras();
 		        	mGsb.setBackgroundColor(extras.getInt("colorKey"));
-		        	mBoardHistory.createHistoryCheckpoint(mGsb);
+		        	mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 	        	}
 	        	break;
 	        	
@@ -1217,7 +1216,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
     	if (newOrientation != this.mCurrentOrientation) {
     		this.mCurrentOrientation = newOrientation;
-    		GraphicalSoundboard newOrientationGsb = mPagination.getBoard(newOrientation);
+    		GraphicalSoundboard newOrientationGsb = mPagination.getBoard(getApplicationContext(), newOrientation);
     		changeBoard(newOrientationGsb, true);
     		
     		// Set resolution handling stuff for the new orientation
@@ -1233,7 +1232,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     @Override
     protected void onResume() {
     	super.onResume();
-    	mToastHandler = new ToastHandler(getApplicationContext());
     	setContentView(mPanel);
     }
 	
@@ -1257,10 +1255,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     private void save() {
     	if (mBoardName != null) {
     		try {
-    			GraphicalSoundboard gsb = GraphicalSoundboard.copy(mGsb);
+    			GraphicalSoundboard gsb = GraphicalSoundboard.copy(getApplicationContext(), mGsb);
     			if (mPressedSound != null && mCurrentGesture == TouchGesture.DRAG) gsb.getSoundList().add(mPressedSound); // Sound is being dragged
-    			mGsbp.overrideBoard(gsb);
-        		mGsbp.saveBoard(mBoardName);
+    			mGsbp.overrideBoard(getApplicationContext(), gsb);
+        		mGsbp.saveBoard(getApplicationContext(), mBoardName);
         		Log.v(TAG, "Board " + mBoardName + " saved");
     		} catch (IOException e) {
     			Log.e(TAG, "Unable to save " + mBoardName, e);
@@ -1314,7 +1312,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				break;
 		}
 		mCopyColor = 0;
-		mBoardHistory.createHistoryCheckpoint(mGsb);
+		mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 	}
     
     void moveSound(float X, float Y) {
@@ -1394,7 +1392,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		
 		sound.setAutoArrangeColumn(column);
 		sound.setAutoArrangeRow(row);
-		mBoardHistory.createHistoryCheckpoint(mGsb);
+		mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 	}
 	
 	public boolean placeToFreeSlot(GraphicalSound sound) {
@@ -1473,7 +1471,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				mPressedSound.setImageX(mPressedSound.getImageX() + movementX);
 				mPressedSound.setImageY(mPressedSound.getImageY() + movementY);
 			}
-			mBoardHistory.setHistoryCheckpoint(mGsb);
+			mBoardHistory.setHistoryCheckpoint(getApplicationContext(), mGsb);
 			return true;
 		} else {
 			return false;
@@ -1489,7 +1487,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				final int windowWidth = mPanel.getWidth();
 				final int windowHeight = mPanel.getHeight();
 				final float allowedResolutionDifference = 0.03f;
-				final ToastHandler toastHandler = mToastHandler;
 
 				if (mGsb.getScreenHeight() == 0 || mGsb.getScreenWidth() == 0) {
 					mGsb.setScreenWidth(windowWidth);
@@ -1522,8 +1519,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
 							mGsb.setBackgroundX(mGsb.getBackgroundX()*xScale);
 							mGsb.setBackgroundY(mGsb.getBackgroundY()*yScale);
-							mGsb.setBackgroundWidth(mGsb.getBackgroundWidth()*xScale);
-							mGsb.setBackgroundHeight(mGsb.getBackgroundHeight()*yScale);
+							mGsb.setBackgroundWidthHeight(getApplicationContext(), 
+									mGsb.getBackgroundWidth()*xScale, 
+									mGsb.getBackgroundHeight()*yScale);
 
 							for (GraphicalSound sound : mGsb.getSoundList()) {
 
@@ -1534,7 +1532,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
 								sound.setImageX(sound.getImageX()*xScale);
 								sound.setImageY(sound.getImageY()*yScale);
-								sound.setImageWidthHeight(getApplicationContext(), toastHandler, sound.getImageWidth()*avarageScale, sound.getImageHeight()*avarageScale);
+								sound.setImageWidthHeight(getApplicationContext(), sound.getImageWidth()*avarageScale, sound.getImageHeight()*avarageScale);
 
 								if (sound.getLinkNameAndImage()) sound.generateNameFrameXYFromImageLocation();
 							}
@@ -1568,8 +1566,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 							Log.v(TAG, "Applicable scale: \"" + applicableScale + "\"");
 							Log.v(TAG, "Hidden area size: \"" + hiddenAreaSize + "\"");
 
-							mGsb.setBackgroundWidth(mGsb.getBackgroundWidth()*applicableScale);
-							mGsb.setBackgroundHeight(mGsb.getBackgroundHeight()*applicableScale);
+							mGsb.setBackgroundWidthHeight(getApplicationContext(),
+									mGsb.getBackgroundWidth()*applicableScale,
+									mGsb.getBackgroundHeight()*applicableScale);
 
 							if (xFillsDisplay) {
 								mGsb.setBackgroundX(mGsb.getBackgroundX()*applicableScale);
@@ -1598,7 +1597,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 									sound.setImageY(sound.getImageY()*applicableScale);
 								}
 
-								sound.setImageWidthHeight(getApplicationContext(), toastHandler, sound.getImageWidth()*applicableScale, sound.getImageHeight()*applicableScale);
+								sound.setImageWidthHeight(getApplicationContext(), sound.getImageWidth()*applicableScale, sound.getImageHeight()*applicableScale);
 
 								if (sound.getLinkNameAndImage()) sound.generateNameFrameXYFromImageLocation();
 							}
@@ -1644,7 +1643,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					mResolutionAlert.setOnDismissListener(new OnDismissListener() {
 						public void onDismiss(DialogInterface dialog) {
 							mResolutionAlert = null;
-							mBoardHistory.createHistoryCheckpoint(mGsb);
+							mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 						}
 					});
 
@@ -1829,9 +1828,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 								GraphicalSoundboard swapGsb = null;
 								
 								if (event.getX() < mInitTouchEventX) {
-									swapGsb = mPagination.getNextBoardPage(mGsb);
+									swapGsb = mPagination.getNextBoardPage(getApplicationContext(), mGsb);
 								} else {
-									swapGsb = mPagination.getPreviousPage(mGsb);
+									swapGsb = mPagination.getPreviousPage(getApplicationContext(), mGsb);
 								}
 								
 								if (swapGsb == null) {
@@ -1851,7 +1850,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						if (mMoveBackground) {
 							mGsb.setBackgroundX(event.getX() - mBackgroundLeftDistance);
 							mGsb.setBackgroundY(event.getY() - mBackgroundTopDistance);
-							mBoardHistory.createHistoryCheckpoint(mGsb);
+							mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 						} else if ((mCurrentGesture == TouchGesture.PRESS_BOARD || mFineTuningSound != null) 
 								&& mMode == EDIT_BOARD && holdTime() < 200) {
 							mCurrentGesture = TouchGesture.TAP;
@@ -1942,7 +1941,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    			  			
 					    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 					    		        		i.putExtra("parentKey", "changeNameColor");
-					    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
+					    		        		i.putExtras(XStreamUtil.getSoundBundle(getApplicationContext(), mPressedSound, mGsb));
 					    		            	startActivityForResult(i, CHANGE_NAME_COLOR);
 					    					}
 					              	  	});
@@ -1956,7 +1955,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    			  			
 					    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 					    		        		i.putExtra("parentKey", "changeinnerPaintColor");
-					    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
+					    		        		i.putExtras(XStreamUtil.getSoundBundle(getApplicationContext(), mPressedSound, mGsb));
 					    		            	startActivityForResult(i, CHANGE_INNER_PAINT_COLOR);
 					    					}
 					              	  	});
@@ -1970,7 +1969,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    			  			
 					    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 					    		        		i.putExtra("parentKey", "changeBorderPaintColor");
-					    		        		i.putExtras(XStreamUtil.getSoundBundle(mPressedSound, mGsb));
+					    		        		i.putExtras(XStreamUtil.getSoundBundle(getApplicationContext(), mPressedSound, mGsb));
 					    		            	startActivityForResult(i, CHANGE_BORDER_PAINT_COLOR);
 					    					}
 					              	  	});
@@ -2011,7 +2010,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          						Toast.LENGTH_SHORT).show();
 					    	          			}
 					    	          			
-					    	          			mBoardHistory.createHistoryCheckpoint(mGsb);
+					    	          			mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 					    	          		}
 					    	          	});
 		
@@ -2149,7 +2148,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          			}
 					    	          			
 					    	          			try {
-					    	          				mPressedSound.setImageWidthHeight(getApplicationContext(), mToastHandler,
+					    	          				mPressedSound.setImageWidthHeight(getApplicationContext(),
 					    	          						Float.valueOf(mSoundImageWidthInput.getText().toString()).floatValue(),
 					    	          						Float.valueOf(mSoundImageHeightInput.getText().toString()).floatValue());	
 					    	          			} catch(NumberFormatException nfe) {
@@ -2160,7 +2159,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          			if (notifyIncorrectValue == true) {
 					    	          				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
 					    	          			}
-					    	          			mBoardHistory.createHistoryCheckpoint(mGsb);
+					    	          			mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 					    	          		}
 					    	          	});
 	
@@ -2284,7 +2283,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          			if (notifyIncorrectValue == true) {
 					    	          				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
 					    	          			}
-					    	          			mBoardHistory.createHistoryCheckpoint(mGsb);
+					    	          			mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 					    	          		}
 					    	          	});
 	
@@ -2320,7 +2319,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          	  			mPressedSound.getPath().delete();
 					    	          	  		}
 					    	          	  		mGsb.getSoundList().remove(mPressedSound);
-					    	          	  		mBoardHistory.createHistoryCheckpoint(mGsb);
+					    	          	  		mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 					    	          	    }
 					    	          	});
 	
@@ -2440,7 +2439,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 							} else {
 								mGsb.getSoundList().add(mPressedSound);
 							}
-							mBoardHistory.createHistoryCheckpoint(mGsb);
+							mBoardHistory.createHistoryCheckpoint(getApplicationContext(), mGsb);
 							
 						} else if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == LISTEN_BOARD) {
 							playTouchedSound(mPressedSound);

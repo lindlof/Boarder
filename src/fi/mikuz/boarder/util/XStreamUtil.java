@@ -2,6 +2,7 @@ package fi.mikuz.boarder.util;
 
 import java.util.ArrayList;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import com.thoughtworks.xstream.XStream;
@@ -33,11 +34,11 @@ public class XStreamUtil {
 	 * @param tempGsb
 	 * @return Bundle including a GraphicalSound and an empty GraphicalSoundboard associated to the GraphicalSound
 	 */
-	public static Bundle getSoundBundle(GraphicalSound tempSound, GraphicalSoundboard tempGsb) {
+	public static Bundle getSoundBundle(Context context, GraphicalSound tempSound, GraphicalSoundboard tempGsb) {
 		
 		GraphicalSound sound = (GraphicalSound) tempSound.clone();
 		sound.unloadImages();
-		GraphicalSoundboard gsb = GraphicalSoundboard.copy(tempGsb);
+		GraphicalSoundboard gsb = GraphicalSoundboard.copy(context, tempGsb);
 		gsb.setSoundList(new ArrayList<GraphicalSound>());
 		GraphicalSoundboard.unloadImages(gsb);
 		
@@ -52,9 +53,9 @@ public class XStreamUtil {
 	 * @param tempGsb
 	 * @return Bundle including an empty GraphicalSoundboard
 	 */
-	public static Bundle getSoundboardBundle(GraphicalSoundboard tempGsb) {
+	public static Bundle getSoundboardBundle(Context context, GraphicalSoundboard tempGsb) {
 		
-		GraphicalSoundboard gsb = GraphicalSoundboard.copy(tempGsb);
+		GraphicalSoundboard gsb = GraphicalSoundboard.copy(context, tempGsb);
 		gsb.setSoundList(new ArrayList<GraphicalSound>());
 		GraphicalSoundboard.unloadImages(gsb);
 		

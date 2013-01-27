@@ -31,8 +31,6 @@ import com.thoughtworks.xstream.XStream;
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.app.BoarderListActivity;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
-import fi.mikuz.boarder.util.Handlers;
-import fi.mikuz.boarder.util.Handlers.ToastHandler;
 import fi.mikuz.boarder.util.XStreamUtil;
 import fi.mikuz.boarder.util.editor.ImageDrawing;
 
@@ -57,14 +55,11 @@ public class FileExplorer extends BoarderListActivity {
 	private File selectedFile;
 	private String mSdcard = Environment.getExternalStorageDirectory().toString();
 	private String mBoardPath = mSdcard;
-	
-	private static ToastHandler mToastHandler;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);  
-		mToastHandler = new Handlers.ToastHandler(this.getApplicationContext());
 		setContentView(R.layout.file_browser);
 		mBoardPath = SoundboardMenu.mSbDir.getPath() + "/" + getIntent().getExtras().getString(FileExplorer.EXTRA_BOARD_NAME_KEY);
 		getDir(mSdcard);
@@ -262,7 +257,7 @@ public class FileExplorer extends BoarderListActivity {
 							sound.setNameFrameX(50);
 							sound.setNameFrameY(50);
 							Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.sound);
-							sound.setImageWidthHeight(getApplicationContext(), mToastHandler, image.getHeight(), image.getHeight());
+							sound.setImageWidthHeight(getApplicationContext(), image.getHeight(), image.getHeight());
 					  
 							XStream xstream = XStreamUtil.graphicalBoardXStream();
 							bundle.putString(FileExplorer.ACTION_ADD_GRAPHICAL_SOUND, xstream.toXML(sound));

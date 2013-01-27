@@ -7,7 +7,6 @@ import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -21,7 +20,6 @@ import android.view.WindowManager;
 
 import com.bugsense.trace.BugSenseHandler;
 
-import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.gui.SoundboardMenu;
@@ -184,7 +182,7 @@ public class PageDrawer {
 				canvas.drawBitmap(drawGsb.getBackgroundImage(), null, bitmapRect, bgImage);
 			} catch(NullPointerException npe) {
 				Log.e(TAG, "Unable to draw image " + drawGsb.getBackgroundImagePath().getAbsolutePath());
-				drawGsb.setBackgroundImage(BitmapFactory.decodeResource(context.getResources(), R.drawable.sound));
+				drawGsb.loadPlaceholderBackgroundImage(context);
 			}
 		}
 		

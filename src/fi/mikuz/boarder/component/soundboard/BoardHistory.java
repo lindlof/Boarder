@@ -3,6 +3,7 @@ package fi.mikuz.boarder.component.soundboard;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 import fi.mikuz.boarder.gui.BoardEditor;
@@ -31,7 +32,7 @@ public class BoardHistory {
 		return boardId;
 	}
 
-	public void createHistoryCheckpoint(GraphicalSoundboard board) {
+	public void createHistoryCheckpoint(Context context, GraphicalSoundboard board) {
 		synchronized (lock) {
 			for (int i = history.size()-index; i > 1; i--) {
 				// User has undone and then creates a checkpoint
@@ -40,7 +41,7 @@ public class BoardHistory {
 			}
 			
 			index++;
-			setHistoryCheckpoint(board);
+			setHistoryCheckpoint(context, board);
 			
 			while (history.size() >= 30) {
 				Log.v(TAG, "removing history from start, size is " + history.size());
@@ -53,9 +54,9 @@ public class BoardHistory {
 		}
 	}
 	
-	public void setHistoryCheckpoint(GraphicalSoundboard board) {
+	public void setHistoryCheckpoint(Context context, GraphicalSoundboard board) {
 		synchronized (lock) {
-			GraphicalSoundboard gsbh = GraphicalSoundboard.copy(board);
+			GraphicalSoundboard gsbh = GraphicalSoundboard.copy(context, board);
 			GraphicalSoundboard.unloadImages(gsbh);
 			
 			// If new checkpoint is being created then index is ahead of list by 1 now
@@ -71,26 +72,26 @@ public class BoardHistory {
 		}
 	}
 
-	public void undo(BoardEditor editor) {
+	public void undo(Context context, BoardEditor editor) {
 		synchronized (lock) {
 			if (index <= 0) {
 				Toast.makeText(editor.getApplicationContext(), "Unable to undo", Toast.LENGTH_SHORT).show();
 			} else {
 				index--;
-				editor.loadBoard(GraphicalSoundboard.copy(history.get(index)));
+				editor.loadBoard(GraphicalSoundboard.copy(context, history.get(index)));
 				editor.issueResolutionConversion();
 			}
 			Log.v(TAG, "undo: index is " + index + " size is " + history.size());
 		}
 	}
 
-	public void redo(BoardEditor editor) {
+	public void redo(Context context, BoardEditor editor) {
 		synchronized (lock) {
 			if (index+1 >= history.size()) {
 				Toast.makeText(editor.getApplicationContext(), "Unable to redo", Toast.LENGTH_SHORT).show();
 			} else {
 				index++;
-				editor.loadBoard(GraphicalSoundboard.copy(history.get(index)));
+				editor.loadBoard(GraphicalSoundboard.copy(context, history.get(index)));
 			}
 			Log.v(TAG, "redo: index is " + index + " size is " + history.size());
 		}
