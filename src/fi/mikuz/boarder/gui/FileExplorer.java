@@ -31,8 +31,8 @@ import com.thoughtworks.xstream.XStream;
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.app.BoarderListActivity;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
+import fi.mikuz.boarder.util.ImageDrawing;
 import fi.mikuz.boarder.util.XStreamUtil;
-import fi.mikuz.boarder.util.editor.ImageDrawing;
 
 /**
  * 

@@ -2,7 +2,6 @@ package fi.mikuz.boarder.util;
 
 import java.io.File;
 
-import fi.mikuz.boarder.util.editor.ImageDrawing;
 
 import android.content.Context;
 import android.graphics.Bitmap;

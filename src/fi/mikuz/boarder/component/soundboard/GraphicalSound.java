@@ -10,7 +10,7 @@ import android.graphics.Color;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 import fi.mikuz.boarder.R;
-import fi.mikuz.boarder.util.editor.ImageDrawing;
+import fi.mikuz.boarder.util.ImageDrawing;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
 /**

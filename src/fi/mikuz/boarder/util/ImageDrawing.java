@@ -1,4 +1,4 @@
-package fi.mikuz.boarder.util.editor;
+package fi.mikuz.boarder.util;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,7 +12,6 @@ import android.util.Log;
 import com.bugsense.trace.BugSenseHandler;
 
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
-import fi.mikuz.boarder.util.ContextUtils;
 
 /**
  * 
