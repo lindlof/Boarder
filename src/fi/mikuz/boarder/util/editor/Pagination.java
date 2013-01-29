@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.util.ContextUtils;
@@ -15,6 +16,9 @@ import fi.mikuz.boarder.util.ContextUtils;
  */
 public class Pagination {
 	public static final String TAG = Pagination.class.getSimpleName();
+	
+	private static final String PAGE_NUMBER_PORTRAIT_KEY = "pageNumberPortraitKey";
+	private static final String PAGE_NUMBER_LANDSCAPE_KEY = "pageNumberLandscapeKey";
 	
 	GraphicalSoundboardProvider gsbp;
 	
@@ -42,6 +46,19 @@ public class Pagination {
 		this.movePageMode = false;
 		this.moveFromPageNumber = -1;
 		this.movePageOrientation = -1;
+	}
+	
+	public void savePaginationInstance(Bundle outState) {
+		outState.putInt(PAGE_NUMBER_PORTRAIT_KEY, pageNumberPortrait);
+		outState.putInt(PAGE_NUMBER_LANDSCAPE_KEY, pageNumberLandscape);
+	}
+	
+	public void restorePaginationInstance(Bundle state) {
+		try {
+			pageNumberPortrait = state.getInt(PAGE_NUMBER_PORTRAIT_KEY);
+			pageNumberLandscape = state.getInt(PAGE_NUMBER_LANDSCAPE_KEY);
+			Log.v(TAG, "Restored pagination instance");
+		} catch (NullPointerException e) {}
 	}
 	
 	public GraphicalSoundboard getBoard(Context context, int orientation) {

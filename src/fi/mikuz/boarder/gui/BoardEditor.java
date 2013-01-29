@@ -173,7 +173,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	int mNullCanvasCount = 0;
 	
 	@Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -187,6 +187,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			
 			mGsbp = new GraphicalSoundboardProvider(mBoardName);
 			mPagination = new Pagination(mGsbp);
+			mPagination.restorePaginationInstance(savedInstanceState);
 			initEditorBoard();
 			
 			if (mGsb.getSoundList().isEmpty()) {
@@ -220,6 +221,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		  				} else {
 		  					mGsbp = new GraphicalSoundboardProvider(mBoardName);
 		  					mPagination = new Pagination(mGsbp);
+		  					mPagination.restorePaginationInstance(savedInstanceState);
 			  				initEditorBoard();
 			  				
 			  				setTitle(mBoardName);
@@ -1238,6 +1240,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	@Override
     protected void onSaveInstanceState(Bundle outState) {
     	super.onSaveInstanceState(outState);
+    	mPagination.savePaginationInstance(outState);
     }
     
     @Override
