@@ -1880,10 +1880,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 							(mCurrentGesture == TouchGesture.PRESS_BLANK && holdTime() < DRAG_SWIPE_TIME))
 							&& mFineTuningSound == null) {
 
-						float swipeTriggerDistance = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
-						double distanceFromInit = Math.sqrt(
-								Math.pow((mInitTouchEventX - event.getX()), 2) +
-								Math.pow((mInitTouchEventY - event.getY()), 2)); // hypotenuse
+						float swipeTriggerDistance = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80, getResources().getDisplayMetrics());
+						double distanceFromInit = Math.abs(mInitTouchEventX - event.getX());
 
 						synchronized (mGestureLock) {
 							if (distanceFromInit > swipeTriggerDistance) {
