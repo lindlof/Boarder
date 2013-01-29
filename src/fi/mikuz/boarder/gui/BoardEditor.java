@@ -43,8 +43,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -141,7 +139,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private DrawingPanel mPanel;
 	boolean mCanvasInvalidated = false;
 	
-	boolean mPanelInitialized = false;
+	Thread mResolutionConverterThread;
 	AlertDialog mResolutionAlert;
 	
 	private boolean mMoveBackground = false;
@@ -254,16 +252,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         }
         
         mPanel = new DrawingPanel(this);
-        ViewTreeObserver vto = mPanel.getViewTreeObserver();
-        vto.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-            	if (!mPanelInitialized) {
-            		mPanelInitialized = true;
-            		issueResolutionConversion();
-            	}
-            }
-        });
 	}
 	
 	public void initEditorBoard() {
@@ -847,6 +835,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			}
 			
 			this.mBoardHistory = boardHistory;
+			
+			issueResolutionConversion(gsb.getScreenOrientation());
+			
 		} else {
 			Log.v(TAG, "Won't change page to same page.");
 		}
@@ -1247,12 +1238,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     		this.mCurrentOrientation = newOrientation;
     		GraphicalSoundboard newOrientationGsb = mPagination.getBoard(getApplicationContext(), newOrientation);
     		changeBoard(newOrientationGsb, true);
-    		
-    		// Set resolution handling stuff for the new orientation
-    		if (mResolutionAlert != null) {
-    			mResolutionAlert.dismiss();
-    		}
-    		mPanelInitialized = false;
     	}
     	
     	super.onConfigurationChanged(newConfig);
@@ -1509,14 +1494,63 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		
 	}
 	
-	public void issueResolutionConversion() {
+	public void issueResolutionConversion(final int orientation) {
+		if (mResolutionAlert != null) {
+			mResolutionAlert.dismiss();
+		}
+		
 		Thread t = new Thread() {
 			public void run() {
 				Looper.prepare();
 				
-				final int windowWidth = mPanel.getWidth();
-				final int windowHeight = mPanel.getHeight();
 				final float allowedResolutionDifference = 0.03f;
+				
+				int panelWindowWidth = -1;
+				int panelWindowHeight = -1;
+				int i = 0, orientationMaxTries = 200;
+				
+				while (i < 400) {
+					if (mPanel != null) {
+						panelWindowWidth = mPanel.getWidth();
+						panelWindowHeight = mPanel.getHeight();
+						if (panelWindowWidth > 0 && panelWindowHeight > 0) {
+							break;
+						}
+					}
+					try {
+						Thread.sleep(20);
+					} catch (InterruptedException e) {
+						Log.e(TAG, "Unable to sleep while initializing mPanel", e);
+					}
+					i++;
+				}
+				
+				i = 0;
+				while (i < orientationMaxTries) {
+					if ((orientation == GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT && panelWindowHeight < panelWindowWidth) ||
+							(orientation == GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE && panelWindowWidth < panelWindowHeight)) {
+						try {
+							Thread.sleep(20);
+							panelWindowWidth = mPanel.getWidth();
+							panelWindowHeight = mPanel.getHeight();
+						} catch (InterruptedException e) {
+							Log.e(TAG, "Unable to sleep while waiting for orientation to change", e);
+						}
+					} else {
+						break;
+					}
+					if (i == orientationMaxTries - 1) {
+						Log.e(TAG, "Resolution conversion cancelled because of orientation change timeout");
+						return;
+					} else if (orientation != mCurrentOrientation) {
+						Log.v(TAG, "Resolution conversion cancelled since orientation is no longer valid");
+						return;
+					}
+					i++;
+				}
+				
+				final int windowWidth = panelWindowWidth;
+				final int windowHeight = panelWindowHeight;
 
 				if (mGsb.getScreenHeight() == 0 || mGsb.getScreenWidth() == 0) {
 					mGsb.setScreenWidth(windowWidth);

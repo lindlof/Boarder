@@ -78,8 +78,9 @@ public class BoardHistory {
 				Toast.makeText(editor.getApplicationContext(), "Unable to undo", Toast.LENGTH_SHORT).show();
 			} else {
 				index--;
-				editor.loadBoard(GraphicalSoundboard.copy(context, history.get(index)));
-				editor.issueResolutionConversion();
+				GraphicalSoundboard undoGsb = history.get(index);
+				editor.loadBoard(GraphicalSoundboard.copy(context, undoGsb));
+				editor.issueResolutionConversion(undoGsb.getScreenOrientation());
 			}
 			Log.v(TAG, "undo: index is " + index + " size is " + history.size());
 		}
