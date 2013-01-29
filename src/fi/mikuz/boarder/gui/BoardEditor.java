@@ -361,7 +361,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
             case R.id.menu_page_options:
 
-            	CharSequence[] pageItems = {"Add page", "Delete this page", "Move this page"};
+            	CharSequence[] pageItems = {"Pagination settings", "Add page", "Delete this page", "Move this page"};
             	
             	Configuration config = getResources().getConfiguration();
             	final int currentOrientation = OrientationUtil.getBoarderOrientation(config);
@@ -371,15 +371,42 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	pageBuilder.setItems(pageItems, new DialogInterface.OnClickListener() {
             	    public void onClick(DialogInterface dialog, int item) {
             	    	if (item == 0) {
+            	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
+            	    				getSystemService(LAYOUT_INFLATER_SERVICE);
+            	    		View layout = inflater.inflate(R.layout.
+            	    				graphical_soundboard_editor_alert_pagination_settings,
+            	    				(ViewGroup) findViewById(R.id.alert_settings_root));
+
+            	    		final CheckBox checkPaginationSynchronizedBetweenOrientations = 
+            	    				(CheckBox) layout.findViewById(R.id.paginationSynchronizedBetweenOrientations);
+            	    		checkPaginationSynchronizedBetweenOrientations.setChecked(mGsbp.isPaginationSynchronizedBetweenOrientations());
+            	    		
+            	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
+                      	  	builder.setView(layout);
+                      	  	builder.setTitle("Pagination settings");
+                  	  	
+            	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            	          		public void onClick(DialogInterface dialog, int whichButton) {
+            	          			mGsbp.setPaginationSynchronizedBetweenOrientations(checkPaginationSynchronizedBetweenOrientations.isChecked());
+            	          		}
+            	          	});
+
+            	          	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            		          	public void onClick(DialogInterface dialog, int whichButton) {
+            	          	    }
+            	          	});
+            	          	
+            	          	builder.show();
+            	    	} else if (item == 1) {
             	    		GraphicalSoundboard swapGsb = mGsbp.addBoardPage(currentOrientation);
             	    		changeBoard(swapGsb, true);
-            	    	} else if (item == 1) {
+            	    	} else if (item == 2) {
             	    		GraphicalSoundboard deleteGsb = mGsb;
             	    		mGsbp.deletePage(getApplicationContext(), deleteGsb);
             	    		GraphicalSoundboard gsb = mGsbp.getPage(getApplicationContext(), deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
             	    		if (gsb == null) gsb = mPagination.getBoard(getApplicationContext(), deleteGsb.getScreenOrientation());
             	    		changeBoard(gsb, false);
-            	    	} else if (item == 2) {
+            	    	} else if (item == 3) {
             	    		mPagination.initMove(mGsb);
             	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
             	    	}
