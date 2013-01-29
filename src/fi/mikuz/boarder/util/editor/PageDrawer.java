@@ -146,6 +146,7 @@ public class PageDrawer {
 				}
 			} catch(ConcurrentModificationException cme) {
 				Log.w(TAG, "Fading page modification while iterating");
+				break;
 			}
 		}
 
