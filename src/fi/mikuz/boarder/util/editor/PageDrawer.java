@@ -110,38 +110,42 @@ public class PageDrawer {
 		Iterator<FadingPage> iter = fadingPages.iterator();
 		Rect screenRect = null;
 		while (iter.hasNext()) {
-			FadingPage listedPage = (FadingPage) iter.next();
-
-			if (screenRect == null) {
-				screenRect = new Rect(0, 0, canvas.getWidth(), canvas.getHeight());
-			}
-
-			listedPage.updateFadeProgress();
-			if (listedPage.getFadeProgress() >= 100 || 
-					listedPage.getFadeProgress() <= 0) {
-				iter.remove();
-			} else {
-				Bitmap pageBitmap = listedPage.getDrawCache();
-				if (pageBitmap == null) {
-					pageBitmap = genPageCache(listedPage.getGsb(), null, null);
-					listedPage.setDrawCache(pageBitmap);
+			try {
+				FadingPage listedPage = (FadingPage) iter.next();
+	
+				if (screenRect == null) {
+					screenRect = new Rect(0, 0, canvas.getWidth(), canvas.getHeight());
 				}
-
-				if (listedPage.getGsb() == topGsb) {
-					topGsgFading = true;
+	
+				listedPage.updateFadeProgress();
+				if (listedPage.getFadeProgress() >= 100 || 
+						listedPage.getFadeProgress() <= 0) {
+					iter.remove();
+				} else {
+					Bitmap pageBitmap = listedPage.getDrawCache();
+					if (pageBitmap == null) {
+						pageBitmap = genPageCache(listedPage.getGsb(), null, null);
+						listedPage.setDrawCache(pageBitmap);
+					}
+	
+					if (listedPage.getGsb() == topGsb) {
+						topGsgFading = true;
+					}
+	
+					float fadeProgress = (float) listedPage.getFadeProgress();
+					float fadePercentage = fadeProgress/100;
+	
+					float xDistance = canvas.getWidth()/2 * (1-fadePercentage);
+					float yDistance = canvas.getHeight()/2 * (1-fadePercentage);
+					RectF fadeRect = new RectF(xDistance, yDistance, 
+							canvas.getWidth() - xDistance, canvas.getHeight() - yDistance);
+	
+					int fadeAlpha = (int) (fadePercentage*255f);
+					paint.setAlpha(fadeAlpha);
+					canvas.drawBitmap(pageBitmap, screenRect, fadeRect, paint);
 				}
-
-				float fadeProgress = (float) listedPage.getFadeProgress();
-				float fadePercentage = fadeProgress/100;
-
-				float xDistance = canvas.getWidth()/2 * (1-fadePercentage);
-				float yDistance = canvas.getHeight()/2 * (1-fadePercentage);
-				RectF fadeRect = new RectF(xDistance, yDistance, 
-						canvas.getWidth() - xDistance, canvas.getHeight() - yDistance);
-
-				int fadeAlpha = (int) (fadePercentage*255f);
-				paint.setAlpha(fadeAlpha);
-				canvas.drawBitmap(pageBitmap, screenRect, fadeRect, paint);
+			} catch(ConcurrentModificationException cme) {
+				Log.w(TAG, "Fading page modification while iterating");
 			}
 		}
 
@@ -287,7 +291,7 @@ public class PageDrawer {
 				}
 			}
 		} catch(ConcurrentModificationException cme) {
-			Log.w(TAG, "Sound list modification while iteration");
+			Log.w(TAG, "Sound list modification while iterating");
 		}
 		
 		if (fineTuningSound != null) {
