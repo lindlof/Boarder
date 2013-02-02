@@ -3,6 +3,8 @@ package fi.mikuz.boarder.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.zip.CheckedInputStream;
+import java.util.zip.Checksum;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -18,9 +20,11 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSound;
  * @author Jan Mikael Lindlöf
  */
 public class ImageDrawing {
-	public static final String TAG = "ImageDrawing";
+	private static final String TAG = ImageDrawing.class.getSimpleName();
 	
 	static final int IMAGE_MAX_SIZE = 4000;
+	
+	static ImageCache imageCache;
 	
 	public static Bitmap decodeSoundImage(Context context, GraphicalSound sound) {
 		return decodeFile(context, sound.getImagePath(), sound.getImageWidth(), sound.getImageHeight());
@@ -47,10 +51,32 @@ public class ImageDrawing {
 	 * @param image file
 	 * @return image bitmap
 	 */
-	public static Bitmap decodeFile(Context context, File f, int width, int height) { // TODO Could a same bitmap in memory be reused elegantly here?
+	public static Bitmap decodeFile(Context context, File f, int width, int height) {
 	    Bitmap b = null;
 	    
-	    // Bitmaps can take large amounts of memory.
+	    if (imageCache == null) {
+			try {
+				imageCache = new ImageCache();
+			} catch (IOException e) {
+				Log.e(TAG, "Unable to initialize image cache", e);
+			}
+	    }
+	    
+	    String cacheKey = null;
+	    if (imageCache != null) {
+	    	try {
+		    	long fileChecksum = genChecksum(f);
+		    	cacheKey = fileChecksum + "-" + width + "-" + height;
+		    	b = imageCache.get(cacheKey);
+		    	if (b != null) {
+		    		Log.v(TAG, "Found image " + f + " from cache");
+		    		return b;
+		    	}
+			} catch (IOException e) {
+				Log.e(TAG, "Unable to generate checksum", e);
+			}
+	    }
+	    
 	    // To avoid unexpected stuff bitmaps won't be decoded if memory is running very low.
 	    if (underFivePercentOfMemoryLeft()) {
 	    	String errorMessage = "Not enough memory, won't decode image " + f.getAbsolutePath();
@@ -109,10 +135,26 @@ public class ImageDrawing {
 	    	BugSenseHandler.log(TAG, e);
 	    }
 	    
+	    if (imageCache != null && b != null && cacheKey != null) {
+	    	imageCache.add(cacheKey, b);
+	    	Log.v(TAG, "Cached image " + f);
+	    }
+	    
 	    return b;
 	    
 	}
 	
+	private static long genChecksum(File file) throws IOException {
+		FileInputStream fis = new FileInputStream(file);
+		CheckedInputStream cis = new CheckedInputStream(fis, new java.util.zip.CRC32());
+
+		byte[] buf = new byte[128];
+		while(cis.read(buf) >= 0) {}
+		
+		Checksum cheksum = cis.getChecksum();
+		return cheksum.getValue();
+	}
+
 	public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
 		// Raw height and width of image
 		final int height = options.outHeight;
@@ -133,7 +175,7 @@ public class ImageDrawing {
 
 		return inSampleSize;
 	}
-
+	
 	private static boolean underFivePercentOfMemoryLeft() {
 	    Runtime runtime = Runtime.getRuntime();
 	    long usedMemory = (runtime.totalMemory() - runtime.freeMemory());
