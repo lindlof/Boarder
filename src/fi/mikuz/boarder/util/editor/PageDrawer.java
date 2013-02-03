@@ -134,9 +134,14 @@ public class PageDrawer {
 	
 					float fadeProgress = (float) listedPage.getFadeProgress();
 					float fadePercentage = fadeProgress/100;
-	
-					float xDistance = canvas.getWidth()/2 * (1-fadePercentage);
-					float yDistance = canvas.getHeight()/2 * (1-fadePercentage);
+					
+					// Full distance means zero image size on fade 0
+					float xFullDistance = canvas.getWidth()/2 * (1-fadePercentage);
+					float yFullDistance = canvas.getHeight()/2 * (1-fadePercentage);
+					
+					// Image size is about 1/3 screen size on fade 0
+					float xDistance = xFullDistance*7/10;
+					float yDistance = yFullDistance*7/10;
 					RectF fadeRect = new RectF(xDistance, yDistance, 
 							canvas.getWidth() - xDistance, canvas.getHeight() - yDistance);
 	

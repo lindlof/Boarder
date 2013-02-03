@@ -49,9 +49,9 @@ public class FadingPage {
 
 	public void updateFadeProgress() {
 		if (fadeState == FadeState.FADING_IN) {
-			this.fadeProgress = this.fadeProgress + 8;
+			this.fadeProgress = this.fadeProgress + 11;
 		} else if (fadeState == FadeState.FADING_OUT) {
-			this.fadeProgress = this.fadeProgress - 13;
+			this.fadeProgress = this.fadeProgress - 15;
 		}
 	}
 
