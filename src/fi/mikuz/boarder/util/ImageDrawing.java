@@ -69,7 +69,7 @@ public class ImageDrawing {
 		    	cacheKey = fileChecksum + "-" + width + "-" + height;
 		    	b = imageCache.get(cacheKey);
 		    	if (b != null) {
-		    		Log.v(TAG, "Found image " + f + " from cache");
+		    		Log.v(TAG, "Found image " + f + " from cache as " + cacheKey);
 		    		return b;
 		    	}
 			} catch (IOException e) {
@@ -87,7 +87,6 @@ public class ImageDrawing {
 	    
 	    try {
 	    	try {
-	    		
 	    		BitmapFactory.Options options = new BitmapFactory.Options();
 	    		options.inJustDecodeBounds = true;
 	    		BitmapFactory.decodeFile(f.getAbsolutePath(), options);
@@ -95,7 +94,6 @@ public class ImageDrawing {
 	    		options.inSampleSize = calculateInSampleSize(options, width, height);
 	    		options.inJustDecodeBounds = false;
 	    		b = BitmapFactory.decodeFile(f.getAbsolutePath(), options);
-	    		
 		    } catch (OutOfMemoryError ome) {
 		    	Log.w(TAG, "Image " + f.getAbsolutePath() + " is enormous! It has to be decoded to smaller resolution.");
 		    	try {
@@ -137,7 +135,12 @@ public class ImageDrawing {
 	    
 	    if (imageCache != null && b != null && cacheKey != null) {
 	    	imageCache.add(cacheKey, b);
-	    	Log.v(TAG, "Cached image " + f);
+	    	try {
+				imageCache.saveCacheMetadata();
+			} catch (IOException e) {
+				Log.e(TAG, "Error flushing image cache", e);
+			}
+	    	Log.v(TAG, "Cached image " + f + " as " + cacheKey);
 	    }
 	    
 	    return b;

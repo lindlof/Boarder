@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import com.wuman.twolevellrucache.TwoLevelLruCache;
 import com.wuman.twolevellrucache.TwoLevelLruCache.Converter;
@@ -18,19 +19,25 @@ public class ImageCache implements TwoLevelLruCache.Converter<Bitmap> {
 	private static final String TAG = ImageCache.class.getSimpleName();
 	
     private TwoLevelLruCache<Bitmap> cache;
-    private CompressFormat mCompressFormat = CompressFormat.PNG;
-    private int mCompressQuality = 100;
+    private CompressFormat compressFormat = CompressFormat.JPEG;
+    private int compressQuality = 80;
     private static final int APP_VERSION = 1;
     
     public static final int IO_BUFFER_SIZE = 8 * 1024;
 
     public ImageCache() throws IOException {
     	final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
-	    final int memCacheSize = maxMemory / 4;
-	    final int diskCacheSize = 100000;
+	    final int maxMemCacheSize = maxMemory / 3;
+	    int maxDiskCacheSize = 4000000;  // 4MB
 	    Converter<Bitmap> converter = (Converter<Bitmap>) this;
 	    
-    	cache = new TwoLevelLruCache<Bitmap>(SoundboardMenu.mImageCacheDir, APP_VERSION, memCacheSize, diskCacheSize, converter);
+	    // TwoLevelLruCache throws an exception if disk cache isn't greater than memory cache
+	    if (maxMemCacheSize >= maxDiskCacheSize) {
+	    	maxDiskCacheSize = maxMemCacheSize + 10000;
+	    	Log.v(TAG, "Increased disk cache to be greater than memory cache.");
+	    }
+	    
+    	cache = new TwoLevelLruCache<Bitmap>(SoundboardMenu.mImageCacheDir, APP_VERSION, maxMemCacheSize, maxDiskCacheSize, converter);
     }
     
     public void add(String key, Bitmap bitmap) {
@@ -41,15 +48,13 @@ public class ImageCache implements TwoLevelLruCache.Converter<Bitmap> {
     	return cache.get(key);
     }
     
-    public long hashBitmap(Bitmap bmp){
-    	  long hash = 31; //or a higher prime at your choice
-    	  for(int x = 0; x < bmp.getWidth(); x++){
-    	    for (int y = 0; y < bmp.getHeight(); y++){
-    	      hash *= (bmp.getPixel(x,y) + 31);
-    	    }
-    	  }
-    	  return hash;
-    	}
+    /**
+     * Forces DiskLruCache journal, which holds information about caches, to be saved on disk
+     * @throws IOException
+     */
+    public void saveCacheMetadata() throws IOException {
+    	cache.flush();
+    }
 
     /** Converts bytes to Bitmap. */
 	@Override
@@ -61,6 +66,6 @@ public class ImageCache implements TwoLevelLruCache.Converter<Bitmap> {
 	/** Converts Bitmap to bytes written to the specified stream. */
 	@Override
 	public void toStream(Bitmap bitmap, OutputStream bytes) throws IOException {
-		bitmap.compress(mCompressFormat, mCompressQuality, bytes);
+		bitmap.compress(compressFormat, compressQuality, bytes);
 	}
 }

@@ -106,9 +106,10 @@ public class SoundboardMenu extends BoarderListActivity {
 	public static final File mSbDir = new File(mBoarderDir, "boards");
 	public static final File mBackupDir = new File(mBoarderDir, "backups");
 	public static final File mHistoryDir = new File(mBoarderDir, "history");
-	public static final File mDropboxCache = new File(mBoarderDir, "dropbox.cache");
 	public static final File mShareDir = new File(mBoarderDir, "share");
-	public static final File mImageCacheDir = new File(mBoarderDir, "imageCache");
+	public static final File mCacheDir = new File(mBoarderDir, "cache");
+	public static final File mDropboxCache = new File(mCacheDir, "dropbox.cache");
+	public static final File mImageCacheDir = new File(mCacheDir, "images");
 	
 	public static final File mLocalBoardDir = new File("/Boarder/filePath/local/");
 	
