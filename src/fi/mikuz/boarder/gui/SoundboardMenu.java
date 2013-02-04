@@ -68,6 +68,7 @@ import fi.mikuz.boarder.util.ExternalIntent;
 import fi.mikuz.boarder.util.FileProcessor;
 import fi.mikuz.boarder.util.GlobalSettings;
 import fi.mikuz.boarder.util.IconUtils;
+import fi.mikuz.boarder.util.ImageDrawing;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.dbadapter.GlobalVariablesDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
@@ -126,6 +127,8 @@ public class SoundboardMenu extends BoarderListActivity {
     public void onCreate(Bundle savedInstanceState) {
     	GlobalSettings.init(this);
     	requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+    	super.mContext = (Context) this;
+    	ImageDrawing.registerCache(super.mContext);
     	
     	String versionName = null;
     	try {
@@ -135,7 +138,7 @@ public class SoundboardMenu extends BoarderListActivity {
 		}
     	Log.v(TAG, "Starting Boarder v" + versionName + " dev: " + mDevelopmentMode);
     	
-    	if (!mDevelopmentMode) BugSenseHandler.setup(this, ApiKeyLoader.loadBugSenseApiKey(this.getApplicationContext(), TAG));
+    	if (!mDevelopmentMode) BugSenseHandler.setup(this, ApiKeyLoader.loadBugSenseApiKey(super.mContext, TAG));
         super.onCreate(savedInstanceState);
         
         mIntent = getIntent();
@@ -210,6 +213,12 @@ public class SoundboardMenu extends BoarderListActivity {
         registerForContextMenu(getListView());
         
         firstStartIntroduction();
+    }
+    
+    @Override
+    protected void onRestart() {
+    	ImageDrawing.registerCache(super.mContext);
+    	super.onRestart();
     }
     
     @Override
@@ -363,7 +372,7 @@ public class SoundboardMenu extends BoarderListActivity {
     	try {
     		Cursor c = mDbHelper.fetchAllBoards();
     		if (mMenuCursorAdapter == null) {
-    			mMenuCursorAdapter = new MenuCursorAdapter(SoundboardMenu.this.getApplicationContext(), c);
+    			mMenuCursorAdapter = new MenuCursorAdapter(SoundboardMenu.super.mContext, c);
         		setListAdapter(mMenuCursorAdapter);
     		} else {
     			mMenuCursorAdapter.swapCursor(c);
@@ -491,7 +500,7 @@ public class SoundboardMenu extends BoarderListActivity {
     };
     
     private void menuIconAnimation(View titleIcon) {
-    	Animation fadeInAnimation = AnimationUtils.loadAnimation(SoundboardMenu.this.getApplicationContext(), R.anim.menu_icon_fade_in);
+    	Animation fadeInAnimation = AnimationUtils.loadAnimation(SoundboardMenu.super.mContext, R.anim.menu_icon_fade_in);
 		titleIcon.startAnimation(fadeInAnimation);
     }
     
@@ -560,7 +569,7 @@ public class SoundboardMenu extends BoarderListActivity {
             	return true;
             	
             case R.id.menu_play_pause:
-            	SoundPlayerControl.togglePlayPause(this.getApplicationContext());
+            	SoundPlayerControl.togglePlayPause(super.mContext);
             	return true;
             	
             case R.id.menu_internet:
@@ -603,7 +612,7 @@ public class SoundboardMenu extends BoarderListActivity {
             				
             				loadGlobalSettings();
             			} catch(NumberFormatException nfe) {
-            				Toast.makeText(getApplicationContext(), "Incorrect value", Toast.LENGTH_SHORT).show();
+            				Toast.makeText(SoundboardMenu.super.mContext, "Incorrect value", Toast.LENGTH_SHORT).show();
             			}
             		}
             	});
@@ -841,7 +850,7 @@ public class SoundboardMenu extends BoarderListActivity {
             
             File icon = new File(mSbDir, boardName + "/icon.png");
             if (icon.exists()) {
-				Bitmap bitmap = IconUtils.decodeIcon(getApplicationContext(), icon);
+				Bitmap bitmap = IconUtils.decodeIcon(super.mContext, icon);
 				intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, IconUtils.resizeIcon(this, bitmap, (40/12)));
             } else {
 	            Parcelable iconResource = Intent.ShortcutIconResource.fromContext(this,  R.drawable.board_icon);

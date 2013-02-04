@@ -3,8 +3,8 @@ package fi.mikuz.boarder.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.zip.CheckedInputStream;
-import java.util.zip.Checksum;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -24,7 +24,30 @@ public class ImageDrawing {
 	
 	static final int IMAGE_MAX_SIZE = 4000;
 	
-	static ImageCache imageCache;
+	static private Map<Context, ImageCache> imageCaches = new HashMap<Context, ImageCache>();
+	static private Object registrationLock = new Object();
+	
+	public static void registerCache(Context context) {
+		synchronized (registrationLock) {
+			try {
+				imageCaches.put(context, new ImageCache());
+				Log.v(TAG, "Registered new image cache " + context);
+			} catch (IOException e) {
+				Log.e(TAG, "Unable to register image cache " + context, e);
+			}
+		}
+	}
+	
+	public static void unregisterCache(Context context) {
+		synchronized (registrationLock) {
+			Object cache = imageCaches.remove(context);
+			if (cache != null) {
+				Log.v(TAG, "Unregistered image cache " + context);
+			} else {
+				Log.v(TAG, "Could not unregister cache " + context);
+			}
+		}
+	}
 	
 	public static Bitmap decodeSoundImage(Context context, GraphicalSound sound) {
 		return decodeFile(context, sound.getImagePath(), sound.getImageWidth(), sound.getImageHeight());
@@ -54,27 +77,24 @@ public class ImageDrawing {
 	public static Bitmap decodeFile(Context context, File f, int width, int height) {
 	    Bitmap b = null;
 	    
+	    ImageCache imageCache = null;
+	    if (context != null ) {
+	    	imageCache = imageCaches.get(context);
+	    }
+	    
 	    if (imageCache == null) {
-			try {
-				imageCache = new ImageCache();
-			} catch (IOException e) {
-				Log.e(TAG, "Unable to initialize image cache", e);
-			}
+			Log.e(TAG, "No cache registered for " + context);
 	    }
 	    
 	    String cacheKey = null;
 	    if (imageCache != null) {
-	    	try {
-		    	long fileChecksum = genChecksum(f);
-		    	cacheKey = fileChecksum + "-" + width + "-" + height;
-		    	b = imageCache.get(cacheKey);
-		    	if (b != null) {
-		    		Log.v(TAG, "Found image " + f + " from cache as " + cacheKey);
-		    		return b;
-		    	}
-			} catch (IOException e) {
-				Log.e(TAG, "Unable to generate checksum", e);
-			}
+	    	int fileChecksum = f.getAbsolutePath().hashCode();
+	    	cacheKey = fileChecksum + "-" + width + "-" + height;
+	    	b = imageCache.get(cacheKey);
+	    	if (b != null) {
+	    		Log.v(TAG, "Found image " + f + " from cache as " + cacheKey);
+	    		return b;
+	    	}
 	    }
 	    
 	    // To avoid unexpected stuff bitmaps won't be decoded if memory is running very low.
@@ -135,27 +155,11 @@ public class ImageDrawing {
 	    
 	    if (imageCache != null && b != null && cacheKey != null) {
 	    	imageCache.add(cacheKey, b);
-	    	try {
-				imageCache.saveCacheMetadata();
-			} catch (IOException e) {
-				Log.e(TAG, "Error flushing image cache", e);
-			}
 	    	Log.v(TAG, "Cached image " + f + " as " + cacheKey);
 	    }
 	    
 	    return b;
 	    
-	}
-	
-	private static long genChecksum(File file) throws IOException {
-		FileInputStream fis = new FileInputStream(file);
-		CheckedInputStream cis = new CheckedInputStream(fis, new java.util.zip.CRC32());
-
-		byte[] buf = new byte[128];
-		while(cis.read(buf) >= 0) {}
-		
-		Checksum cheksum = cis.getChecksum();
-		return cheksum.getValue();
 	}
 
 	public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
