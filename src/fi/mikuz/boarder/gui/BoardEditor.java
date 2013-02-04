@@ -25,6 +25,7 @@ import android.media.AudioManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Vibrator;
@@ -818,14 +819,14 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				(gsb.getPageNumber() == lastGsb.getPageNumber() && gsb.getScreenOrientation() == lastGsb.getScreenOrientation()); 
 		
 		if (!samePage) {
+			refreshPageTitle(gsb.getPageNumber());
+			
 			loadBoard(gsb);
 			mPageDrawer.switchPage(gsb);
 			if (overrideCurrentBoard) {
 				GraphicalSoundboard.unloadImages(lastGsb);
 				mGsbp.overrideBoard(getApplicationContext(), lastGsb);
 			}
-			
-			refreshPageTitle();
 			
 			int boardId = gsb.getId();
 			BoardHistory boardHistory = mBoardHistoryProvider.getBoardHistory(boardId);
@@ -837,14 +838,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			this.mBoardHistory = boardHistory;
 			
 			issueResolutionConversion(gsb.getScreenOrientation());
-			
 		} else {
 			Log.v(TAG, "Won't change page to same page.");
 		}
 	}
 	
-	public void refreshPageTitle() {
-		setTitle(mBoardName + " - " + (mGsb.getPageNumber()+1));
+	public void refreshPageTitle(int pageNumber) {
+		setTitle(mBoardName + " - " + (pageNumber+1));
 	}
 	
 	public void loadBoard(GraphicalSoundboard gsb) {
