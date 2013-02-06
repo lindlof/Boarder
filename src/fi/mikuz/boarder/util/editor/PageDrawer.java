@@ -267,7 +267,7 @@ public class PageDrawer {
 						} catch(NullPointerException npe) {
 							Log.e(TAG, "Unable to draw image for sound " + sound.getName());
 							npe.printStackTrace();
-							BugSenseHandler.log(TAG, npe);
+							BugSenseHandler.sendException(npe);
 							sound.setDefaultImage();
 						}
 				    }

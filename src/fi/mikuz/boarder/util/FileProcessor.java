@@ -187,10 +187,10 @@ public class FileProcessor {
 			    IOUtils.copy(in, out);
 			} catch (FileNotFoundException e) {
 				Log.e(TAG, "Failed to backup", e);
-				BugSenseHandler.log(TAG, e);
+				BugSenseHandler.sendException(e);
 			} catch (IOException e) {
 				Log.e(TAG, "Failed to backup", e);
-				BugSenseHandler.log(TAG, e);
+				BugSenseHandler.sendException(e);
 			}
 		}
 	}
@@ -375,7 +375,7 @@ public class FileProcessor {
 	    	}
 			return returnString;
 		} catch (FileNotFoundException e) {
-			BugSenseHandler.log(TAG, e);
+			BugSenseHandler.sendException(e);
 			Log.e(TAG, "Error saving screenshot", e);
 			returnString = "Error saving screenshot";
 		}
@@ -398,7 +398,7 @@ public class FileProcessor {
 		    out.close();
 		}
 		catch(IOException e) {
-			BugSenseHandler.log(TAG, e);
+			BugSenseHandler.sendException(e);
 			Log.e(TAG, "Error zipping", e);
 		}
 	}

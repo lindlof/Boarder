@@ -138,7 +138,7 @@ public class SoundboardMenu extends BoarderListActivity {
 		}
     	Log.v(TAG, "Starting Boarder v" + versionName + " dev: " + mDevelopmentMode);
     	
-    	if (!mDevelopmentMode) BugSenseHandler.setup(this, ApiKeyLoader.loadBugSenseApiKey(super.mContext, TAG));
+    	if (!mDevelopmentMode) BugSenseHandler.initAndStartSession(this, ApiKeyLoader.loadBugSenseApiKey(super.mContext, TAG));
         super.onCreate(savedInstanceState);
         
         mIntent = getIntent();

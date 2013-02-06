@@ -309,7 +309,7 @@ public class DownloadBoard extends BoarderActivity implements ConnectionListener
 							startActivity(browserIntent);
 						} catch (ActivityNotFoundException e) {
 							Log.e(TAG, "Unable to open board url", e);
-							BugSenseHandler.log(TAG, e);
+							BugSenseHandler.sendException(e);
 						}
 					}
 				});
