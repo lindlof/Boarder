@@ -43,7 +43,7 @@ public class FileProcessor {
 	public static GraphicalSoundboardHolder loadGraphicalSoundboardHolder(String boardName) throws IOException {
 		
 		GraphicalSoundboardHolder gsbHolder = new GraphicalSoundboardHolder();
-		File boardDir = new File(SoundboardMenu.mSbDir, boardName);
+		File boardDir = constructBoardPath(boardName);
 		
 		try{
 			XStream xstream = XStreamUtil.graphicalBoardXStream();
@@ -151,7 +151,7 @@ public class FileProcessor {
 	
 	public static void saveGraphicalSoundboardHolder(String boardName, GraphicalSoundboardHolder boardHolder) throws IOException {
 		
-		File boardDir = new File(SoundboardMenu.mSbDir, boardName);
+		File boardDir = constructBoardPath(boardName);
 		File sbFile = new File(boardDir, "graphicalBoard");
 		
 		changeBoardDirectoryReferences(boardHolder, boardDir, SoundboardMenu.mLocalBoardDir);
@@ -168,6 +168,15 @@ public class FileProcessor {
 		XStream xstream = XStreamUtil.graphicalBoardXStream();
 		xstream.toXML(boardHolder, out);
 		out.close();
+	}
+	
+	public static boolean boardExists(String boardName) {
+		File boardDir = constructBoardPath(boardName);
+		return boardDir.exists();
+	}
+	
+	private static File constructBoardPath(String boardName) {
+		return new File(SoundboardMenu.mSbDir, boardName);
 	}
 	
 	public static void attemptBackup(File backupIn) {

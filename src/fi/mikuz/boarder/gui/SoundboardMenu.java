@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.StaleDataException;
 import android.graphics.Bitmap;
@@ -69,10 +70,12 @@ import fi.mikuz.boarder.util.FileProcessor;
 import fi.mikuz.boarder.util.GlobalSettings;
 import fi.mikuz.boarder.util.IconUtils;
 import fi.mikuz.boarder.util.ImageDrawing;
+import fi.mikuz.boarder.util.OrientationUtil;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.dbadapter.GlobalVariablesDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.MenuDbAdapter;
+import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 
 /**
  * 
@@ -85,9 +88,6 @@ public class SoundboardMenu extends BoarderListActivity {
 	
 	public static final String EXTRA_LAUNCH_BAORD_KEY = "SoundboardMenu.boardToLaunch";
 	public static final String EXTRA_HIDE_SOUNDBOARDMENU = "SoundboardMenu.hideSoundboardmenu";
-
-	private static final int ACTIVITY_ADD = 0;
-	private static final int ACTIVITY_EDIT = 1;
 	
 	private MenuDbAdapter mDbHelper;
     private GlobalVariablesDbAdapter mGlobalVariableDbHelper;
@@ -162,7 +162,7 @@ public class SoundboardMenu extends BoarderListActivity {
         			}
         		}
         		i.putExtra(MenuDbAdapter.KEY_TITLE, launchExtra);
-        		startActivityForResult(i, ACTIVITY_EDIT);
+        		startActivity(i);
         	} catch (NullPointerException e) {
         		mIntent = new Intent();
         		Log.e(SoundboardMenu.TAG, "Board not found", e);
@@ -510,13 +510,59 @@ public class SoundboardMenu extends BoarderListActivity {
 	    inflater.inflate(R.menu.soundboard_menu_bottom, menu);
 	    return true;
     }
+    
+    private void addBoard() {
+    	AlertDialog.Builder boardNameAlert = new AlertDialog.Builder(this);
+		
+		final EditText input = new EditText(this);
+		boardNameAlert.setTitle("Give board a name");
+	  	boardNameAlert.setView(input);
+
+	  	boardNameAlert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+	  		public void onClick(DialogInterface dialog, int whichButton) {
+	  				String inputText = input.getText().toString();
+	  				String boardName = inputText.replaceAll("\n", " ");
+	  				
+	  				if (boardName.equals("")) {
+	  					finish();
+	  				} else if (FileProcessor.boardExists(boardName)) {
+	  					Toast.makeText(SoundboardMenu.this, "Already exists", Toast.LENGTH_LONG).show();
+	  				} else {
+	  					Configuration config = getResources().getConfiguration();
+	  					int orientation = OrientationUtil.getBoarderOrientation(config);
+	  					GraphicalSoundboardProvider mGsbp = new GraphicalSoundboardProvider(orientation);
+	  					
+		  				try {
+							mGsbp.saveBoard(SoundboardMenu.super.mContext, boardName);
+						} catch (IOException e) {
+							Log.e(TAG, "Unable to save " + boardName, e);
+						}
+		  				
+		  				initializeBoardUpdateThread();
+	  				}
+	  		}
+	  	});
+	  	boardNameAlert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+	  		@Override
+	  		public void onClick(DialogInterface dialog, int whichButton) {
+	  			finish();
+  		}
+	  	});
+	  	boardNameAlert.setOnCancelListener(new DialogInterface.OnCancelListener() {
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				finish();
+			}
+	  	});
+	  	
+	  	boardNameAlert.show();
+    }
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         switch(item.getItemId()) {
             case R.id.menu_add_board:
-            	Intent addBoardIntent = new Intent(this, BoardEditor.class);
-        		startActivityForResult(addBoardIntent, ACTIVITY_ADD);
+            	addBoard();
                 return true;
             
             case R.id.menu_help:
@@ -885,7 +931,7 @@ public class SoundboardMenu extends BoarderListActivity {
         			if (boardDirContent.getName().equals("graphicalBoard")) {
         				Intent i = new Intent(this, BoardEditor.class);
         				i.putExtra(MenuDbAdapter.KEY_TITLE, boardName);
-        				startActivityForResult(i, ACTIVITY_EDIT);
+        				startActivity(i);
         				boardFileFound = true;
         				break;
         			}
@@ -893,7 +939,7 @@ public class SoundboardMenu extends BoarderListActivity {
 	        	if (!boardFileFound) {
 	        		Intent i = new Intent(this, BoardEditor.class);
 	                i.putExtra(MenuDbAdapter.KEY_TITLE, boardName);
-	        		startActivityForResult(i, ACTIVITY_ADD);
+	        		startActivity(i);
 	        	}
         	} catch (NullPointerException npe) {
         		Log.e(SoundboardMenu.TAG, "Unable to list boards", npe);

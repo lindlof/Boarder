@@ -20,14 +20,28 @@ public class GraphicalSoundboardProvider {
 	
 	GraphicalSoundboardHolder boardHolder;
 	
+	/**
+	 * Creates new provider with specified orientation
+	 * 
+	 * @param orientation
+	 */
+	public GraphicalSoundboardProvider(int orientation) {
+		boardHolder = new GraphicalSoundboardHolder();
+		setOrientationMode(orientation);
+		GraphicalSoundboard initialGsb = new GraphicalSoundboard();
+		boardHolder.allocateBoardResources(initialGsb);
+	}
+	
+	/**
+	 * Loads provider for boardName
+	 * 
+	 * @param boardName
+	 */
 	public GraphicalSoundboardProvider(String boardName) {
 		try {
 			boardHolder = FileProcessor.loadGraphicalSoundboardHolder(boardName);
 		} catch (IOException e) {
 			Log.w(TAG, "Unable to load board holder", e);
-			boardHolder = new GraphicalSoundboardHolder();
-			GraphicalSoundboard initialGsb = new GraphicalSoundboard();
-			boardHolder.allocateBoardResources(initialGsb);
 		}
 	}
 	

@@ -180,72 +180,19 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         
         mBoardHistoryProvider = new BoardHistoryProvider();
         
-		Bundle extras = getIntent().getExtras();
-		if (extras != null) {
-			mBoardName = extras.getString(MenuDbAdapter.KEY_TITLE);
-			setTitle(mBoardName);
-			
-			mGsbp = new GraphicalSoundboardProvider(mBoardName);
-			mPagination = new Pagination(mGsbp);
-			mPagination.restorePaginationInstance(savedInstanceState);
-			initEditorBoard();
-			
-			if (mGsb.getSoundList().isEmpty()) {
-				mMode = EDIT_BOARD;
-			}
-		} else {
-			mMode = EDIT_BOARD;
-			
-			mGsb = new GraphicalSoundboard();
-			
-			AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        Bundle extras = getIntent().getExtras();
+        mBoardName = extras.getString(MenuDbAdapter.KEY_TITLE);
+        setTitle(mBoardName);
 
-		  	alert.setTitle("Set board name");
+        mGsbp = new GraphicalSoundboardProvider(mBoardName);
+        mPagination = new Pagination(mGsbp);
+        mPagination.restorePaginationInstance(savedInstanceState);
+        initEditorBoard();
 
-		  	final EditText input = new EditText(this);
-		  	alert.setView(input);
+        if (mGsb.getSoundList().isEmpty()) {
+        	mMode = EDIT_BOARD;
+        }
 
-		  	alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-		  		public void onClick(DialogInterface dialog, int whichButton) {
-		  				String inputText = input.getText().toString();
-		  				
-		  				if (inputText.contains("\n")) {
-		  					mBoardName = inputText.substring(0, inputText.indexOf("\n"));
-		  				} else {
-		  					mBoardName = inputText;
-		  				}
-		  				
-		  				if (mBoardName.equals("")) {
-		  					mBoardName = null;
-		  					finish();
-		  				} else {
-		  					mGsbp = new GraphicalSoundboardProvider(mBoardName);
-		  					mPagination = new Pagination(mGsbp);
-		  					mPagination.restorePaginationInstance(savedInstanceState);
-			  				initEditorBoard();
-			  				
-			  				setTitle(mBoardName);
-			  				save();
-		  				}
-		  		}
-		  	});
-		  	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-		  		@Override
-		  		public void onClick(DialogInterface dialog, int whichButton) {
-		  			finish();
-	  		}
-		  	});
-		  	alert.setOnCancelListener(new DialogInterface.OnCancelListener() {
-				@Override
-				public void onCancel(DialogInterface dialog) {
-					finish();
-				}
-		  	});
-		  	
-		  	alert.show();
-		  	
-		}
-        
         File icon = new File(mSbDir, mBoardName + "/icon.png");
         if (icon.exists()) {
 			Bitmap bitmap = ImageDrawing.decodeFile(BoardEditor.super.mContext, icon);
