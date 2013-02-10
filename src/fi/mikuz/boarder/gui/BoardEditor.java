@@ -1236,6 +1236,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     }
     
     private void playTouchedSound(GraphicalSound sound) {
+    	vibrator.vibrate(10);
     	if (sound.getPath().getAbsolutePath().equals(SoundboardMenu.mPauseSoundFilePath)) { 
 			SoundPlayerControl.togglePlayPause(super.mContext);
 		} else {
@@ -1254,6 +1255,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     }
     
     private void initializeDrag(float initTouchEventX, float initTouchEventY, GraphicalSound sound) {
+    	vibrator.vibrate(20);
     	mPressedSound = sound;
     	mCurrentGesture = TouchGesture.DRAG;
     	mInitialNameFrameX = sound.getNameFrameX();
@@ -1817,7 +1819,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 							mCurrentGesture = TouchGesture.PRESS_BLANK;
 						} else {
 							mCurrentGesture = TouchGesture.PRESS_BOARD;
-							vibrator.vibrate(15);
 							new Timer().schedule(new DragInitializeTimer(), DRAG_SWIPE_TIME);
 						}
 
