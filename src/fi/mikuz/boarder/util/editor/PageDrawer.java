@@ -108,16 +108,6 @@ public class PageDrawer {
 			} catch (IndexOutOfBoundsException e) {}
 		}
 		
-		FadeDirection newFadeDirection = FadeDirection.NO_DIRECTION;
-		if (direction == SwipingDirection.LEFT) {
-			newFadeDirection = FadeDirection.RIGHT;
-		} else if (direction == SwipingDirection.RIGHT) {
-			newFadeDirection = FadeDirection.LEFT;
-		}
-		FadingPage newFadingPage = new FadingPage(newGsb, FadeState.FADING_IN, newFadeDirection);
-		if (newPageDrawCache != null) newFadingPage.setDrawCache(newPageDrawCache);
-		fadingPages.add(newFadingPage);
-
 		if (!initialPage && !lastPageAlreadyFading) {
 			Bitmap lastPageDrawCache = genPageDrawCache(lastGsb, null, null);
 			FadeDirection lastFadeDirection = FadeDirection.NO_DIRECTION;
@@ -129,7 +119,18 @@ public class PageDrawer {
 			FadingPage lastFadingPage = new FadingPage(lastGsb, FadeState.FADING_OUT, lastFadeDirection);
 			lastFadingPage.setDrawCache(lastPageDrawCache);
 			fadingPages.add(lastFadingPage);
+			GraphicalSoundboard.unloadImages(lastGsb);
 		}
+		
+		FadeDirection newFadeDirection = FadeDirection.NO_DIRECTION;
+		if (direction == SwipingDirection.LEFT) {
+			newFadeDirection = FadeDirection.RIGHT;
+		} else if (direction == SwipingDirection.RIGHT) {
+			newFadeDirection = FadeDirection.LEFT;
+		}
+		FadingPage newFadingPage = new FadingPage(newGsb, FadeState.FADING_IN, newFadeDirection);
+		if (newPageDrawCache != null) newFadingPage.setDrawCache(newPageDrawCache);
+		fadingPages.add(newFadingPage);
 		
 		initializingAnimation = false;
 	}

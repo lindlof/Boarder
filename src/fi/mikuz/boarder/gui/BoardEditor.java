@@ -781,7 +781,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			loadBoard(gsb);
 			mPageDrawer.switchPage(gsb, direction);
 			if (overrideCurrentBoard) {
-				GraphicalSoundboard.unloadImages(lastGsb);
 				mGsbp.overrideBoard(BoardEditor.super.mContext, lastGsb);
 			}
 			
