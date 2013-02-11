@@ -46,6 +46,8 @@ public class PageDrawer {
 	private List<FadingPage> fadingPages;
 	private boolean initialPage;
 	
+	private boolean initializingAnimation;
+	
 	private SoftReference<Bitmap> leftPageDrawCache;
 	private SoftReference<Bitmap> rightPageDrawCache;
 	
@@ -61,6 +63,8 @@ public class PageDrawer {
 		fadingPages = new ArrayList<FadingPage>();
 		initialPage = true;
 		
+		initializingAnimation = false;
+		
 		soundImagePaint = new Paint();
         soundImagePaint.setColor(Color.WHITE);
         soundImagePaint.setAntiAlias(true);
@@ -68,8 +72,13 @@ public class PageDrawer {
 	}
 	
 	public boolean needAnimationRefreshSpeed() {
-		return (fadingPages.size() > 0);
+		return (initializingAnimation || fadingPages.size() > 0);
 	}
+	
+	public void startInitializingAnimation() {
+		initializingAnimation = true;
+	}
+	
 	
 	public void switchPage(GraphicalSoundboard newGsb, SwipingDirection direction) {
 		boolean initialPage = this.initialPage;
@@ -138,6 +147,8 @@ public class PageDrawer {
 			lastFadingPage.setDrawCache(lastPageDrawCache);
 			fadingPages.add(lastFadingPage);
 		}
+		
+		initializingAnimation = false;
 	}
 	
 	public Canvas drawSurface(Canvas canvas, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {

@@ -774,6 +774,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		if (!samePage) {
 			refreshPageTitle(gsb.getPageNumber());
 			
+			// Put thread to animation speed
+			mPageDrawer.startInitializingAnimation();
+			if (mThread != null) mThread.interrupt();
+			
 			loadBoard(gsb);
 			mPageDrawer.switchPage(gsb, direction);
 			if (overrideCurrentBoard) {
