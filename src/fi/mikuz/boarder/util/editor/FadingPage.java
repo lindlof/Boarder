@@ -57,12 +57,20 @@ public class FadingPage {
 		if (fadeState == FadeState.FADING_IN) {
 			this.fadeProgress = this.fadeProgress + 11;
 			
-			if (this.fadingOutWhenFinished && this.fadeProgress >= 100) {
-				fadeState = FadeState.FADING_OUT;
+			if (this.fadeProgress >= 100) {
 				this.fadeProgress = 100;
+				
+				if (this.fadingOutWhenFinished) {
+					fadeState = FadeState.FADING_OUT;
+					updateFadeProgress();
+				}
 			}
 		} else if (fadeState == FadeState.FADING_OUT) {
 			this.fadeProgress = this.fadeProgress - 15;
+			
+			if (this.fadeProgress <= 0) {
+				this.fadeProgress = 0;
+			}
 		}
 	}
 
@@ -72,6 +80,10 @@ public class FadingPage {
 
 	public void setDrawCache(Bitmap drawCache) {
 		this.drawCache = drawCache;
+	}
+	
+	public void setFadeDirection(FadeDirection fadeDirection) {
+		this.fadeDirection = fadeDirection;
 	}
 
 	public FadeDirection getFadeDirection() {

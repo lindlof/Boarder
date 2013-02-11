@@ -94,7 +94,13 @@ public class PageDrawer {
 			if (listedPage.getGsb().getId() == newGsb.getId()) {
 				newPageDrawCache = listedPage.getDrawCache();
 			} else if (listedPage.getGsb().getId() == lastGsb.getId()) {
+				// Last page is already fading. Letting it to fade out  after fading in.
 				listedPage.fadeOutWhenFinished();
+				if (direction == SwipingDirection.LEFT) {
+					listedPage.setFadeDirection(FadeDirection.LEFT);
+				} else if (direction == SwipingDirection.RIGHT) {
+					listedPage.setFadeDirection(FadeDirection.RIGHT);
+				}
 				lastPageAlreadyFading = true;
 			}
 		}
