@@ -71,6 +71,7 @@ import fi.mikuz.boarder.util.editor.BoardHistoryProvider;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 import fi.mikuz.boarder.util.editor.Joystick;
 import fi.mikuz.boarder.util.editor.PageDrawer;
+import fi.mikuz.boarder.util.editor.PageDrawer.SwipingDirection;
 import fi.mikuz.boarder.util.editor.Pagination;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
@@ -760,8 +761,12 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
                 return super.onOptionsItemSelected(item);
         }
     }
-
+	
 	public void changeBoard(GraphicalSoundboard gsb, boolean overrideCurrentBoard) {
+		changeBoard(gsb, SwipingDirection.NO_DIRECTION, overrideCurrentBoard);
+	}
+
+	public void changeBoard(GraphicalSoundboard gsb, SwipingDirection direction, boolean overrideCurrentBoard) {
 		GraphicalSoundboard lastGsb = mGsb;
 		boolean samePage = lastGsb != null && 
 				(gsb.getPageNumber() == lastGsb.getPageNumber() && gsb.getScreenOrientation() == lastGsb.getScreenOrientation()); 
@@ -770,7 +775,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			refreshPageTitle(gsb.getPageNumber());
 			
 			loadBoard(gsb);
-			mPageDrawer.switchPage(gsb);
+			mPageDrawer.switchPage(gsb, direction);
 			if (overrideCurrentBoard) {
 				GraphicalSoundboard.unloadImages(lastGsb);
 				mGsbp.overrideBoard(BoardEditor.super.mContext, lastGsb);
@@ -1843,17 +1848,20 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 								mCurrentGesture = TouchGesture.SWIPE;
 								
 								GraphicalSoundboard swapGsb = null;
+								SwipingDirection direction;
 								
 								if (event.getX() < mInitTouchEventX) {
+									direction = SwipingDirection.LEFT;
 									swapGsb = mPagination.getNextBoardPage(BoardEditor.super.mContext, mGsb);
 								} else {
+									direction = SwipingDirection.RIGHT;
 									swapGsb = mPagination.getPreviousPage(BoardEditor.super.mContext, mGsb);
 								}
 								
 								if (swapGsb == null) {
 									Toast.makeText(BoardEditor.super.mContext, "No page there", Toast.LENGTH_SHORT).show();
 								} else {
-									changeBoard(swapGsb, true);
+									changeBoard(swapGsb, direction, true);
 								}
 							}
 						}

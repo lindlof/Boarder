@@ -8,6 +8,9 @@ public class FadingPage {
 	public enum FadeState {FADING_IN, FADING_OUT}
 	private FadeState fadeState;
 	
+	public enum FadeDirection {NO_DIRECTION, LEFT, RIGHT}
+	private FadeDirection fadeDirection;
+	
 	/**
 	 * 0: Faded out, invisible
 	 * 100: Faded in, fully visible
@@ -16,7 +19,7 @@ public class FadingPage {
 	private GraphicalSoundboard gsb;
 	private Bitmap drawCache;
 	
-	public FadingPage(GraphicalSoundboard gsb, FadeState fadeState) {
+	public FadingPage(GraphicalSoundboard gsb, FadeState fadeState, FadeDirection fadeDirection) {
 		this.setGsb(gsb);
 		this.setFadeState(fadeState);
 		if (fadeState == FadeState.FADING_IN) {
@@ -24,6 +27,7 @@ public class FadingPage {
 		} else if (fadeState == FadeState.FADING_OUT) {
 			this.fadeProgress = 100;
 		}
+		this.fadeDirection = fadeDirection;
 		drawCache = null;
 	}
 
@@ -61,5 +65,9 @@ public class FadingPage {
 
 	public void setDrawCache(Bitmap drawCache) {
 		this.drawCache = drawCache;
+	}
+
+	public FadeDirection getFadeDirection() {
+		return fadeDirection;
 	}
 }

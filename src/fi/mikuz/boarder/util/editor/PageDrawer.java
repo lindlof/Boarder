@@ -24,6 +24,7 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.gui.SoundboardMenu;
 import fi.mikuz.boarder.util.SoundPlayerControl;
+import fi.mikuz.boarder.util.editor.FadingPage.FadeDirection;
 import fi.mikuz.boarder.util.editor.FadingPage.FadeState;
 
 /**
@@ -32,6 +33,8 @@ import fi.mikuz.boarder.util.editor.FadingPage.FadeState;
  * @author Jan Mikael Lindlöf
  */
 public class PageDrawer {
+	
+	public enum SwipingDirection {NO_DIRECTION, LEFT, RIGHT}
 	
 	public static final String TAG = PageDrawer.class.getSimpleName();
 	
@@ -64,7 +67,7 @@ public class PageDrawer {
 		return (fadingPages.size() > 0);
 	}
 	
-	public void switchPage(GraphicalSoundboard newGsb) {
+	public void switchPage(GraphicalSoundboard newGsb, SwipingDirection direction) {
 		boolean initialPage = this.initialPage;
 		this.initialPage = false;
 		
@@ -88,13 +91,25 @@ public class PageDrawer {
 				Log.w(TAG, "Removed last fading page because of flood");
 			} catch (IndexOutOfBoundsException e) {}
 		}
-
-		FadingPage newFadingPage = new FadingPage(newGsb, FadeState.FADING_IN);
+		
+		FadeDirection newFadeDirection = FadeDirection.NO_DIRECTION;
+		if (direction == SwipingDirection.LEFT) {
+			newFadeDirection = FadeDirection.RIGHT;
+		} else if (direction == SwipingDirection.RIGHT) {
+			newFadeDirection = FadeDirection.LEFT;
+		}
+		FadingPage newFadingPage = new FadingPage(newGsb, FadeState.FADING_IN, newFadeDirection);
 		if (newPageDrawCache != null) newFadingPage.setDrawCache(newPageDrawCache);
 		fadingPages.add(newFadingPage);
 
 		if (!initialPage) {
-			FadingPage lastFadingPage = new FadingPage(lastGsb, FadeState.FADING_OUT);
+			FadeDirection lastFadeDirection = FadeDirection.NO_DIRECTION;
+			if (direction == SwipingDirection.LEFT) {
+				lastFadeDirection = FadeDirection.LEFT;
+			} else if (direction == SwipingDirection.RIGHT) {
+				lastFadeDirection = FadeDirection.RIGHT;
+			}
+			FadingPage lastFadingPage = new FadingPage(lastGsb, FadeState.FADING_OUT, lastFadeDirection);
 			if (lastPageDrawCache == null) lastPageDrawCache = genPageCache(lastGsb, null, null);
 			lastFadingPage.setDrawCache(lastPageDrawCache);
 			fadingPages.add(lastFadingPage);
@@ -142,8 +157,27 @@ public class PageDrawer {
 					// Image size is about 1/3 screen size on fade 0
 					float xDistance = xFullDistance*7/10;
 					float yDistance = yFullDistance*7/10;
-					RectF fadeRect = new RectF(xDistance, yDistance, 
-							canvas.getWidth() - xDistance, canvas.getHeight() - yDistance);
+					
+//					float directionEffect = fadePercentage*canvas.getWidth()/150;
+//					// If page is left fading then left must have smaller distance than right
+//					float directionEffectLeft = (listedPage.getFadeDirection() == FadeDirection.LEFT) ? directionEffect * -1 : directionEffect;
+//					float xDistanceLeft = xDistance * (directionEffectLeft);
+//					float xDistanceRight = canvas.getWidth() - xDistance * (directionEffectLeft*-1);
+					
+					float directionEffect = canvas.getWidth()/4*3 * (1-fadePercentage);
+					if (listedPage.getFadeDirection() == FadeDirection.LEFT) {
+						directionEffect *= -1;
+					} else if (listedPage.getFadeDirection() == FadeDirection.RIGHT) {
+						directionEffect *= +1;
+					} else {
+						directionEffect = 0;
+					}
+					
+					float xDistanceLeft = xDistance + directionEffect;
+					float xDistanceRight = canvas.getWidth() - xDistance + directionEffect;
+					
+					RectF fadeRect = new RectF(xDistanceLeft, yDistance, 
+							xDistanceRight, canvas.getHeight() - yDistance);
 	
 					int fadeAlpha = (int) (fadePercentage*255f);
 					paint.setAlpha(fadeAlpha);
