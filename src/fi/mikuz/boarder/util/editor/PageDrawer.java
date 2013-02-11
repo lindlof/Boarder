@@ -75,13 +75,14 @@ public class PageDrawer {
 		topGsb = newGsb;
 
 		Bitmap newPageDrawCache = null;
-		Bitmap lastPageDrawCache = null;
+		boolean lastPageAlreadyFading = false;
 
 		for (FadingPage listedPage : fadingPages) {
 			if (listedPage.getGsb().getId() == newGsb.getId()) {
 				newPageDrawCache = listedPage.getDrawCache();
 			} else if (listedPage.getGsb().getId() == lastGsb.getId()) {
-				lastPageDrawCache = listedPage.getDrawCache();
+				listedPage.fadeOutWhenFinished();
+				lastPageAlreadyFading = true;
 			}
 		}
 		
@@ -102,7 +103,7 @@ public class PageDrawer {
 		if (newPageDrawCache != null) newFadingPage.setDrawCache(newPageDrawCache);
 		fadingPages.add(newFadingPage);
 
-		if (!initialPage) {
+		if (!initialPage && !lastPageAlreadyFading) {
 			FadeDirection lastFadeDirection = FadeDirection.NO_DIRECTION;
 			if (direction == SwipingDirection.LEFT) {
 				lastFadeDirection = FadeDirection.LEFT;
@@ -110,7 +111,7 @@ public class PageDrawer {
 				lastFadeDirection = FadeDirection.RIGHT;
 			}
 			FadingPage lastFadingPage = new FadingPage(lastGsb, FadeState.FADING_OUT, lastFadeDirection);
-			if (lastPageDrawCache == null) lastPageDrawCache = genPageCache(lastGsb, null, null);
+			Bitmap lastPageDrawCache = genPageCache(lastGsb, null, null);
 			lastFadingPage.setDrawCache(lastPageDrawCache);
 			fadingPages.add(lastFadingPage);
 		}
@@ -157,12 +158,6 @@ public class PageDrawer {
 					// Image size is about 1/3 screen size on fade 0
 					float xDistance = xFullDistance*7/10;
 					float yDistance = yFullDistance*7/10;
-					
-//					float directionEffect = fadePercentage*canvas.getWidth()/150;
-//					// If page is left fading then left must have smaller distance than right
-//					float directionEffectLeft = (listedPage.getFadeDirection() == FadeDirection.LEFT) ? directionEffect * -1 : directionEffect;
-//					float xDistanceLeft = xDistance * (directionEffectLeft);
-//					float xDistanceRight = canvas.getWidth() - xDistance * (directionEffectLeft*-1);
 					
 					float directionEffect = canvas.getWidth()/4*3 * (1-fadePercentage);
 					if (listedPage.getFadeDirection() == FadeDirection.LEFT) {

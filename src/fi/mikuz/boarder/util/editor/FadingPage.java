@@ -19,6 +19,8 @@ public class FadingPage {
 	private GraphicalSoundboard gsb;
 	private Bitmap drawCache;
 	
+	private boolean fadingOutWhenFinished;
+	
 	public FadingPage(GraphicalSoundboard gsb, FadeState fadeState, FadeDirection fadeDirection) {
 		this.setGsb(gsb);
 		this.setFadeState(fadeState);
@@ -54,6 +56,11 @@ public class FadingPage {
 	public void updateFadeProgress() {
 		if (fadeState == FadeState.FADING_IN) {
 			this.fadeProgress = this.fadeProgress + 11;
+			
+			if (this.fadingOutWhenFinished && this.fadeProgress >= 100) {
+				fadeState = FadeState.FADING_OUT;
+				this.fadeProgress = 100;
+			}
 		} else if (fadeState == FadeState.FADING_OUT) {
 			this.fadeProgress = this.fadeProgress - 15;
 		}
@@ -69,5 +76,9 @@ public class FadingPage {
 
 	public FadeDirection getFadeDirection() {
 		return fadeDirection;
+	}
+
+	public void fadeOutWhenFinished() {
+		this.fadingOutWhenFinished = true;
 	}
 }
