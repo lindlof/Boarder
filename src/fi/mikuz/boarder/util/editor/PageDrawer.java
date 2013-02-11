@@ -1,5 +1,6 @@
 package fi.mikuz.boarder.util.editor;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -44,6 +45,9 @@ public class PageDrawer {
 	private GraphicalSoundboard topGsb;
 	private List<FadingPage> fadingPages;
 	private boolean initialPage;
+	
+	private SoftReference<Bitmap> leftPageDrawCache;
+	private SoftReference<Bitmap> rightPageDrawCache;
 	
 	private final static Bitmap.Config BITMAP_CONF = Bitmap.Config.ARGB_8888;
 	
@@ -96,22 +100,41 @@ public class PageDrawer {
 		FadeDirection newFadeDirection = FadeDirection.NO_DIRECTION;
 		if (direction == SwipingDirection.LEFT) {
 			newFadeDirection = FadeDirection.RIGHT;
+			
+			try {
+				if (newPageDrawCache == null) newPageDrawCache = rightPageDrawCache.get();
+			} catch (NullPointerException e) {}
 		} else if (direction == SwipingDirection.RIGHT) {
 			newFadeDirection = FadeDirection.LEFT;
+			
+			try {
+				if (newPageDrawCache == null) newPageDrawCache = leftPageDrawCache.get();
+			} catch (NullPointerException e) {}
 		}
 		FadingPage newFadingPage = new FadingPage(newGsb, FadeState.FADING_IN, newFadeDirection);
 		if (newPageDrawCache != null) newFadingPage.setDrawCache(newPageDrawCache);
 		fadingPages.add(newFadingPage);
 
 		if (!initialPage && !lastPageAlreadyFading) {
+			Bitmap lastPageDrawCache = genPageDrawCache(lastGsb, null, null);
+			SoftReference<Bitmap> pageDrawCache = new SoftReference<Bitmap>(lastPageDrawCache);
 			FadeDirection lastFadeDirection = FadeDirection.NO_DIRECTION;
 			if (direction == SwipingDirection.LEFT) {
 				lastFadeDirection = FadeDirection.LEFT;
+				
+				try {
+					rightPageDrawCache.clear();
+				} catch (NullPointerException e) {}
+				leftPageDrawCache = pageDrawCache;
 			} else if (direction == SwipingDirection.RIGHT) {
 				lastFadeDirection = FadeDirection.RIGHT;
+				
+				try {
+					leftPageDrawCache.clear();
+				} catch (NullPointerException e) {}
+				rightPageDrawCache = pageDrawCache;
 			}
 			FadingPage lastFadingPage = new FadingPage(lastGsb, FadeState.FADING_OUT, lastFadeDirection);
-			Bitmap lastPageDrawCache = genPageCache(lastGsb, null, null);
 			lastFadingPage.setDrawCache(lastPageDrawCache);
 			fadingPages.add(lastFadingPage);
 		}
@@ -140,7 +163,7 @@ public class PageDrawer {
 				} else {
 					Bitmap pageBitmap = listedPage.getDrawCache();
 					if (pageBitmap == null) {
-						pageBitmap = genPageCache(listedPage.getGsb(), null, null);
+						pageBitmap = genPageDrawCache(listedPage.getGsb(), null, null);
 						listedPage.setDrawCache(pageBitmap);
 					}
 	
@@ -192,7 +215,7 @@ public class PageDrawer {
 		return canvas;
 	}
 	
-	private Bitmap genPageCache(GraphicalSoundboard gsb, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
+	private Bitmap genPageDrawCache(GraphicalSoundboard gsb, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 		Display display = wm.getDefaultDisplay();
 		Point size = new Point();
