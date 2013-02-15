@@ -51,9 +51,9 @@ public class PageDrawer {
 	
 	private Paint soundImagePaint;
 	
-	public PageDrawer(Context context, Joystick joystick) {
+	public PageDrawer(Context context) {
 		this.context = context;
-		this.joystick = joystick;
+		this.joystick = null;
 		
 		this.topGsb = null;
 		fadingPages = new ArrayList<FadingPage>();
@@ -65,6 +65,10 @@ public class PageDrawer {
         soundImagePaint.setColor(Color.WHITE);
         soundImagePaint.setAntiAlias(true);
         soundImagePaint.setTextAlign(Align.LEFT);
+	}
+	
+	public void giveJoystick(Joystick joystick) {
+		this.joystick = joystick;
 	}
 	
 	public boolean needAnimationRefreshSpeed() {
@@ -109,7 +113,7 @@ public class PageDrawer {
 		}
 		
 		if (!initialPage && !lastPageAlreadyFading) {
-			Bitmap lastPageDrawCache = genPageDrawCache(lastGsb, null, null);
+			Bitmap lastPageDrawCache = genPageDrawCache(lastGsb, null);
 			FadeDirection lastFadeDirection = FadeDirection.NO_DIRECTION;
 			if (direction == SwipingDirection.LEFT) {
 				lastFadeDirection = FadeDirection.LEFT;
@@ -135,7 +139,7 @@ public class PageDrawer {
 		initializingAnimation = false;
 	}
 	
-	public Canvas drawSurface(Canvas canvas, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
+	public Canvas drawSurface(Canvas canvas, GraphicalSound pressedSound) {
 		Paint paint = new Paint();
 		canvas.drawColor(Color.BLACK);
 
@@ -158,7 +162,7 @@ public class PageDrawer {
 				} else {
 					Bitmap pageBitmap = listedPage.getDrawCache();
 					if (pageBitmap == null) {
-						pageBitmap = genPageDrawCache(listedPage.getGsb(), null, null);
+						pageBitmap = genPageDrawCache(listedPage.getGsb(), null);
 						listedPage.setDrawCache(pageBitmap);
 					}
 	
@@ -204,13 +208,13 @@ public class PageDrawer {
 
 		if (!topGsgFading) {
 			// Drawing directly to SurfaceView canvas is a lot faster.
-			drawPage(canvas, topGsb, pressedSound, fineTuningSound);
+			drawPage(canvas, topGsb, pressedSound);
 		}
 
 		return canvas;
 	}
 	
-	private Bitmap genPageDrawCache(GraphicalSoundboard gsb, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
+	private Bitmap genPageDrawCache(GraphicalSoundboard gsb, GraphicalSound pressedSound) {
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 		Display display = wm.getDefaultDisplay();
 		Point size = new Point();
@@ -218,12 +222,12 @@ public class PageDrawer {
 		
 		Bitmap pageBitmap = Bitmap.createBitmap(size.x, size.y, BITMAP_CONF);
 		Canvas pageCanvas = new Canvas(pageBitmap);
-		drawPage(pageCanvas, gsb, pressedSound, fineTuningSound);
+		drawPage(pageCanvas, gsb, pressedSound);
 		
 		return pageBitmap;
 	}
 	
-	private Canvas drawPage(Canvas canvas, GraphicalSoundboard drawGsb, GraphicalSound pressedSound, GraphicalSound fineTuningSound) {
+	private Canvas drawPage(Canvas canvas, GraphicalSoundboard drawGsb, GraphicalSound pressedSound) {
 		
 		canvas.drawColor(drawGsb.getBackgroundColor());
 		
@@ -347,7 +351,7 @@ public class PageDrawer {
 			Log.w(TAG, "Sound list modification while iterating");
 		}
 		
-		if (fineTuningSound != null) {
+		if (joystick != null) {
 			canvas.drawBitmap(joystick.getJoystickImage(), null, joystick.getJoystickImageRect(), soundImagePaint);
 		}
 		

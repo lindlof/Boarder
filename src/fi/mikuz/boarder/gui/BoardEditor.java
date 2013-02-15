@@ -221,7 +221,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		this.mCurrentOrientation = orientation;
 		GraphicalSoundboard newGsb = mPagination.getBoard(BoardEditor.super.mContext, orientation);
 			
-		mPageDrawer = new PageDrawer(super.mContext, mJoystick);
+		mPageDrawer = new PageDrawer(super.mContext);
 		changeBoard(newGsb, false);
 	}
 	
@@ -262,11 +262,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         	case R.id.menu_undo:
         		mBoardHistory.undo(BoardEditor.super.mContext, this);
         		mFineTuningSound = null;
+        		removeJoystick();
         		return true;
         	
         	case R.id.menu_redo:
         		mBoardHistory.redo(BoardEditor.super.mContext, this);
         		mFineTuningSound = null;
+        		removeJoystick();
         		return true;
         		
         	case R.id.menu_add_sound:
@@ -1458,6 +1460,16 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		
 	}
 	
+	private void addJoystick(MotionEvent event) {
+		mJoystick = new Joystick(BoardEditor.super.mContext, event);
+		mPageDrawer.giveJoystick(mJoystick);
+	}
+	
+	private void removeJoystick() {
+		mJoystick = null;
+		mPageDrawer.giveJoystick(null);
+	}
+	
 	public void issueResolutionConversion(final int orientation) {
 		if (mResolutionAlert != null) {
 			mResolutionAlert.dismiss();
@@ -1717,7 +1729,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			super(context);
             getHolder().addCallback(this);
             mThread = new DrawingThread(getHolder(), this);
-            mJoystick = new Joystick(context);
 		}
 		
 		private GraphicalSound findPressedSound(MotionEvent pressInitEvent) {
@@ -1813,7 +1824,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						mCurrentGesture = TouchGesture.PRESS_BOARD;
 						new Timer().schedule(new DragInitializeTimer(), 200);
 						
-						mJoystick.init(event);
+						addJoystick(event);
 						mJoystickTimer = new Timer();
 						mJoystickTimer.schedule(new JoystickTimer(), 210, 50);
 					} else {
@@ -2466,6 +2477,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	  							
 							} else {
 								mGsb.getSoundList().add(mPressedSound);
+								if (mFineTuningSound != null) {
+									removeJoystick();
+									mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+								}
 							}
 							mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 							
@@ -2505,11 +2520,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				super.dispatchDraw(canvas);
 				
 				GraphicalSound pressedSound = null;
-				GraphicalSound fineTuningSound = null;
 				if (mCurrentGesture == TouchGesture.DRAG) pressedSound = mPressedSound;
-				if (mFineTuningSound != null && mCurrentGesture == TouchGesture.DRAG) fineTuningSound = mFineTuningSound;
 				
-				mPageDrawer.drawSurface(canvas, pressedSound, fineTuningSound);
+				mPageDrawer.drawSurface(canvas, pressedSound);
 			}
 
 		}

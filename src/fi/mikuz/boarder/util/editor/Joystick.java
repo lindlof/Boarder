@@ -21,16 +21,14 @@ public class Joystick {
 	private RectF joystickImageRect;
 	private Bitmap joystickImage;
 
-	public Joystick(Context context) {
+	public Joystick(Context context, MotionEvent event) {
 		joystickSide = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, context.getResources().getDisplayMetrics());
         joystickReferenceDistance = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, context.getResources().getDisplayMetrics());
         
         joystickImageRect = new RectF();
         joystickImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.joystick);
-	}
-	
-	public void init(MotionEvent event) {
-		joystickX = event.getX();
+        
+        joystickX = event.getX();
 		joystickY = event.getY();
 		joystickDistanceX = 0;
 		joystickDistanceY = 0;
