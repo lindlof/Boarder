@@ -69,6 +69,7 @@ import fi.mikuz.boarder.util.XStreamUtil;
 import fi.mikuz.boarder.util.dbadapter.MenuDbAdapter;
 import fi.mikuz.boarder.util.editor.BoardHistoryProvider;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
+import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider.OverridePage;
 import fi.mikuz.boarder.util.editor.Joystick;
 import fi.mikuz.boarder.util.editor.PageDrawer;
 import fi.mikuz.boarder.util.editor.PageDrawer.SwipingDirection;
@@ -260,13 +261,18 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         		return true;
         		
         	case R.id.menu_undo:
-        		mBoardHistory.undo(BoardEditor.super.mContext, this);
+        		GraphicalSoundboard undoGsb = mBoardHistory.undo(BoardEditor.super.mContext);
+        		loadBoard(undoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
+        		mGsbp.overrideBoard(BoardEditor.super.mContext, undoGsb);
+        		issueResolutionConversion(undoGsb.getScreenOrientation());
         		mFineTuningSound = null;
         		removeJoystick();
         		return true;
         	
         	case R.id.menu_redo:
-        		mBoardHistory.redo(BoardEditor.super.mContext, this);
+        		GraphicalSoundboard redoGsb = mBoardHistory.redo(BoardEditor.super.mContext);
+        		loadBoard(redoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
+        		mGsbp.overrideBoard(BoardEditor.super.mContext, redoGsb);
         		mFineTuningSound = null;
         		removeJoystick();
         		return true;
@@ -780,10 +786,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			mPageDrawer.startInitializingAnimation();
 			if (mThread != null) mThread.interrupt();
 			
-			loadBoard(gsb, direction);
-			if (overrideCurrentBoard) {
-				mGsbp.overrideBoard(BoardEditor.super.mContext, lastGsb);
-			}
+			OverridePage override = (overrideCurrentBoard) ? OverridePage.OVERRIDE_CURRENT : OverridePage.NO_OVERRIDE;
+			loadBoard(gsb, direction, override);
 			
 			int boardId = gsb.getId();
 			BoardHistory boardHistory = mBoardHistoryProvider.getBoardHistory(boardId);
@@ -804,8 +808,15 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		setTitle(mBoardName + " - " + (pageNumber+1));
 	}
 	
-	public void loadBoard(GraphicalSoundboard gsb, SwipingDirection direction) {
+	public void loadBoard(GraphicalSoundboard gsb, SwipingDirection direction, OverridePage override) {
 		GraphicalSoundboard.loadImages(super.mContext, gsb);
+		
+		if (override == OverridePage.OVERRIDE_CURRENT) {
+			mGsbp.overrideBoard(BoardEditor.super.mContext, mGsb);
+		} else if (override == OverridePage.OVERRIDE_NEW) {
+			mGsbp.overrideBoard(BoardEditor.super.mContext, gsb);
+		}
+		
 		mGsb = gsb;
 		mPageDrawer.switchPage(gsb, direction);
 	}

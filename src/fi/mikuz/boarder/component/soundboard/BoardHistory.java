@@ -7,6 +7,7 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 import fi.mikuz.boarder.gui.BoardEditor;
+import fi.mikuz.boarder.util.ContextUtils;
 import fi.mikuz.boarder.util.editor.PageDrawer.SwipingDirection;
 
 /**
@@ -73,30 +74,33 @@ public class BoardHistory {
 		}
 	}
 
-	public void undo(Context context, BoardEditor editor) {
+	public GraphicalSoundboard undo(Context context) {
+		GraphicalSoundboard undoGsb = null;
 		synchronized (lock) {
 			if (index <= 0) {
-				Toast.makeText(editor.getApplicationContext(), "Unable to undo", Toast.LENGTH_SHORT).show();
+				ContextUtils.toast(context, "Unable to undo");
 			} else {
 				index--;
-				GraphicalSoundboard undoGsb = history.get(index);
-				editor.loadBoard(undoGsb, SwipingDirection.NO_ANIMATION);
-				editor.issueResolutionConversion(undoGsb.getScreenOrientation());
+				undoGsb = history.get(index);
+				
 			}
 			Log.v(TAG, "undo: index is " + index + " size is " + history.size());
 		}
+		return undoGsb;
 	}
 
-	public void redo(Context context, BoardEditor editor) {
+	public GraphicalSoundboard redo(Context context) {
+		GraphicalSoundboard redoGsb = null;
 		synchronized (lock) {
 			if (index+1 >= history.size()) {
-				Toast.makeText(editor.getApplicationContext(), "Unable to redo", Toast.LENGTH_SHORT).show();
+				ContextUtils.toast(context, "Unable to redo");
 			} else {
 				index++;
-				editor.loadBoard(history.get(index), SwipingDirection.NO_ANIMATION);
+				redoGsb = history.get(index);
 			}
 			Log.v(TAG, "redo: index is " + index + " size is " + history.size());
 		}
+		return redoGsb;
 	}
 
 }

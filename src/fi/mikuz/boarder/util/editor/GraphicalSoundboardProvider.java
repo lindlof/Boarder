@@ -18,6 +18,8 @@ import fi.mikuz.boarder.util.FileProcessor;
 public class GraphicalSoundboardProvider {
 	public static final String TAG = GraphicalSoundboardProvider.class.getSimpleName();
 	
+	public enum OverridePage {OVERRIDE_CURRENT, OVERRIDE_NEW, NO_OVERRIDE}
+	
 	GraphicalSoundboardHolder boardHolder;
 	
 	/**
