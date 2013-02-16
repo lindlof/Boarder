@@ -262,17 +262,23 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         		
         	case R.id.menu_undo:
         		GraphicalSoundboard undoGsb = mBoardHistory.undo(BoardEditor.super.mContext);
-        		loadBoard(undoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
-        		mGsbp.overrideBoard(BoardEditor.super.mContext, undoGsb);
-        		issueResolutionConversion(undoGsb.getScreenOrientation());
+        		if (undoGsb != null) {
+        			loadBoard(undoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
+            		mGsbp.overrideBoard(BoardEditor.super.mContext, undoGsb);
+            		issueResolutionConversion(undoGsb.getScreenOrientation());
+            		
+        		}
         		mFineTuningSound = null;
         		removeJoystick();
         		return true;
         	
         	case R.id.menu_redo:
         		GraphicalSoundboard redoGsb = mBoardHistory.redo(BoardEditor.super.mContext);
-        		loadBoard(redoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
-        		mGsbp.overrideBoard(BoardEditor.super.mContext, redoGsb);
+        		if (redoGsb != null) {
+        			loadBoard(redoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
+            		mGsbp.overrideBoard(BoardEditor.super.mContext, redoGsb);
+            		
+        		}
         		mFineTuningSound = null;
         		removeJoystick();
         		return true;
