@@ -780,8 +780,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			mPageDrawer.startInitializingAnimation();
 			if (mThread != null) mThread.interrupt();
 			
-			loadBoard(gsb);
-			mPageDrawer.switchPage(gsb, direction);
+			loadBoard(gsb, direction);
 			if (overrideCurrentBoard) {
 				mGsbp.overrideBoard(BoardEditor.super.mContext, lastGsb);
 			}
@@ -805,9 +804,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		setTitle(mBoardName + " - " + (pageNumber+1));
 	}
 	
-	public void loadBoard(GraphicalSoundboard gsb) {
+	public void loadBoard(GraphicalSoundboard gsb, SwipingDirection direction) {
 		GraphicalSoundboard.loadImages(super.mContext, gsb);
 		mGsb = gsb;
+		mPageDrawer.switchPage(gsb, direction);
 	}
 	
 	private void orientationTurningConflictActionAlert(final int screenOrientation) {

@@ -34,7 +34,7 @@ import fi.mikuz.boarder.util.editor.FadingPage.FadeState;
  */
 public class PageDrawer {
 	
-	public enum SwipingDirection {NO_DIRECTION, LEFT, RIGHT}
+	public enum SwipingDirection {NO_DIRECTION, LEFT, RIGHT, NO_ANIMATION}
 	
 	public static final String TAG = PageDrawer.class.getSimpleName();
 	
@@ -87,54 +87,56 @@ public class PageDrawer {
 		GraphicalSoundboard lastGsb = topGsb;
 		topGsb = newGsb;
 
-		Bitmap newPageDrawCache = null;
-		boolean lastPageAlreadyFading = false;
+		if (direction != SwipingDirection.NO_ANIMATION) {
+			Bitmap newPageDrawCache = null;
+			boolean lastPageAlreadyFading = false;
 
-		for (FadingPage listedPage : fadingPages) {
-			if (listedPage.getGsb().getId() == newGsb.getId()) {
-				newPageDrawCache = listedPage.getDrawCache();
-			} else if (listedPage.getGsb().getId() == lastGsb.getId()) {
-				// Last page is already fading. Letting it to fade out  after fading in.
-				listedPage.fadeOutWhenFinished();
-				if (direction == SwipingDirection.LEFT) {
-					listedPage.setFadeDirection(FadeDirection.LEFT);
-				} else if (direction == SwipingDirection.RIGHT) {
-					listedPage.setFadeDirection(FadeDirection.RIGHT);
+			for (FadingPage listedPage : fadingPages) {
+				if (listedPage.getGsb().getId() == newGsb.getId()) {
+					newPageDrawCache = listedPage.getDrawCache();
+				} else if (listedPage.getGsb().getId() == lastGsb.getId()) {
+					// Last page is already fading. Letting it to fade out  after fading in.
+					listedPage.fadeOutWhenFinished();
+					if (direction == SwipingDirection.LEFT) {
+						listedPage.setFadeDirection(FadeDirection.LEFT);
+					} else if (direction == SwipingDirection.RIGHT) {
+						listedPage.setFadeDirection(FadeDirection.RIGHT);
+					}
+					lastPageAlreadyFading = true;
 				}
-				lastPageAlreadyFading = true;
 			}
-		}
-		
-		if (fadingPages.size() > 3) {
-			try {
-				fadingPages.remove(fadingPages.size()-1);
-				Log.w(TAG, "Removed last fading page because of flood");
-			} catch (IndexOutOfBoundsException e) {}
-		}
-		
-		if (!initialPage && !lastPageAlreadyFading) {
-			Bitmap lastPageDrawCache = genPageDrawCache(lastGsb, null);
-			FadeDirection lastFadeDirection = FadeDirection.NO_DIRECTION;
+			
+			if (fadingPages.size() > 3) {
+				try {
+					fadingPages.remove(fadingPages.size()-1);
+					Log.w(TAG, "Removed last fading page because of flood");
+				} catch (IndexOutOfBoundsException e) {}
+			}
+			
+			if (!initialPage && !lastPageAlreadyFading) {
+				Bitmap lastPageDrawCache = genPageDrawCache(lastGsb, null);
+				FadeDirection lastFadeDirection = FadeDirection.NO_DIRECTION;
+				if (direction == SwipingDirection.LEFT) {
+					lastFadeDirection = FadeDirection.LEFT;
+				} else if (direction == SwipingDirection.RIGHT) {
+					lastFadeDirection = FadeDirection.RIGHT;
+				}
+				FadingPage lastFadingPage = new FadingPage(lastGsb, FadeState.FADING_OUT, lastFadeDirection);
+				lastFadingPage.setDrawCache(lastPageDrawCache);
+				fadingPages.add(lastFadingPage);
+				GraphicalSoundboard.unloadImages(lastGsb);
+			}
+			
+			FadeDirection newFadeDirection = FadeDirection.NO_DIRECTION;
 			if (direction == SwipingDirection.LEFT) {
-				lastFadeDirection = FadeDirection.LEFT;
+				newFadeDirection = FadeDirection.RIGHT;
 			} else if (direction == SwipingDirection.RIGHT) {
-				lastFadeDirection = FadeDirection.RIGHT;
+				newFadeDirection = FadeDirection.LEFT;
 			}
-			FadingPage lastFadingPage = new FadingPage(lastGsb, FadeState.FADING_OUT, lastFadeDirection);
-			lastFadingPage.setDrawCache(lastPageDrawCache);
-			fadingPages.add(lastFadingPage);
-			GraphicalSoundboard.unloadImages(lastGsb);
+			FadingPage newFadingPage = new FadingPage(newGsb, FadeState.FADING_IN, newFadeDirection);
+			if (newPageDrawCache != null) newFadingPage.setDrawCache(newPageDrawCache);
+			fadingPages.add(newFadingPage);
 		}
-		
-		FadeDirection newFadeDirection = FadeDirection.NO_DIRECTION;
-		if (direction == SwipingDirection.LEFT) {
-			newFadeDirection = FadeDirection.RIGHT;
-		} else if (direction == SwipingDirection.RIGHT) {
-			newFadeDirection = FadeDirection.LEFT;
-		}
-		FadingPage newFadingPage = new FadingPage(newGsb, FadeState.FADING_IN, newFadeDirection);
-		if (newPageDrawCache != null) newFadingPage.setDrawCache(newPageDrawCache);
-		fadingPages.add(newFadingPage);
 		
 		initializingAnimation = false;
 	}
