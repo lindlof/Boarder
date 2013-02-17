@@ -414,10 +414,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	
             case R.id.menu_take_screenshot:
             	
+            	GraphicalSoundboard scPage = mGsb;
             	Bitmap bitmap = Bitmap.createBitmap(mPanel.getWidth(), mPanel.getHeight(), Bitmap.Config.ARGB_8888);
             	Canvas canvas = new Canvas(bitmap);
             	mPanel.onDraw(canvas);
-	            Toast.makeText(BoardEditor.super.mContext, FileProcessor.saveScreenshot(bitmap, mBoardName), Toast.LENGTH_LONG).show();
+	            FileProcessor.saveScreenshot(super.mContext, bitmap, 
+	            		mBoardName + "-" + scPage.getScreenOrientation() + "_" + 
+	            		(mPagination.getPageIndexForOrientation(scPage.getScreenOrientation()) + 1));
 				
             	return true;
             	

@@ -21,6 +21,7 @@ import org.apache.commons.io.IOUtils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 
@@ -371,24 +372,23 @@ public class FileProcessor {
 		out.close();
 	}
 	
-	public static String saveScreenshot(Bitmap bitmap, String boardName) {
-		String returnString;
-		
+	public static void saveScreenshot(Context context, Bitmap bitmap, String boardName) {
+		String toastMsg = null;
 		try {
 			SoundboardMenu.mShareDir.mkdirs();
 			File screenshot = new File(SoundboardMenu.mShareDir, boardName + ".png");
 			if (bitmap.compress(Bitmap.CompressFormat.PNG, 100, new FileOutputStream(screenshot))) {
-				returnString = "Screenshot saved as sdcard/" + SoundboardMenu.mShareDir.getName() + "/" + screenshot.getName();
+				toastMsg = "Screenshot saved as " + 
+						SoundboardMenu.mShareDir.getParent() + "/" + SoundboardMenu.mShareDir.getName() + "/" + screenshot.getName();
 	    	} else {
-	    		returnString = "Couldn't save screenshot";
+	    		toastMsg = "Couldn't save screenshot";
 	    	}
-			return returnString;
 		} catch (FileNotFoundException e) {
 			BugSenseHandler.sendException(e);
 			Log.e(TAG, "Error saving screenshot", e);
-			returnString = "Error saving screenshot";
+			toastMsg = "Error saving screenshot";
 		}
-		return returnString;
+		ContextUtils.toast(context, toastMsg);
 	}
 	
 	private int mBoardDirLength;

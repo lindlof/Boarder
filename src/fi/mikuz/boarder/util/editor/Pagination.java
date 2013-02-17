@@ -63,7 +63,7 @@ public class Pagination {
 	
 	public GraphicalSoundboard getBoard(Context context, int orientation) {
 		
-		int pageNumber = getPageNumberForOrientation(orientation);
+		int pageNumber = getPageIndexForOrientation(orientation);
 		GraphicalSoundboard gsb = gsbp.getPage(context, orientation, pageNumber);
 		if (gsb != null) return gsb;
 		Log.w(TAG, "Can not find expected page. Giving last page available.");
@@ -175,7 +175,7 @@ public class Pagination {
 	public boolean isMovePageMode() {
 		return movePageMode;
 	}
-	public int getPageNumberForOrientation(int orientation) {
+	public int getPageIndexForOrientation(int orientation) {
 		if (orientation == GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT) {
 			return pageNumberPortrait;
 		} else if (orientation == GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE) {
