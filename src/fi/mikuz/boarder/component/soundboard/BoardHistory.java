@@ -5,10 +5,7 @@ import java.util.List;
 
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
-import fi.mikuz.boarder.gui.BoardEditor;
 import fi.mikuz.boarder.util.ContextUtils;
-import fi.mikuz.boarder.util.editor.PageDrawer.SwipingDirection;
 
 /**
  * Stores changes in soundboard
@@ -81,8 +78,8 @@ public class BoardHistory {
 				ContextUtils.toast(context, "Unable to undo");
 			} else {
 				index--;
-				undoGsb = history.get(index);
-				
+				GraphicalSoundboard checkpoint = history.get(index);
+				undoGsb = GraphicalSoundboard.copy(context, checkpoint);
 			}
 			Log.v(TAG, "undo: index is " + index + " size is " + history.size());
 		}
@@ -96,7 +93,8 @@ public class BoardHistory {
 				ContextUtils.toast(context, "Unable to redo");
 			} else {
 				index++;
-				redoGsb = history.get(index);
+				GraphicalSoundboard checkpoint = history.get(index);
+				redoGsb = GraphicalSoundboard.copy(context, checkpoint);
 			}
 			Log.v(TAG, "redo: index is " + index + " size is " + history.size());
 		}
