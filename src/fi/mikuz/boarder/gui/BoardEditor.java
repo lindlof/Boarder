@@ -2497,15 +2497,16 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	  							
 							} else {
 								mGsb.getSoundList().add(mPressedSound);
-								if (mFineTuningSound != null) {
-									removeJoystick();
-									mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
-								}
 							}
 							mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 							
 						} else if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == LISTEN_BOARD) {
 							playTouchedSound(mPressedSound);
+						}
+						
+						if (mJoystick != null) {
+							removeJoystick();
+							mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 						}
 						
 						mCurrentGesture = null;
