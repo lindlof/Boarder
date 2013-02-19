@@ -94,7 +94,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	private Pagination mPagination;
 	private PageDrawer mPageDrawer;
+	
 	private Joystick mJoystick = null;
+	private Timer mJoystickTimer = null;
 	
 	private static final int LISTEN_BOARD = 0;
 	private static final int EDIT_BOARD = 1;
@@ -278,8 +280,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         			loadBoard(redoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
             		overrideBoard(redoGsb);
         		}
-        		mFineTuningSound = null;
         		removeJoystick();
+        		mFineTuningSound = null;
         		return true;
         		
         	case R.id.menu_add_sound:
@@ -1217,6 +1219,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     		
     		changeBoard(newOrientationGsb, true);
     		
+    		removeJoystick();
     		this.mFineTuningSound = null;
     		this.mPressedSound = null;
     	}
@@ -1487,12 +1490,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		
 	}
 	
-	private void addJoystick(MotionEvent event) {
-		mJoystick = new Joystick(BoardEditor.super.mContext, event);
-		mPageDrawer.giveJoystick(mJoystick);
-	}
-	
 	private void removeJoystick() {
+		if (mJoystickTimer != null) mJoystickTimer.cancel();
+		mJoystickTimer = null;
 		mJoystick = null;
 		mPageDrawer.giveJoystick(null);
 	}
@@ -1748,8 +1748,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		private float mLatestEventX = 0;
 		private float mLatestEventY = 0;
 		
-		Timer mJoystickTimer = null;
-		
 		Object mGestureLock = new Object();
 		
 		public DrawingPanel(Context context) {
@@ -1830,6 +1828,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				dragEvent(mLatestEventX, mLatestEventY);
 			}
 		}
+		
+		private void addJoystick(MotionEvent event) {
+			mJoystickTimer = new Timer();
+			mJoystickTimer.schedule(new JoystickTimer(), 210, 50);
+			mJoystick = new Joystick(BoardEditor.super.mContext, event);
+			mPageDrawer.giveJoystick(mJoystick);
+		}
 
 		@Override
 		public boolean onTouchEvent(MotionEvent event) {
@@ -1852,8 +1857,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						new Timer().schedule(new DragInitializeTimer(), 200);
 						
 						addJoystick(event);
-						mJoystickTimer = new Timer();
-						mJoystickTimer.schedule(new JoystickTimer(), 210, 50);
 					} else {
 						mInitTouchEventX = event.getX();
 						mInitTouchEventY = event.getY();
@@ -2517,11 +2520,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						}
 						
 						mCurrentGesture = null;
-						
-						if (mJoystickTimer != null) {
-							mJoystickTimer.cancel();
-							mJoystickTimer = null;
-						}
 					}
 				}
 				
