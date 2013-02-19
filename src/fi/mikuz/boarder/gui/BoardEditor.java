@@ -1327,14 +1327,18 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	}
     
     void moveSound(float X, float Y) {
-		if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
-			mPressedSound.setNameFrameX(X-mNameFrameDragDistanceX);
-			mPressedSound.setNameFrameY(Y-mNameFrameDragDistanceY);
-		}
-		if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
-			mPressedSound.setImageX(X-mImageDragDistanceX);
-			mPressedSound.setImageY(Y-mImageDragDistanceY);
-		}
+    	if (mPressedSound != null) {
+    		if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
+    			mPressedSound.setNameFrameX(X-mNameFrameDragDistanceX);
+    			mPressedSound.setNameFrameY(Y-mNameFrameDragDistanceY);
+    		}
+    		if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
+    			mPressedSound.setImageX(X-mImageDragDistanceX);
+    			mPressedSound.setImageY(Y-mImageDragDistanceY);
+    		}
+    	} else {
+    		Log.w(TAG, "Tried to move null sound"); // Orientation changed while dragging?
+    	}
 	}
 	
 	public void moveSoundToSlot(GraphicalSound sound, int column, int row, float imageX, float imageY, float nameX, float nameY) {
