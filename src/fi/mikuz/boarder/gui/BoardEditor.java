@@ -264,7 +264,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         		GraphicalSoundboard undoGsb = mBoardHistory.undo(BoardEditor.super.mContext);
         		if (undoGsb != null) {
         			loadBoard(undoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
-            		mGsbp.overrideBoard(BoardEditor.super.mContext, undoGsb);
+            		overrideBoard(undoGsb);
             		issueResolutionConversion(undoGsb.getScreenOrientation());
             		
         		}
@@ -276,8 +276,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         		GraphicalSoundboard redoGsb = mBoardHistory.redo(BoardEditor.super.mContext);
         		if (redoGsb != null) {
         			loadBoard(redoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
-            		mGsbp.overrideBoard(BoardEditor.super.mContext, redoGsb);
-            		
+            		overrideBoard(redoGsb);
         		}
         		mFineTuningSound = null;
         		removeJoystick();
@@ -372,7 +371,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             case R.id.menu_move_page_here:
             	GraphicalSoundboard currentGsb = mGsb;
             	int toPageNumber = currentGsb.getPageNumber();
-            	mGsbp.overrideBoard(BoardEditor.super.mContext, currentGsb);
+            	overrideBoard(currentGsb);
             	mPagination.movePage(BoardEditor.super.mContext, mGsb);
             	GraphicalSoundboard gsb = mGsbp.getPage(BoardEditor.super.mContext, currentGsb.getScreenOrientation(), toPageNumber);
             	changeBoard(gsb, false);
@@ -821,9 +820,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		GraphicalSoundboard.loadImages(super.mContext, gsb);
 		
 		if (override == OverridePage.OVERRIDE_CURRENT) {
-			mGsbp.overrideBoard(BoardEditor.super.mContext, mGsb);
+			overrideBoard(mGsb);
 		} else if (override == OverridePage.OVERRIDE_NEW) {
-			mGsbp.overrideBoard(BoardEditor.super.mContext, gsb);
+			overrideBoard(gsb);
 		}
 		
 		mGsb = gsb;
@@ -1215,7 +1214,11 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     	if (newOrientation != this.mCurrentOrientation) {
     		this.mCurrentOrientation = newOrientation;
     		GraphicalSoundboard newOrientationGsb = mPagination.getBoard(BoardEditor.super.mContext, newOrientation);
+    		
     		changeBoard(newOrientationGsb, true);
+    		
+    		this.mFineTuningSound = null;
+    		this.mPressedSound = null;
     	}
     	
     	super.onConfigurationChanged(newConfig);
@@ -1254,15 +1257,19 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     private void save() {
     	if (mBoardName != null) {
     		try {
-    			GraphicalSoundboard gsb = GraphicalSoundboard.copy(BoardEditor.super.mContext, mGsb);
-    			if (mPressedSound != null && mCurrentGesture == TouchGesture.DRAG) gsb.getSoundList().add(mPressedSound); // Sound is being dragged
-    			mGsbp.overrideBoard(BoardEditor.super.mContext, gsb);
-        		mGsbp.saveBoard(BoardEditor.super.mContext, mBoardName);
+    			overrideBoard(mGsb);
+    			mGsbp.saveBoard(BoardEditor.super.mContext, mBoardName);
         		Log.v(TAG, "Board " + mBoardName + " saved");
     		} catch (IOException e) {
     			Log.e(TAG, "Unable to save " + mBoardName, e);
     		}
     	}
+    }
+    
+    private void overrideBoard(GraphicalSoundboard gsb) {
+    	GraphicalSoundboard overrideGsb = GraphicalSoundboard.copy(BoardEditor.super.mContext, gsb);
+		if (mPressedSound != null && mCurrentGesture == TouchGesture.DRAG) overrideGsb.getSoundList().add(mPressedSound); // Sound is being dragged
+		mGsbp.overrideBoard(BoardEditor.super.mContext, overrideGsb);
     }
     
     private void playTouchedSound(GraphicalSound sound) {
