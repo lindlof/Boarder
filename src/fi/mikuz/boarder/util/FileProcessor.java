@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,134 +42,147 @@ import fi.mikuz.boarder.gui.SoundboardMenu;
 public class FileProcessor {
 	public static final String TAG = "FileProcessor";
 	
+	static Object boardLock = new Object();
+	
 	public static GraphicalSoundboardHolder loadGraphicalSoundboardHolder(String boardName) throws IOException {
-		
-		GraphicalSoundboardHolder gsbHolder = new GraphicalSoundboardHolder();
-		File boardDir = constructBoardPath(boardName);
-		
-		try{
-			XStream xstream = XStreamUtil.graphicalBoardXStream();
-			gsbHolder = (GraphicalSoundboardHolder) xstream.fromXML(new File(boardDir + "/graphicalBoard"));
-			changeBoardDirectoryReferences(gsbHolder, SoundboardMenu.mLocalBoardDir, boardDir);
-			return gsbHolder;
-		} catch(StreamException e) {
-			Log.e(TAG, "Can't open the board " + boardName, e);
+		synchronized (boardLock) {
+			GraphicalSoundboardHolder gsbHolder = new GraphicalSoundboardHolder();
+			File boardDir = constructBoardPath(boardName);
 			
-			GraphicalSoundboard gsb = new GraphicalSoundboard();
-			
-			DataInputStream in = new DataInputStream(new FileInputStream(boardDir + "/graphicalBoard"));
-	        BufferedReader br = new BufferedReader(new InputStreamReader(in), 8192);
-	        
-		    String line;
-		    line = br.readLine();
-		    
-		    gsb.setPlaySimultaneously(Boolean.parseBoolean(line.substring(0, line.indexOf("¤1¤"))));
-		    gsb.setBoardVolume(Float.valueOf(line.substring(line.indexOf("¤1¤") + 3, line.indexOf("¤2¤"))).floatValue());
-		    gsb.setUseBackgroundImage(Boolean.parseBoolean(line.substring(line.indexOf("¤2¤") + 3, line.indexOf("¤3¤"))));
-		    gsb.setBackgroundColor(Integer.valueOf(line.substring(line.indexOf("¤3¤") + 3, line.indexOf("¤4¤"))).intValue());
-		    File backgroundImagePath = new File(line.substring(line.indexOf("¤4¤") + 3, line.indexOf("¤5¤")));
-		    if (backgroundImagePath.toString().contains("local/")) {
-		    	backgroundImagePath = new File(SoundboardMenu.mSbDir + "/" + boardName, backgroundImagePath.toString().
-		    			substring(6, backgroundImagePath.toString().length()));
-		    } else if (backgroundImagePath.toString().equals("na")) {
-		    	backgroundImagePath = null;
-		    }
-		    gsb.setBackgroundImagePath(backgroundImagePath);
-		    gsb.setBackgroundX(Float.valueOf(line.substring(line.indexOf("¤5¤") + 3, line.indexOf("¤6¤"))).floatValue());
-		    gsb.setBackgroundY(Float.valueOf(line.substring(line.indexOf("¤6¤") + 3, line.indexOf("¤7¤"))).floatValue());
-		    gsb.setBackgroundWidthHeight(null, 
-		    		Float.valueOf(line.substring(line.indexOf("¤7¤") + 3, line.indexOf("¤8¤"))).floatValue(),
-		    		Float.valueOf(line.substring(line.indexOf("¤8¤") + 3, line.indexOf("¤9¤"))).floatValue());
-		    gsb.setScreenOrientation(Integer.valueOf(line.substring(line.indexOf("¤9¤") + 3, line.indexOf("¤10¤"))).intValue());
-		    gsb.setAutoArrange(Boolean.parseBoolean(line.substring(line.indexOf("¤10¤") + 4, line.indexOf("¤11¤"))));
-		    gsb.setAutoArrangeColumns(Integer.valueOf(line.substring(line.indexOf("¤11¤") + 4, line.indexOf("¤12¤"))).intValue());
-		    gsb.setAutoArrangeRows(Integer.valueOf(line.substring(line.indexOf("¤12¤") + 4, line.length())).intValue());
+			try{
+				XStream xstream = XStreamUtil.graphicalBoardXStream();
+				gsbHolder = (GraphicalSoundboardHolder) xstream.fromXML(new File(boardDir + "/graphicalBoard"));
+				changeBoardDirectoryReferences(gsbHolder, SoundboardMenu.mLocalBoardDir, boardDir);
+				return gsbHolder;
+			} catch(StreamException e) {
+				Log.e(TAG, "Can't open the board " + boardName, e);
+				
+				GraphicalSoundboard gsb = new GraphicalSoundboard();
+				
+				DataInputStream in = new DataInputStream(new FileInputStream(boardDir + "/graphicalBoard"));
+		        BufferedReader br = new BufferedReader(new InputStreamReader(in), 8192);
+		        
+			    String line;
+			    line = br.readLine();
+			    
+			    gsb.setPlaySimultaneously(Boolean.parseBoolean(line.substring(0, line.indexOf("¤1¤"))));
+			    gsb.setBoardVolume(Float.valueOf(line.substring(line.indexOf("¤1¤") + 3, line.indexOf("¤2¤"))).floatValue());
+			    gsb.setUseBackgroundImage(Boolean.parseBoolean(line.substring(line.indexOf("¤2¤") + 3, line.indexOf("¤3¤"))));
+			    gsb.setBackgroundColor(Integer.valueOf(line.substring(line.indexOf("¤3¤") + 3, line.indexOf("¤4¤"))).intValue());
+			    File backgroundImagePath = new File(line.substring(line.indexOf("¤4¤") + 3, line.indexOf("¤5¤")));
+			    if (backgroundImagePath.toString().contains("local/")) {
+			    	backgroundImagePath = new File(SoundboardMenu.mSbDir + "/" + boardName, backgroundImagePath.toString().
+			    			substring(6, backgroundImagePath.toString().length()));
+			    } else if (backgroundImagePath.toString().equals("na")) {
+			    	backgroundImagePath = null;
+			    }
+			    gsb.setBackgroundImagePath(backgroundImagePath);
+			    gsb.setBackgroundX(Float.valueOf(line.substring(line.indexOf("¤5¤") + 3, line.indexOf("¤6¤"))).floatValue());
+			    gsb.setBackgroundY(Float.valueOf(line.substring(line.indexOf("¤6¤") + 3, line.indexOf("¤7¤"))).floatValue());
+			    gsb.setBackgroundWidthHeight(null, 
+			    		Float.valueOf(line.substring(line.indexOf("¤7¤") + 3, line.indexOf("¤8¤"))).floatValue(),
+			    		Float.valueOf(line.substring(line.indexOf("¤8¤") + 3, line.indexOf("¤9¤"))).floatValue());
+			    gsb.setScreenOrientation(Integer.valueOf(line.substring(line.indexOf("¤9¤") + 3, line.indexOf("¤10¤"))).intValue());
+			    gsb.setAutoArrange(Boolean.parseBoolean(line.substring(line.indexOf("¤10¤") + 4, line.indexOf("¤11¤"))));
+			    gsb.setAutoArrangeColumns(Integer.valueOf(line.substring(line.indexOf("¤11¤") + 4, line.indexOf("¤12¤"))).intValue());
+			    gsb.setAutoArrangeRows(Integer.valueOf(line.substring(line.indexOf("¤12¤") + 4, line.length())).intValue());
 
-		    while ((line = br.readLine()) != null)   {
-		    	GraphicalSound sound = new GraphicalSound();
+			    while ((line = br.readLine()) != null)   {
+			    	GraphicalSound sound = new GraphicalSound();
 
-		    	sound.setName(line.substring(0, line.indexOf("¤1¤")).replaceAll("lineBreak", "\n"));
+			    	sound.setName(line.substring(0, line.indexOf("¤1¤")).replaceAll("lineBreak", "\n"));
 
-		    	File soundPath = new File(line.substring(line.indexOf("¤1¤") + 3, line.indexOf("¤2¤")));
-		    	if (soundPath.toString().contains("local/")) {
-		    		sound.setPath(new File(
-		    				SoundboardMenu.mSbDir + "/" + boardName, soundPath.toString().substring(6, soundPath.toString().length())));
-		    	} else {
-		    		sound.setPath(soundPath);
-		    	}
+			    	File soundPath = new File(line.substring(line.indexOf("¤1¤") + 3, line.indexOf("¤2¤")));
+			    	if (soundPath.toString().contains("local/")) {
+			    		sound.setPath(new File(
+			    				SoundboardMenu.mSbDir + "/" + boardName, soundPath.toString().substring(6, soundPath.toString().length())));
+			    	} else {
+			    		sound.setPath(soundPath);
+			    	}
 
-		    	sound.setVolumeLeft(Float.valueOf(line.substring(line.indexOf("¤2¤") + 3, line.indexOf("¤3¤"))).floatValue());
-		    	sound.setVolumeRight(Float.valueOf(line.substring(line.indexOf("¤3¤") + 3, line.indexOf("¤4¤"))).floatValue());
-		    	sound.setNameFrameX(Float.valueOf(line.substring(line.indexOf("¤4¤") + 3, line.indexOf("¤5¤"))).floatValue());
-		    	sound.setNameFrameY(Float.valueOf(line.substring(line.indexOf("¤5¤") + 3, line.indexOf("¤6¤"))).floatValue());
-		    	sound.setHideImageOrText(Integer.valueOf(line.substring(line.indexOf("¤8¤") + 3, line.indexOf("¤9¤"))));
+			    	sound.setVolumeLeft(Float.valueOf(line.substring(line.indexOf("¤2¤") + 3, line.indexOf("¤3¤"))).floatValue());
+			    	sound.setVolumeRight(Float.valueOf(line.substring(line.indexOf("¤3¤") + 3, line.indexOf("¤4¤"))).floatValue());
+			    	sound.setNameFrameX(Float.valueOf(line.substring(line.indexOf("¤4¤") + 3, line.indexOf("¤5¤"))).floatValue());
+			    	sound.setNameFrameY(Float.valueOf(line.substring(line.indexOf("¤5¤") + 3, line.indexOf("¤6¤"))).floatValue());
+			    	sound.setHideImageOrText(Integer.valueOf(line.substring(line.indexOf("¤8¤") + 3, line.indexOf("¤9¤"))));
 
-		    	File imagePath = new File(line.substring(line.indexOf("¤9¤") + 3, line.indexOf("¤10¤")));
-		    	if (imagePath.toString().contains("local/")) {
-		    		sound.setImagePath(new File(
-		    				SoundboardMenu.mSbDir + "/" + boardName, imagePath.toString().substring(6, imagePath.toString().length())));
-		    	} else {
-		    		sound.setImagePath(imagePath);
-		    	}
+			    	File imagePath = new File(line.substring(line.indexOf("¤9¤") + 3, line.indexOf("¤10¤")));
+			    	if (imagePath.toString().contains("local/")) {
+			    		sound.setImagePath(new File(
+			    				SoundboardMenu.mSbDir + "/" + boardName, imagePath.toString().substring(6, imagePath.toString().length())));
+			    	} else {
+			    		sound.setImagePath(imagePath);
+			    	}
 
-		    	sound.setImageX(Float.valueOf(line.substring(line.indexOf("¤10¤") + 4, line.indexOf("¤11¤"))).floatValue());
-		    	sound.setImageY(Float.valueOf(line.substring(line.indexOf("¤11¤") + 4, line.indexOf("¤12¤"))).floatValue());
-		    	sound.setImageWidthHeight(null, 
-		    			Float.valueOf(line.substring(line.indexOf("¤12¤") + 4, line.indexOf("¤13¤"))).floatValue(),
-		    			Float.valueOf(line.substring(line.indexOf("¤13¤") + 4, line.indexOf("¤14¤"))).floatValue());
-		    	sound.setHideImageOrText(Integer.valueOf(line.substring(line.indexOf("¤14¤") + 4, line.indexOf("¤15¤"))));
-		    	sound.setNameTextColorInt(Integer.valueOf(line.substring(line.indexOf("¤15¤") + 4, line.indexOf("¤16¤"))));
-		    	sound.setNameFrameInnerColorInt(Integer.valueOf(line.substring(line.indexOf("¤16¤") + 4, line.indexOf("¤17¤"))));
-		    	sound.setNameFrameBorderColorInt(Integer.valueOf(line.substring(line.indexOf("¤17¤") + 4, line.indexOf("¤18¤"))));
-		    	sound.setShowNameFrameInnerPaint(Boolean.parseBoolean(line.substring(line.indexOf("¤18¤") + 4, line.indexOf("¤19¤"))));
-		    	sound.setShowNameFrameBorderPaint(Boolean.parseBoolean(line.substring(line.indexOf("¤19¤") + 4, line.indexOf("¤20¤"))));
-		    	sound.setLinkNameAndImage(Boolean.parseBoolean(line.substring(line.indexOf("¤20¤") + 4, line.indexOf("¤21¤"))));
-		    	sound.setNameSize(Float.valueOf(line.substring(line.indexOf("¤21¤") + 4, line.indexOf("¤22¤"))));
-		    	sound.setAutoArrangeColumn(Integer.valueOf(line.substring(line.indexOf("¤22¤") + 4, line.indexOf("¤23¤"))));
-		    	sound.setAutoArrangeRow(Integer.valueOf(line.substring(line.indexOf("¤23¤") + 4, line.indexOf("¤24¤"))));
+			    	sound.setImageX(Float.valueOf(line.substring(line.indexOf("¤10¤") + 4, line.indexOf("¤11¤"))).floatValue());
+			    	sound.setImageY(Float.valueOf(line.substring(line.indexOf("¤11¤") + 4, line.indexOf("¤12¤"))).floatValue());
+			    	sound.setImageWidthHeight(null, 
+			    			Float.valueOf(line.substring(line.indexOf("¤12¤") + 4, line.indexOf("¤13¤"))).floatValue(),
+			    			Float.valueOf(line.substring(line.indexOf("¤13¤") + 4, line.indexOf("¤14¤"))).floatValue());
+			    	sound.setHideImageOrText(Integer.valueOf(line.substring(line.indexOf("¤14¤") + 4, line.indexOf("¤15¤"))));
+			    	sound.setNameTextColorInt(Integer.valueOf(line.substring(line.indexOf("¤15¤") + 4, line.indexOf("¤16¤"))));
+			    	sound.setNameFrameInnerColorInt(Integer.valueOf(line.substring(line.indexOf("¤16¤") + 4, line.indexOf("¤17¤"))));
+			    	sound.setNameFrameBorderColorInt(Integer.valueOf(line.substring(line.indexOf("¤17¤") + 4, line.indexOf("¤18¤"))));
+			    	sound.setShowNameFrameInnerPaint(Boolean.parseBoolean(line.substring(line.indexOf("¤18¤") + 4, line.indexOf("¤19¤"))));
+			    	sound.setShowNameFrameBorderPaint(Boolean.parseBoolean(line.substring(line.indexOf("¤19¤") + 4, line.indexOf("¤20¤"))));
+			    	sound.setLinkNameAndImage(Boolean.parseBoolean(line.substring(line.indexOf("¤20¤") + 4, line.indexOf("¤21¤"))));
+			    	sound.setNameSize(Float.valueOf(line.substring(line.indexOf("¤21¤") + 4, line.indexOf("¤22¤"))));
+			    	sound.setAutoArrangeColumn(Integer.valueOf(line.substring(line.indexOf("¤22¤") + 4, line.indexOf("¤23¤"))));
+			    	sound.setAutoArrangeRow(Integer.valueOf(line.substring(line.indexOf("¤23¤") + 4, line.indexOf("¤24¤"))));
 
-		    	File activeImagePath = new File(line.substring(line.indexOf("¤24¤") + 4, line.indexOf("¤25¤")));
-		    	if (activeImagePath.toString().contains("local/")) {
-		    		sound.setActiveImagePath(new File(
-		    				SoundboardMenu.mSbDir + "/" + boardName, activeImagePath.toString().substring(6, activeImagePath.toString().length())));
-		    	} else {
-		    		sound.setActiveImagePath(activeImagePath);
-		    	}
-		    	sound.setSecondClickAction(Integer.valueOf(line.substring(line.indexOf("¤25¤") + 4, line.length())));
-		    	
-		    	if (sound.getImagePath().getAbsolutePath().equals("/")) sound.setImagePath(null);
-		    	if (sound.getActiveImagePath().getAbsolutePath().equals("/")) sound.setActiveImagePath(null);
+			    	File activeImagePath = new File(line.substring(line.indexOf("¤24¤") + 4, line.indexOf("¤25¤")));
+			    	if (activeImagePath.toString().contains("local/")) {
+			    		sound.setActiveImagePath(new File(
+			    				SoundboardMenu.mSbDir + "/" + boardName, activeImagePath.toString().substring(6, activeImagePath.toString().length())));
+			    	} else {
+			    		sound.setActiveImagePath(activeImagePath);
+			    	}
+			    	sound.setSecondClickAction(Integer.valueOf(line.substring(line.indexOf("¤25¤") + 4, line.length())));
+			    	
+			    	if (sound.getImagePath().getAbsolutePath().equals("/")) sound.setImagePath(null);
+			    	if (sound.getActiveImagePath().getAbsolutePath().equals("/")) sound.setActiveImagePath(null);
 
-		    	gsb.addSound(sound);
-		    }
-		    
-		    in.close();
-		    gsbHolder.getBoardList().add(gsb);
-		    
-		    Log.i(TAG, "Imported Unlimited Soundboards board");
-			return gsbHolder;
+			    	gsb.addSound(sound);
+			    }
+			    
+			    in.close();
+			    gsbHolder.getBoardList().add(gsb);
+			    
+			    Log.i(TAG, "Imported Unlimited Soundboards board");
+				return gsbHolder;
+			}
 		}
 	}
 	
 	public static void saveGraphicalSoundboardHolder(String boardName, GraphicalSoundboardHolder boardHolder) throws IOException {
-		
-		File boardDir = constructBoardPath(boardName);
-		File sbFile = new File(boardDir, "graphicalBoard");
-		
-		changeBoardDirectoryReferences(boardHolder, boardDir, SoundboardMenu.mLocalBoardDir);
-		
-		boardDir.mkdirs();
-		attemptBackup(sbFile);
-
-		if (boardDir.exists() == false) {
+		synchronized (boardLock) {
+			File boardDir = constructBoardPath(boardName);
+			File boardFile = new File(boardDir, "graphicalBoard");
+			File tmpBoardFile = new File(boardFile + ".tmp");
+			
+			changeBoardDirectoryReferences(boardHolder, boardDir, SoundboardMenu.mLocalBoardDir);
+			
 			boardDir.mkdirs();
+			attemptBackup(tmpBoardFile);
+
+			if (boardDir.exists() == false) {
+				boardDir.mkdirs();
+			}
+			
+			BufferedWriter tmpOut = new BufferedWriter(new FileWriter(tmpBoardFile));
+			
+			XStream xstream = XStreamUtil.graphicalBoardXStream();
+			xstream.toXML(boardHolder, tmpOut);
+			tmpOut.close();
+			
+			BufferedReader in = new BufferedReader(new FileReader(tmpBoardFile));
+			BufferedWriter out = new BufferedWriter(new FileWriter(tmpBoardFile));
+			IOUtils.copy(in, out);
+			in.close();
+			out.close();
+			
+			tmpBoardFile.delete();
 		}
-		
-		BufferedWriter out = new BufferedWriter(new FileWriter(sbFile));
-		
-		XStream xstream = XStreamUtil.graphicalBoardXStream();
-		xstream.toXML(boardHolder, out);
-		out.close();
 	}
 	
 	public static boolean boardExists(String boardName) {
