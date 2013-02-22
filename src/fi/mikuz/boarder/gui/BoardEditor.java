@@ -416,7 +416,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             case R.id.menu_take_screenshot:
             	
             	GraphicalSoundboard scPage = mGsb;
-            	Bitmap bitmap = Bitmap.createBitmap(mPanel.getWidth(), mPanel.getHeight(), Bitmap.Config.ARGB_8888);
+            	Bitmap bitmap = Bitmap.createBitmap(getPanelWidth(), getPanelHeight(), Bitmap.Config.ARGB_8888);
             	Canvas canvas = new Canvas(bitmap);
             	mPanel.onDraw(canvas);
 	            FileProcessor.saveScreenshot(super.mContext, bitmap, 
@@ -974,167 +974,174 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	}
 	
 	@Override
-    protected void onActivityResult(int requestCode, int resultCode, final Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-        
-        switch(requestCode) {
-	        case EXPLORE_SOUND:
-	        	
-	        	if (resultCode == RESULT_OK) {
-		        	Bundle extras = intent.getExtras();
-		        	XStream xstream = XStreamUtil.graphicalBoardXStream();
-		        	
-		        	GraphicalSound sound = (GraphicalSound) xstream.fromXML(extras.getString(FileExplorer.ACTION_ADD_GRAPHICAL_SOUND));
-		        	sound.setDefaultImage();
-		        	sound.setAutoArrangeColumn(0);
-		        	sound.setAutoArrangeRow(0);
-		        	if (mGsb.getAutoArrange()) {
-		        		if (placeToFreeSlot(sound)) {
-		        			mGsb.getSoundList().add(sound);
-   	    			 	}
-		        	} else {
-		        		placeToFreeSpace(sound);
-		        		mGsb.getSoundList().add(sound);
-		        	}
-		        	mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
-	        	}
-	        	break;
-	        	
-	        case EXPLORE_BACKGROUD:
-	        	
-	        	if (resultCode == RESULT_OK) {
-		        	Bundle extras = intent.getExtras();
-		        	File background = new File(extras.getString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE));
-		        	mGsb.setBackgroundImagePath(background);
-		        	mGsb.setBackgroundWidthHeight(BoardEditor.super.mContext,
-		        			mGsb.getBackgroundImage().getWidth(),
-		        			mGsb.getBackgroundImage().getHeight());
-		        	mGsb.loadBackgroundImage(BoardEditor.super.mContext);
-		        	mGsb.setBackgroundX(0);
-					mGsb.setBackgroundY(0);
-					mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
-	        	}
-	        	if (mBackgroundDialog != null && mGsb.getBackgroundImage() != null) {
-	        		mBackgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
-					mBackgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
-					mBackgroundWidthInput.setText(Float.toString(mGsb.getBackgroundWidth()));
-					mBackgroundHeightInput.setText(Float.toString(mGsb.getBackgroundHeight()));
-	        	}
-	        	break;
-	        
-	        case EXPLORE_SOUND_IMAGE:
-	        	
-	        	if (resultCode == RESULT_OK) {
-		        	Bundle extras = intent.getExtras();
-		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE));
-		        	mPressedSound.setImagePath(image);
-		        	mPressedSound.loadImages(BoardEditor.super.mContext);
-	        	}
-	        	if (mSoundImageDialog != null) {
-	        		mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
-					mSoundImageHeightText.setText("Height (" + mPressedSound.getImage().getHeight() + ")");
-					mSoundImageWidthInput.setText(Float.toString(mPressedSound.getImage().getWidth()));
-					mSoundImageHeightInput.setText(Float.toString(mPressedSound.getImage().getHeight()));
-	        	}
-	        	break;
-	        	
-	        case EXPLORE_SOUND_ACTIVE_IMAGE:
-	        	
-	        	if (resultCode == RESULT_OK) {
-		        	Bundle extras = intent.getExtras();
-		        	File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE));
-		        	mPressedSound.setActiveImagePath(image);
-		        	mPressedSound.loadImages(BoardEditor.super.mContext);
-	        	}
-	        	break;
-	        	
-	        case CHANGE_NAME_COLOR:
-	        	
-	        	if (resultCode == RESULT_OK) {
-		        	Bundle extras = intent.getExtras();
-		        	if (extras.getBoolean("copyKey")) {
-		        		mCopyColor = CHANGE_NAME_COLOR;
-		        	} else {
-		        		mPressedSound.setNameTextColorInt(extras.getInt("colorKey"));
-		        	}
-	        	}
-	        	break;
-	        	
-	        case CHANGE_INNER_PAINT_COLOR:
-	
-				if (resultCode == RESULT_OK) {
-					Bundle extras = intent.getExtras();
-		        	if (extras.getBoolean("copyKey")) {
-		        		mCopyColor = CHANGE_INNER_PAINT_COLOR;
-		        	} else {
-		        		mPressedSound.setNameFrameInnerColorInt(extras.getInt("colorKey"));
-		        	}
-				}
-				break;
-				
-	        case CHANGE_BORDER_PAINT_COLOR:
-	        	
-	        	if (resultCode == RESULT_OK) {
-	        		Bundle extras = intent.getExtras();
-		        	if (extras.getBoolean("copyKey")) {
-		        		mCopyColor = CHANGE_BORDER_PAINT_COLOR;
-		        	} else {
-		        		mPressedSound.setNameFrameBorderColorInt(extras.getInt("colorKey"));
-		        	}
-	        	}
-	        	break;
-	        	
-	        case CHANGE_BACKGROUND_COLOR:
-	        	
-	        	if (resultCode == RESULT_OK) {
-	        		Bundle extras = intent.getExtras();
-		        	mGsb.setBackgroundColor(extras.getInt("colorKey"));
-		        	mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
-	        	}
-	        	break;
-	        	
-	        case CHANGE_SOUND_PATH:
-	        	if (resultCode == RESULT_OK) {
-                	
-                	LayoutInflater removeInflater = (LayoutInflater) 
-                			BoardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
-                	View removeLayout = removeInflater.inflate(
-                			R.layout.graphical_soundboard_editor_alert_remove_sound,
-                	        (ViewGroup) findViewById(R.id.alert_remove_sound_root));
-              	  	
-              	  	final CheckBox removeFileCheckBox = 
-              	  		(CheckBox) removeLayout.findViewById(R.id.removeFile);
-              	  	removeFileCheckBox.setText(" DELETE " + mPressedSound.getPath().getAbsolutePath());
-              	  	
-              	  	AlertDialog.Builder removeBuilder = new AlertDialog.Builder(
-              	  		BoardEditor.this);
-              	  	removeBuilder.setView(removeLayout);
-              	  	removeBuilder.setTitle("Changing sound");
-          	  	
-              	  	removeBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-    	          	  	public void onClick(DialogInterface dialog, int whichButton) {
-    	          	  		if (removeFileCheckBox.isChecked() == true) {
-    	          	  			mPressedSound.getPath().delete();
-    	          	  		}
-	    	          	  	Bundle extras = intent.getExtras();
-				        	mPressedSound.setPath(new File(extras.getString(FileExplorer.ACTION_CHANGE_SOUND_PATH)));
-    	          	    }
-    	          	});
+	protected void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
+		super.onActivityResult(requestCode, resultCode, intent);
 
-              	  	removeBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-    		          	public void onClick(DialogInterface dialog, int whichButton) {
-    	          	    }
-    	          	});
-    	          	
-              	  	removeBuilder.setCancelable(false);
-              	  	removeBuilder.show();
-	        	}
-	        	break;
-	        
-	        default:
-	        	break;
-        }
-    }
+		Thread t = new Thread() {
+			public void run() {
+				Looper.prepare();
+
+				switch(requestCode) {
+				case EXPLORE_SOUND:
+
+					if (resultCode == RESULT_OK) {
+						Bundle extras = intent.getExtras();
+						XStream xstream = XStreamUtil.graphicalBoardXStream();
+
+						GraphicalSound sound = (GraphicalSound) xstream.fromXML(extras.getString(FileExplorer.ACTION_ADD_GRAPHICAL_SOUND));
+						sound.setDefaultImage();
+						sound.setAutoArrangeColumn(0);
+						sound.setAutoArrangeRow(0);
+						if (mGsb.getAutoArrange()) {
+							if (placeToFreeSlot(sound)) {
+								mGsb.getSoundList().add(sound);
+							}
+						} else {
+							placeToFreeSpace(sound);
+							mGsb.getSoundList().add(sound);
+						}
+						mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					}
+					break;
+
+				case EXPLORE_BACKGROUD:
+
+					if (resultCode == RESULT_OK) {
+						Bundle extras = intent.getExtras();
+						File background = new File(extras.getString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE));
+						mGsb.setBackgroundImagePath(background);
+						mGsb.setBackgroundWidthHeight(BoardEditor.super.mContext,
+								mGsb.getBackgroundImage().getWidth(),
+								mGsb.getBackgroundImage().getHeight());
+						mGsb.loadBackgroundImage(BoardEditor.super.mContext);
+						mGsb.setBackgroundX(0);
+						mGsb.setBackgroundY(0);
+						mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					}
+					if (mBackgroundDialog != null && mGsb.getBackgroundImage() != null) {
+						mBackgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
+						mBackgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
+						mBackgroundWidthInput.setText(Float.toString(mGsb.getBackgroundWidth()));
+						mBackgroundHeightInput.setText(Float.toString(mGsb.getBackgroundHeight()));
+					}
+					break;
+
+				case EXPLORE_SOUND_IMAGE:
+
+					if (resultCode == RESULT_OK) {
+						Bundle extras = intent.getExtras();
+						File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE));
+						mPressedSound.setImagePath(image);
+						mPressedSound.loadImages(BoardEditor.super.mContext);
+					}
+					if (mSoundImageDialog != null) {
+						mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
+						mSoundImageHeightText.setText("Height (" + mPressedSound.getImage().getHeight() + ")");
+						mSoundImageWidthInput.setText(Float.toString(mPressedSound.getImage().getWidth()));
+						mSoundImageHeightInput.setText(Float.toString(mPressedSound.getImage().getHeight()));
+					}
+					break;
+
+				case EXPLORE_SOUND_ACTIVE_IMAGE:
+
+					if (resultCode == RESULT_OK) {
+						Bundle extras = intent.getExtras();
+						File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE));
+						mPressedSound.setActiveImagePath(image);
+						mPressedSound.loadImages(BoardEditor.super.mContext);
+					}
+					break;
+
+				case CHANGE_NAME_COLOR:
+
+					if (resultCode == RESULT_OK) {
+						Bundle extras = intent.getExtras();
+						if (extras.getBoolean("copyKey")) {
+							mCopyColor = CHANGE_NAME_COLOR;
+						} else {
+							mPressedSound.setNameTextColorInt(extras.getInt("colorKey"));
+						}
+					}
+					break;
+
+				case CHANGE_INNER_PAINT_COLOR:
+
+					if (resultCode == RESULT_OK) {
+						Bundle extras = intent.getExtras();
+						if (extras.getBoolean("copyKey")) {
+							mCopyColor = CHANGE_INNER_PAINT_COLOR;
+						} else {
+							mPressedSound.setNameFrameInnerColorInt(extras.getInt("colorKey"));
+						}
+					}
+					break;
+
+				case CHANGE_BORDER_PAINT_COLOR:
+
+					if (resultCode == RESULT_OK) {
+						Bundle extras = intent.getExtras();
+						if (extras.getBoolean("copyKey")) {
+							mCopyColor = CHANGE_BORDER_PAINT_COLOR;
+						} else {
+							mPressedSound.setNameFrameBorderColorInt(extras.getInt("colorKey"));
+						}
+					}
+					break;
+
+				case CHANGE_BACKGROUND_COLOR:
+
+					if (resultCode == RESULT_OK) {
+						Bundle extras = intent.getExtras();
+						mGsb.setBackgroundColor(extras.getInt("colorKey"));
+						mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					}
+					break;
+
+				case CHANGE_SOUND_PATH:
+					if (resultCode == RESULT_OK) {
+
+						LayoutInflater removeInflater = (LayoutInflater) 
+								BoardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
+						View removeLayout = removeInflater.inflate(
+								R.layout.graphical_soundboard_editor_alert_remove_sound,
+								(ViewGroup) findViewById(R.id.alert_remove_sound_root));
+
+						final CheckBox removeFileCheckBox = 
+								(CheckBox) removeLayout.findViewById(R.id.removeFile);
+						removeFileCheckBox.setText(" DELETE " + mPressedSound.getPath().getAbsolutePath());
+
+						AlertDialog.Builder removeBuilder = new AlertDialog.Builder(
+								BoardEditor.this);
+						removeBuilder.setView(removeLayout);
+						removeBuilder.setTitle("Changing sound");
+
+						removeBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int whichButton) {
+								if (removeFileCheckBox.isChecked() == true) {
+									mPressedSound.getPath().delete();
+								}
+								Bundle extras = intent.getExtras();
+								mPressedSound.setPath(new File(extras.getString(FileExplorer.ACTION_CHANGE_SOUND_PATH)));
+							}
+						});
+
+						removeBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int whichButton) {
+							}
+						});
+
+						removeBuilder.setCancelable(false);
+						removeBuilder.show();
+					}
+					break;
+
+				default:
+					break;
+				}
+			}
+		};
+		t.start();
+	}
 	
 	private void initializeConvert() {
 		mWaitDialog = ProgressDialog.show(BoardEditor.this, "", "Please wait", true);
@@ -1343,8 +1350,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	public void moveSoundToSlot(GraphicalSound sound, int column, int row, float imageX, float imageY, float nameX, float nameY) {
 		
-		int width = mPanel.getWidth();
-		int height = mPanel.getHeight();
+		int width = getPanelWidth();
+		int height = getPanelHeight();
 		
 		float middlePointX = width/mGsb.getAutoArrangeColumns()/2;
 		float middlePointY = height/mGsb.getAutoArrangeRows()/2;
@@ -1427,8 +1434,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		float freeSpaceX = 0;
 		float freeSpaceY = 0;
 		
-		int width = mPanel.getWidth();
-		int height = mPanel.getHeight();
+		int width = getPanelWidth();
+		int height = getPanelHeight();
 		
 		while (freeSpaceY + sound.getImageHeight() < height) {
 			spaceAvailable = true;
@@ -1501,6 +1508,48 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		mPageDrawer.giveJoystick(null);
 	}
 	
+	private int getPanelWidth() {
+		int i = 0;
+		int width = -1;
+		while (i < 400) {
+			if (mPanel != null) {
+				width = mPanel.getWidth();
+				if (width > 0) {
+					break;
+				}
+			}
+			try {
+				Thread.sleep(20);
+			} catch (InterruptedException e) {
+				Log.e(TAG, "Unable to sleep while initializing mPanel", e);
+			}
+			i++;
+		}
+		if (width <= 0) Log.e(TAG, "Unable to find real panel width");
+		return width;
+	}
+	
+	private int getPanelHeight() {
+		int i = 0;
+		int height = -1;
+		while (i < 400) {
+			if (mPanel != null) {
+				height = mPanel.getHeight();
+				if (height > 0) {
+					break;
+				}
+			}
+			try {
+				Thread.sleep(20);
+			} catch (InterruptedException e) {
+				Log.e(TAG, "Unable to sleep while initializing mPanel", e);
+			}
+			i++;
+		}
+		if (height <= 0) Log.e(TAG, "Unable to find real panel height");
+		return height;
+	}
+	
 	public void issueResolutionConversion(final int orientation) {
 		if (mResolutionAlert != null) {
 			mResolutionAlert.dismiss();
@@ -1512,25 +1561,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				
 				final float allowedResolutionDifference = 0.03f;
 				
-				int panelWindowWidth = -1;
-				int panelWindowHeight = -1;
+				int panelWindowWidth = getPanelWidth();
+				int panelWindowHeight = getPanelHeight();
 				int i = 0, orientationMaxTries = 200;
-				
-				while (i < 400) {
-					if (mPanel != null) {
-						panelWindowWidth = mPanel.getWidth();
-						panelWindowHeight = mPanel.getHeight();
-						if (panelWindowWidth > 0 && panelWindowHeight > 0) {
-							break;
-						}
-					}
-					try {
-						Thread.sleep(20);
-					} catch (InterruptedException e) {
-						Log.e(TAG, "Unable to sleep while initializing mPanel", e);
-					}
-					i++;
-				}
 				
 				i = 0;
 				while (i < orientationMaxTries) {
@@ -1538,8 +1571,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 							(orientation == GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE && panelWindowWidth < panelWindowHeight)) {
 						try {
 							Thread.sleep(20);
-							panelWindowWidth = mPanel.getWidth();
-							panelWindowHeight = mPanel.getHeight();
+							panelWindowWidth = getPanelWidth();
+							panelWindowHeight = getPanelHeight();
 						} catch (InterruptedException e) {
 							Log.e(TAG, "Unable to sleep while waiting for orientation to change", e);
 						}
@@ -2462,8 +2495,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						} else if (mCurrentGesture == TouchGesture.DRAG) {
 							if (mGsb.getAutoArrange()) {
 								
-								int width = mPanel.getWidth();
-								int height = mPanel.getHeight();
+								int width = getPanelWidth();
+								int height = getPanelHeight();
 	      						
 	      						int column = -1, i = 0;
 	      						while (column == -1) {
