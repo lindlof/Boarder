@@ -74,6 +74,7 @@ import fi.mikuz.boarder.util.editor.Joystick;
 import fi.mikuz.boarder.util.editor.PageDrawer;
 import fi.mikuz.boarder.util.editor.PageDrawer.SwipingDirection;
 import fi.mikuz.boarder.util.editor.Pagination;
+import fi.mikuz.boarder.util.editor.PanelSize;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
 /**
@@ -416,7 +417,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             case R.id.menu_take_screenshot:
             	
             	GraphicalSoundboard scPage = mGsb;
-            	Bitmap bitmap = Bitmap.createBitmap(getPanelWidth(), getPanelHeight(), Bitmap.Config.ARGB_8888);
+            	PanelSize panelSize = new PanelSize(BoardEditor.this);
+            	Bitmap bitmap = Bitmap.createBitmap(panelSize.getWidth(), panelSize.getHeight(), Bitmap.Config.ARGB_8888);
             	Canvas canvas = new Canvas(bitmap);
             	mPanel.onDraw(canvas);
 	            FileProcessor.saveScreenshot(super.mContext, bitmap, 
@@ -1350,8 +1352,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	public void moveSoundToSlot(GraphicalSound sound, int column, int row, float imageX, float imageY, float nameX, float nameY) {
 		
-		int width = getPanelWidth();
-		int height = getPanelHeight();
+		PanelSize panelSize = new PanelSize(BoardEditor.this);
+		int width = panelSize.getWidth();
+		int height = panelSize.getHeight();
 		
 		float middlePointX = width/mGsb.getAutoArrangeColumns()/2;
 		float middlePointY = height/mGsb.getAutoArrangeRows()/2;
@@ -1434,8 +1437,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		float freeSpaceX = 0;
 		float freeSpaceY = 0;
 		
-		int width = getPanelWidth();
-		int height = getPanelHeight();
+		PanelSize panelSize = new PanelSize(BoardEditor.this);
+		int width = panelSize.getWidth();
+		int height = panelSize.getHeight();
 		
 		while (freeSpaceY + sound.getImageHeight() < height) {
 			spaceAvailable = true;
@@ -1508,47 +1512,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		mPageDrawer.giveJoystick(null);
 	}
 	
-	private int getPanelWidth() {
-		int i = 0;
-		int width = -1;
-		while (i < 400) {
-			if (mPanel != null) {
-				width = mPanel.getWidth();
-				if (width > 0) {
-					break;
-				}
-			}
-			try {
-				Thread.sleep(20);
-			} catch (InterruptedException e) {
-				Log.e(TAG, "Unable to sleep while initializing mPanel", e);
-			}
-			i++;
-		}
-		if (width <= 0) Log.e(TAG, "Unable to find real panel width");
-		return width;
-	}
 	
-	private int getPanelHeight() {
-		int i = 0;
-		int height = -1;
-		while (i < 400) {
-			if (mPanel != null) {
-				height = mPanel.getHeight();
-				if (height > 0) {
-					break;
-				}
-			}
-			try {
-				Thread.sleep(20);
-			} catch (InterruptedException e) {
-				Log.e(TAG, "Unable to sleep while initializing mPanel", e);
-			}
-			i++;
-		}
-		if (height <= 0) Log.e(TAG, "Unable to find real panel height");
-		return height;
-	}
 	
 	public void issueResolutionConversion(final int orientation) {
 		if (mResolutionAlert != null) {
@@ -1561,8 +1525,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				
 				final float allowedResolutionDifference = 0.03f;
 				
-				int panelWindowWidth = getPanelWidth();
-				int panelWindowHeight = getPanelHeight();
+				PanelSize panelSize = new PanelSize(BoardEditor.this);
+				int panelWindowWidth = panelSize.getWidth();
+				int panelWindowHeight = panelSize.getHeight();
 				int i = 0, orientationMaxTries = 200;
 				
 				i = 0;
@@ -1571,8 +1536,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 							(orientation == GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE && panelWindowWidth < panelWindowHeight)) {
 						try {
 							Thread.sleep(20);
-							panelWindowWidth = getPanelWidth();
-							panelWindowHeight = getPanelHeight();
+							panelSize = new PanelSize(BoardEditor.this);
+							panelWindowWidth = panelSize.getWidth();
+							panelWindowHeight = panelSize.getHeight();
 						} catch (InterruptedException e) {
 							Log.e(TAG, "Unable to sleep while waiting for orientation to change", e);
 						}
@@ -1776,7 +1742,11 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		}
 	}
 	
-	class DrawingPanel extends SurfaceView implements SurfaceHolder.Callback {
+	public DrawingPanel getPanel() {
+		return this.mPanel;
+	}
+	
+	public class DrawingPanel extends SurfaceView implements SurfaceHolder.Callback {
 		
 		private float mInitTouchEventX = 0;
 		private float mInitTouchEventY = 0;
@@ -2495,8 +2465,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						} else if (mCurrentGesture == TouchGesture.DRAG) {
 							if (mGsb.getAutoArrange()) {
 								
-								int width = getPanelWidth();
-								int height = getPanelHeight();
+								PanelSize panelSize = new PanelSize(BoardEditor.this);
+								int width = panelSize.getWidth();
+								int height = panelSize.getHeight();
 	      						
 	      						int column = -1, i = 0;
 	      						while (column == -1) {
