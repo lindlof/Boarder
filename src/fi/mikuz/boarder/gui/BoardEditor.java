@@ -355,7 +355,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	    		mGsbp.deletePage(BoardEditor.super.mContext, deleteGsb);
             	    		GraphicalSoundboard gsb = mGsbp.getPage(BoardEditor.super.mContext, deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
             	    		if (gsb == null) gsb = mPagination.getBoard(BoardEditor.super.mContext, deleteGsb.getScreenOrientation());
-            	    		changeBoard(gsb, false);
+            	    		changeBoard(gsb, SwipingDirection.NO_DIRECTION, false, true);
             	    	} else if (item == 3) {
             	    		mPagination.initMove(mGsb);
             	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
@@ -779,15 +779,15 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     }
 	
 	public void changeBoard(GraphicalSoundboard gsb, boolean overrideCurrentBoard) {
-		changeBoard(gsb, SwipingDirection.NO_DIRECTION, overrideCurrentBoard);
+		changeBoard(gsb, SwipingDirection.NO_DIRECTION, overrideCurrentBoard, false);
 	}
 
-	public void changeBoard(GraphicalSoundboard gsb, SwipingDirection direction, boolean overrideCurrentBoard) {
+	public void changeBoard(GraphicalSoundboard gsb, SwipingDirection direction, boolean overrideCurrentBoard, boolean forceChange) {
 		GraphicalSoundboard lastGsb = mGsb;
 		boolean samePage = lastGsb != null && 
 				(gsb.getPageNumber() == lastGsb.getPageNumber() && gsb.getScreenOrientation() == lastGsb.getScreenOrientation()); 
 		
-		if (!samePage) {
+		if (!samePage || forceChange) {
 			refreshPageTitle(gsb.getPageNumber());
 			
 			// Put drawing thread to animation speed
@@ -1918,7 +1918,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 								if (swapGsb == null) {
 									Toast.makeText(BoardEditor.super.mContext, "No page there", Toast.LENGTH_SHORT).show();
 								} else {
-									changeBoard(swapGsb, direction, true);
+									changeBoard(swapGsb, direction, true, false);
 								}
 							}
 						}
