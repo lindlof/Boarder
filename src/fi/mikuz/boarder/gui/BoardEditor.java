@@ -794,8 +794,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		if (!samePage) {
 			refreshPageTitle(gsb.getPageNumber());
 			
-			// Put thread to animation speed
+			// Put drawing thread to animation speed
 			mPageDrawer.startInitializingAnimation();
+			mCanvasInvalidated = true;
 			if (mThread != null) mThread.interrupt();
 			
 			OverridePage override = (overrideCurrentBoard) ? OverridePage.OVERRIDE_CURRENT : OverridePage.NO_OVERRIDE;
@@ -2588,6 +2589,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	class DrawingThread extends Thread {
         private SurfaceHolder mSurfaceHolder;
         private boolean mRun = false;
+        
+        private long mAnimationLastUpdate = 0;
 		
         public DrawingThread(SurfaceHolder surfaceHolder, DrawingPanel panel) {
             mSurfaceHolder = surfaceHolder;
@@ -2619,7 +2622,18 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
                 }
                 try {
                 	if (mPageDrawer.needAnimationRefreshSpeed()) {
-                		Thread.sleep(1);
+                		
+                		int animationUpdateInterval = 20;
+                		long currentTime = System.currentTimeMillis();
+                		
+                		long timeToNextUpdate = (mAnimationLastUpdate + animationUpdateInterval) - currentTime;
+                		if (timeToNextUpdate > 0) {
+                			mAnimationLastUpdate = currentTime;
+                			Thread.sleep(animationUpdateInterval);
+                		} else {
+                			mAnimationLastUpdate = currentTime;
+                		}
+                		
                 	} else if (mMode == EDIT_BOARD && (mCurrentGesture == TouchGesture.DRAG || mMoveBackground )) {
             			Thread.sleep(10);
             		} else if (mMode == EDIT_BOARD && mCurrentGesture != TouchGesture.DRAG && mMoveBackground == false) {
@@ -2631,7 +2645,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             				}
             			}
             		} else if (mMode == LISTEN_BOARD) {
-            			for (int i = 0; i <= 30; i++) {
+            			for (int i = 0; i <= 300; i++) {
             				Thread.sleep(20);
             				if (mMode == EDIT_BOARD || mCanvasInvalidated == true) {
             					mCanvasInvalidated = false;
