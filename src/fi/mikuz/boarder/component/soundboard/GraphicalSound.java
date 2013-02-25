@@ -84,12 +84,10 @@ public class GraphicalSound implements Cloneable {
 	public void loadImages(Context context) {
 		if (this.image == null) {
 			if (getImagePath() == null) {
-				if (defaultSoundImage == null && context != null) { // context null for loadGraphicalSoundboardHolder
-					defaultSoundImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.sound);
-				}
-				this.image = defaultSoundImage;
+				setDefaultImage(context);
 			} else {
 				this.image = ImageDrawing.decodeSoundImage(context, this);
+				if (this.image == null) setDefaultImage(context);
 			}
 		}
 		if (getActiveImage() == null && getActiveImagePath() != null) {
@@ -100,12 +98,10 @@ public class GraphicalSound implements Cloneable {
 	private void reloadImages(Context context) {
 		if (this.image != null) {
 			if (getImagePath() == null) {
-				if (defaultSoundImage == null && context != null) {
-					defaultSoundImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.sound);
-				}
-				this.image = defaultSoundImage;
+				setDefaultImage(context);
 			} else {
 				this.image = ImageDrawing.decodeSoundImage(context, this);
+				if (this.image == null) setDefaultImage(context);
 			}
 		}
 		if (getActiveImage() != null && getActiveImagePath() != null) {
@@ -118,7 +114,10 @@ public class GraphicalSound implements Cloneable {
 		this.activeImage = null;
 	}
 	
-	public void setDefaultImage() {
+	public void setDefaultImage(Context context) {
+		if (defaultSoundImage == null && context != null) { // context null for loadGraphicalSoundboardHolder
+			defaultSoundImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.sound);
+		}
 		this.image = defaultSoundImage;
 	}
 	

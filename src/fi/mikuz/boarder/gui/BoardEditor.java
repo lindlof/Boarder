@@ -984,7 +984,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				XStream xstream = XStreamUtil.graphicalBoardXStream();
 
 				GraphicalSound sound = (GraphicalSound) xstream.fromXML(extras.getString(FileExplorer.ACTION_ADD_GRAPHICAL_SOUND));
-				sound.setDefaultImage();
+				sound.setDefaultImage(BoardEditor.super.mContext);
 				sound.setAutoArrangeColumn(0);
 				sound.setAutoArrangeRow(0);
 				if (mGsb.getAutoArrange()) {
@@ -2187,10 +2187,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					              	  	final Button resetSoundImageButton = (Button) layout.findViewById(R.id.resetSoundImageButton);
 					              	  	resetSoundImageButton.setOnClickListener(new OnClickListener() {
 					    					public void onClick(View v) {
-					    						mPressedSound.setDefaultImage();
+					    						mPressedSound.setDefaultImage(BoardEditor.super.mContext);
 					    						String soundWidth = Integer.toString(mPressedSound.getImage().getWidth());
 					    						String soundHeight = Integer.toString(mPressedSound.getImage().getHeight());
-					    						mPressedSound.setDefaultImage();
 					    						mPressedSound.setImagePath(null);
 					    						mSoundImageWidthInput.setText(soundWidth);
 					              	  			mSoundImageHeightInput.setText(soundHeight);
