@@ -134,7 +134,7 @@ public class GraphicalSoundboardProvider {
 		return false;
 	}
 	
-	public void deleteBoardWithOrientation(int orientation) {
+	public void deletePagesWithOrientation(int orientation) {
 		List<GraphicalSoundboard> gsbList = boardHolder.getBoardList();
 		ListIterator<GraphicalSoundboard> iterator = gsbList.listIterator();
 		

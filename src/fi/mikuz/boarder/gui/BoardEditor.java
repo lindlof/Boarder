@@ -842,7 +842,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		  			"By removing it you can turn " + oppositeOrientationName + " board to " + orientationName + " orientation.\n\n");
 	  	orientationWarningBuilder.setPositiveButton("Remove board", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				mGsbp.deleteBoardWithOrientation(screenOrientation);
+				mGsbp.deletePagesWithOrientation(screenOrientation);
 				orientationTurningAlert(screenOrientation);
 			}
 	  	});
@@ -861,20 +861,25 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			BoardEditor.this);
 		orientationWarningBuilder.setTitle("Changing orientation");
 			orientationWarningBuilder.setMessage(
-		  			"Changing screen orientation will delete all position data if you don't " +
+		  			"Changing screen orientation will reset all positions if you don't " +
 		  			"select deny.\n\n" +
 		  			"Proceed?");
 	  	orientationWarningBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				mGsb.setBackgroundX(0);
-				mGsb.setBackgroundY(0);
-	    		for(GraphicalSound sound : mGsb.getSoundList()) {
-	    			sound.setNameFrameX(50);
-	    			sound.setNameFrameY(50);
-	    			sound.generateImageXYFromNameFrameLocation();
-	    		}
+				// Reset all elements
+				for (GraphicalSoundboard gsb : mGsbp.getBoardList()) {
+					gsb.setBackgroundX(0);
+					gsb.setBackgroundY(0);
+		    		for(GraphicalSound sound : gsb.getSoundList()) {
+		    			sound.setNameFrameX(50);
+		    			sound.setNameFrameY(50);
+		    			sound.generateImageXYFromNameFrameLocation();
+		    		}
+		    		gsb.setScreenOrientation(screenOrientation);
+				}
 	    		mGsbp.setOrientationMode(screenOrientation);
-	    		mGsb.setScreenOrientation(screenOrientation);
+	    		GraphicalSoundboard gsb = mPagination.getBoard(BoardEditor.super.mContext, screenOrientation);
+	    		changeBoard(gsb, false); // Change to one of the reseted pages
 	    		finishBoard();
 			}
 	  	});
@@ -885,8 +890,12 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	  	});
 	  	orientationWarningBuilder.setNeutralButton("Deny", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
+				for (GraphicalSoundboard gsb : mGsbp.getBoardList()) {
+					gsb.setScreenOrientation(screenOrientation);
+				}
 				mGsbp.setOrientationMode(screenOrientation);
-				mGsb.setScreenOrientation(screenOrientation);
+				GraphicalSoundboard gsb = mPagination.getBoard(BoardEditor.super.mContext, screenOrientation);
+	    		changeBoard(gsb, false); // Change to one of the reseted pages
 				finishBoard();
 			}
 	  	});
@@ -900,7 +909,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		orientationWarningBuilder.setTitle("Hybrid mode");
 			orientationWarningBuilder.setMessage(
 		  			"Hybrid mode allows you to switch between portrait and landscape by turning the screen.\n\n" +
-		  			"However both orientations must be created and maintained separately.\n\n" +
+		  			"However pages in both orientations must be created and maintained separately.\n\n" +
 		  			"Proceed?");
 	  	orientationWarningBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
@@ -922,14 +931,14 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		
 		AlertDialog.Builder orientationWarningBuilder = new AlertDialog.Builder(
 			BoardEditor.this);
-		orientationWarningBuilder.setTitle("Unused board");
+		orientationWarningBuilder.setTitle("Unused pages");
 			orientationWarningBuilder.setMessage(
-		  			"Do you want to delete unused board in " +  GraphicalSoundboard.getOrientationName(oppositeOrientation) + " orientation?\n\n");
+		  			"Do you want to delete pages in " +  GraphicalSoundboard.getOrientationName(oppositeOrientation) + " orientation?\n\n");
 	  	orientationWarningBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				//mThread.setRunning(false); // TODO handle board deleting better
 				mGsb = mPagination.getBoard(BoardEditor.super.mContext, screenOrientation);
-				mGsbp.deleteBoardWithOrientation(oppositeOrientation);
+				mGsbp.deletePagesWithOrientation(oppositeOrientation);
 				mGsbp.setOrientationMode(screenOrientation);
 	    		finishBoard();
 			}
