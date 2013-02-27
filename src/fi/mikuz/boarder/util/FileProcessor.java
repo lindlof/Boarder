@@ -1,5 +1,6 @@
 package fi.mikuz.boarder.util;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -13,7 +14,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Formatter;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -253,20 +257,28 @@ public class FileProcessor {
 		String boardDir = new File(SoundboardMenu.mSbDir, boardName).getAbsolutePath();
 		
 		for (GraphicalSoundboard gsb : gsbp.getBoardList()) {
+			
 			if (gsb.getBackgroundImagePath() != null) {
+				String causingElementBackground = " \n\nBackground image file:\n" + gsb.getBackgroundImagePath().getAbsolutePath();
+				
 				if (!gsb.getBackgroundImagePath().exists()) {
 					String error = "Background image file doesn't exist\n\nFile: " + gsb.getBackgroundImagePath().getAbsolutePath();
 					notify(activity, error);
 					Log.w(TAG, error);
 				} else if (gsb.getBackgroundImagePath().getAbsolutePath().contains(boardDir) == false) {
-					File outFile = copySoundElement(boardDir, gsb.getBackgroundImagePath());
-					gsb.setBackgroundImagePath(outFile);
+					try {
+						File outFile = copySoundElement(boardDir, gsb.getBackgroundImagePath());
+						gsb.setBackgroundImagePath(outFile);
+					} catch (WillNotOverrideSoundElementException e) {
+						notifyWillNotOverrideException(activity, e, causingElementBackground);
+					}
 				}
 			}
 
 
 			for (GraphicalSound sound : gsb.getSoundList()) {
-				String doesntExist = " doesn't exist\n\nSound:\n" + sound.getName() + "\n\nFile: ";
+				String causingElementSound = " \n\nSound:\n" + sound.getName();
+				String doesntExist = " doesn't exist" + causingElementSound + "\n\nFile: ";
 
 				if (BoardLocal.isFunctionSound(sound)) {
 				} else if (!sound.getPath().exists()) {
@@ -274,8 +286,12 @@ public class FileProcessor {
 					notify(activity, error);
 					Log.w(TAG, error);
 				} else if (sound.getPath().getAbsolutePath().contains(boardDir) == false) {
-					File outFile = copySoundElement(boardDir, sound.getPath());
-					sound.setPath(outFile);
+					try {
+						File outFile = copySoundElement(boardDir, sound.getPath());
+						sound.setPath(outFile);
+					} catch (WillNotOverrideSoundElementException e) {
+						notifyWillNotOverrideException(activity, e, causingElementSound);
+					}
 				}
 
 				if (sound.getImagePath() != null) {
@@ -284,8 +300,12 @@ public class FileProcessor {
 						notify(activity, error);
 						Log.w(TAG, error);
 					} else if (sound.getImagePath().getAbsolutePath().contains(boardDir) == false) {
-						File outFile = copySoundElement(boardDir, sound.getImagePath());
-						sound.setImagePath(outFile);
+						try {
+							File outFile = copySoundElement(boardDir, sound.getImagePath());
+							sound.setImagePath(outFile);
+						} catch (WillNotOverrideSoundElementException e) {
+							notifyWillNotOverrideException(activity, e, causingElementSound);
+						}
 					}
 				}
 
@@ -295,24 +315,75 @@ public class FileProcessor {
 						notify(activity, error);
 						Log.w(TAG, error);
 					} else if (sound.getActiveImagePath().getAbsolutePath().contains(boardDir) == false) {
-						File outFile = copySoundElement(boardDir, sound.getActiveImagePath());
-						sound.setActiveImagePath(outFile);
+						try {
+							File outFile = copySoundElement(boardDir, sound.getActiveImagePath());
+							sound.setActiveImagePath(outFile);
+						} catch (WillNotOverrideSoundElementException e) {
+							notifyWillNotOverrideException(activity, e, causingElementSound);
+						}
 					}
 				}
 			}
 		}
 		
-		Log.v(TAG, boardName + " converted");
+		Log.v(TAG, "Board \"" + boardName + "\" converted");
 	}
 	
-	private static File copySoundElement(String boardDir, File inFile) throws IOException {
+	private static File copySoundElement(String boardDir, File inFile) throws IOException, WillNotOverrideSoundElementException {
 		File outFile = new File(boardDir, inFile.getName());
+		
+		if (outFile.exists()) {
+			boolean hashMatch = false;
+			
+			try {
+				String inHash = calculateHash(inFile);
+				String outHash = calculateHash(outFile);
+				if (inHash.equals(outHash)) hashMatch = true;
+			} catch (Exception e) {
+				Log.e(TAG, "Failed to check for sound element hash match", e);
+			}
+			
+			if (hashMatch) {
+				Log.i(TAG, "Hash match between " + outFile + " and " + inFile);
+				return outFile;
+			} else {
+				throw new WillNotOverrideSoundElementException(outFile);
+			}
+		} else {
+			InputStream in = new FileInputStream(inFile);
+			OutputStream out = new FileOutputStream(outFile);
+			IOUtils.copy(in, out);
+			Log.v(TAG, "Copied " + inFile.getAbsolutePath() + " to " + outFile);
+			return outFile;
+		}
+	}
+	
+	public static String calculateHash(File file) throws Exception {
+		
+		MessageDigest algorithm = MessageDigest.getInstance("SHA1");
+        FileInputStream     fis = new FileInputStream(file);
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        DigestInputStream   dis = new DigestInputStream(bis, algorithm);
 
-		InputStream in = new FileInputStream(inFile);
-		OutputStream out = new FileOutputStream(outFile);
-		IOUtils.copy(in, out);
-		Log.v(TAG, "Copied " + inFile.getAbsolutePath() + " to " + outFile);
-		return outFile;
+        // read the file and update the hash calculation
+        while (dis.read() != -1);
+
+        // get the hash value as byte array
+        byte[] hash = algorithm.digest();
+
+        return byteArray2Hex(hash);
+    }
+
+    private static String byteArray2Hex(byte[] hash) {
+        Formatter formatter = new Formatter();
+        for (byte b : hash) {
+            formatter.format("%02x", b);
+        }
+        return formatter.toString();
+    }
+	
+	private static void notifyWillNotOverrideException(final Activity activity, WillNotOverrideSoundElementException e, String causingElementPresentation) {
+		notify(activity, "Did not override existing file \"" + e.getSoundElement().getName() +  "\" with:\n" + e.getSoundElement().getAbsolutePath() + causingElementPresentation);
 	}
 	
 	private static void notify(final Activity activity, final String text) {
