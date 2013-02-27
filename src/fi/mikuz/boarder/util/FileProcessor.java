@@ -34,6 +34,7 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
 import fi.mikuz.boarder.gui.SoundboardMenu;
+import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 
 /**
  * 
@@ -247,57 +248,60 @@ public class FileProcessor {
 		}
 	}
 	
-	public static void convertGraphicalBoard(Activity activity, String boardName, GraphicalSoundboard gsb) throws IOException {
+	public static void convertGraphicalBoard(Activity activity, String boardName, GraphicalSoundboardProvider gsbp) throws IOException {
 		
 		String boardDir = new File(SoundboardMenu.mSbDir, boardName).getAbsolutePath();
 		
-		if (gsb.getBackgroundImagePath() != null) {
-			if (!gsb.getBackgroundImagePath().exists()) {
-				String error = "Background image file doesn't exist\n\nFile: " + gsb.getBackgroundImagePath().getAbsolutePath();
-				notify(activity, error);
-				Log.w(TAG, error);
-			} else if (gsb.getBackgroundImagePath().getAbsolutePath().contains(boardDir) == false) {
-				File outFile = copySoundElement(boardDir, gsb.getBackgroundImagePath());
-				gsb.setBackgroundImagePath(outFile);
+		for (GraphicalSoundboard gsb : gsbp.getBoardList()) {
+			if (gsb.getBackgroundImagePath() != null) {
+				if (!gsb.getBackgroundImagePath().exists()) {
+					String error = "Background image file doesn't exist\n\nFile: " + gsb.getBackgroundImagePath().getAbsolutePath();
+					notify(activity, error);
+					Log.w(TAG, error);
+				} else if (gsb.getBackgroundImagePath().getAbsolutePath().contains(boardDir) == false) {
+					File outFile = copySoundElement(boardDir, gsb.getBackgroundImagePath());
+					gsb.setBackgroundImagePath(outFile);
+				}
+			}
+
+
+			for (GraphicalSound sound : gsb.getSoundList()) {
+				String doesntExist = " doesn't exist\n\nSound:\n" + sound.getName() + "\n\nFile: ";
+
+				if (BoardLocal.isFunctionSound(sound)) {
+				} else if (!sound.getPath().exists()) {
+					String error = "Sound file" + doesntExist + sound.getPath().getAbsolutePath();
+					notify(activity, error);
+					Log.w(TAG, error);
+				} else if (sound.getPath().getAbsolutePath().contains(boardDir) == false) {
+					File outFile = copySoundElement(boardDir, sound.getPath());
+					sound.setPath(outFile);
+				}
+
+				if (sound.getImagePath() != null) {
+					if (!sound.getImagePath().exists()) {
+						String error = "Image file" + doesntExist + sound.getImagePath().getAbsolutePath();
+						notify(activity, error);
+						Log.w(TAG, error);
+					} else if (sound.getImagePath().getAbsolutePath().contains(boardDir) == false) {
+						File outFile = copySoundElement(boardDir, sound.getImagePath());
+						sound.setImagePath(outFile);
+					}
+				}
+
+				if (sound.getActiveImagePath() != null) {
+					if (!sound.getActiveImagePath().exists()) {
+						String error = "Active image file" + doesntExist + sound.getActiveImagePath().getAbsolutePath();
+						notify(activity, error);
+						Log.w(TAG, error);
+					} else if (sound.getActiveImagePath().getAbsolutePath().contains(boardDir) == false) {
+						File outFile = copySoundElement(boardDir, sound.getActiveImagePath());
+						sound.setActiveImagePath(outFile);
+					}
+				}
 			}
 		}
 		
-		
-		for (GraphicalSound sound : gsb.getSoundList()) {
-			String doesntExist = " doesn't exist\n\nSound:\n" + sound.getName() + "\n\nFile: ";
-			
-			if (BoardLocal.isFunctionSound(sound)) {
-			} else if (!sound.getPath().exists()) {
-				String error = "Sound file" + doesntExist + sound.getPath().getAbsolutePath();
-				notify(activity, error);
-				Log.w(TAG, error);
-			} else if (sound.getPath().getAbsolutePath().contains(boardDir) == false) {
-				File outFile = copySoundElement(boardDir, sound.getPath());
-				sound.setPath(outFile);
-			}
-			
-			if (sound.getImagePath() != null) {
-				if (!sound.getImagePath().exists()) {
-					String error = "Image file" + doesntExist + sound.getImagePath().getAbsolutePath();
-					notify(activity, error);
-					Log.w(TAG, error);
-				} else if (sound.getImagePath().getAbsolutePath().contains(boardDir) == false) {
-					File outFile = copySoundElement(boardDir, sound.getImagePath());
-					sound.setImagePath(outFile);
-				}
-			}
-			
-			if (sound.getActiveImagePath() != null) {
-				if (!sound.getActiveImagePath().exists()) {
-					String error = "Active image file" + doesntExist + sound.getActiveImagePath().getAbsolutePath();
-					notify(activity, error);
-					Log.w(TAG, error);
-				} else if (sound.getActiveImagePath().getAbsolutePath().contains(boardDir) == false) {
-					File outFile = copySoundElement(boardDir, sound.getActiveImagePath());
-					sound.setActiveImagePath(outFile);
-				}
-			}
-		}
 		Log.v(TAG, boardName + " converted");
 	}
 	

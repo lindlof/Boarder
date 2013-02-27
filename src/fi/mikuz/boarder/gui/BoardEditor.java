@@ -8,6 +8,7 @@ import java.util.ListIterator;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
@@ -1142,7 +1143,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						cleanDirectory(new File(mSbDir, mBoardName).listFiles());
 					}
 					
-					FileProcessor.convertGraphicalBoard(BoardEditor.this, mBoardName, mGsb);
+					FileProcessor.convertGraphicalBoard((Activity) BoardEditor.this, mBoardName, mGsbp);
 					save();
 				} catch (IOException e) {
 					Log.e(TAG, "Error converting board", e);
@@ -1170,25 +1171,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					boardUsesFile = true;
 				}
 
-				try {
-					if (file.getName().equals(mGsb.getBackgroundImagePath().getName())) boardUsesFile = true;
-				} catch (NullPointerException e) {}
-
-				for (GraphicalSound sound : mGsb.getSoundList()) {
-					if (boardUsesFile) break;
-
-					try {
-						if (sound.getPath().getAbsolutePath().equals(file.getAbsolutePath())) boardUsesFile = true;
-					} catch (NullPointerException e) {}
-
-					try {
-						if (sound.getImagePath().getAbsolutePath().equals(file.getAbsolutePath())) boardUsesFile = true;
-					} catch (NullPointerException e) {}
-
-					try {
-						if (sound.getActiveImagePath().getAbsolutePath().equals(file.getAbsolutePath())) boardUsesFile = true;
-					} catch (NullPointerException e) {}
-				}
+				if (!boardUsesFile) boardUsesFile = mGsbp.boardUsesFile(file);
 
 				if (boardUsesFile == false) {
 					Log.d(TAG, "Deleting unused file " + file.getAbsolutePath());

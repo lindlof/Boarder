@@ -1,11 +1,13 @@
 package fi.mikuz.boarder.util.editor;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
 
 import android.content.Context;
 import android.util.Log;
+import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
 import fi.mikuz.boarder.util.FileProcessor;
@@ -157,6 +159,33 @@ public class GraphicalSoundboardProvider {
 				break;
 			}
 		}
+	}
+	
+	public boolean boardUsesFile(File file) {
+		for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
+			try {
+				if (file.getName().equals(gsb.getBackgroundImagePath().getName())) return true;
+			} catch (NullPointerException e) {}
+
+			for (GraphicalSound sound : gsb.getSoundList()) {
+				try {
+					if (sound.getPath().getAbsolutePath().equals(file.getAbsolutePath())) return true;
+				} catch (NullPointerException e) {}
+
+				try {
+					if (sound.getImagePath().getAbsolutePath().equals(file.getAbsolutePath())) return true;
+				} catch (NullPointerException e) {}
+
+				try {
+					if (sound.getActiveImagePath().getAbsolutePath().equals(file.getAbsolutePath())) return true;
+				} catch (NullPointerException e) {}
+			}
+		}
+		return false;
+	}
+	
+	public List<GraphicalSoundboard> getBoardList() {
+		return boardHolder.getBoardList();
 	}
 	
 	public boolean isPaginationSynchronizedBetweenOrientations() {
