@@ -85,6 +85,8 @@ public class DownloadBoard extends BoarderActivity implements ConnectionListener
 		super.onCreate(savedInstanceState);
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		setContentView(R.layout.internet_download_board);
+		setProgressBarIndeterminateVisibility(true);
 		
 		mWaitDialog = new TimeoutProgressDialog(DownloadBoard.this, "Waiting for response", TAG, true);
 		
@@ -222,7 +224,6 @@ public class DownloadBoard extends BoarderActivity implements ConnectionListener
 	};
 	
 	private void getBoard() {
-		setProgressBarIndeterminateVisibility(true);
 		HashMap<String, String> sendList = new HashMap<String, String>();
 		sendList.put(InternetMenu.BOARD_ID_KEY, Integer.toString(mBoardId));
 		if (mLoggedIn) {
@@ -233,7 +234,6 @@ public class DownloadBoard extends BoarderActivity implements ConnectionListener
 	}
 	
 	private void fillBoard(String favoriteText) {
-		setContentView(R.layout.internet_download_board);
 		DownloadBoard.this.setTitle(mBoard.getUploaderUsername() + " - " + mBoard.getBoardName());
 
 		TextView description = (TextView) findViewById(R.id.descriptionText);
