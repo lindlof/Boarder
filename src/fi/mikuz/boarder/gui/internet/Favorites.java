@@ -102,13 +102,6 @@ public class Favorites extends BoarderListActivity implements ConnectionListener
 	    	startActivity(i);
 		}
 	}
-	
-	@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-    	MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.internet_uploads_bottom, menu);
-	    return true;
-    }
     
     private void populateList() {
     	if (mListView.getAdapter() == null) {
