@@ -10,13 +10,25 @@ import android.widget.Toast;
 public abstract class ExternalIntent {
 	private static final String TAG = ExternalIntent.class.getSimpleName();
 	
-	private static final String mExtLinkDonate = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=ZY98RYEQTS7TY";
-	private static final String mExtLinkXDA = "http://forum.xda-developers.com/showthread.php?p=23224859#post23224859";
+	private static final String mExtLinkDonateFlattr = "https://flattr.com/thing/8aeacefc6a7b51a10f7777d01a3604d1";
+	private static final String mExtLinkDonatePaypal = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=ZY98RYEQTS7TY";
+	private static final String mExtLinkXDA = "https://forum.xda-developers.com/showthread.php?p=23224859#post23224859";
 	public static final String mExtLinkMarket = "market://details?id=fi.mikuz.boarder";
 	
-	public static void openDonate(Context context) {
+	public static void openDonateFlattr(Context context) {
 		try {
-			Intent browserDonateIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(mExtLinkDonate));
+			Intent browserDonateIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(mExtLinkDonateFlattr));
+			context.startActivity(browserDonateIntent);
+		} catch (ActivityNotFoundException e) {
+			String error = "Unable to open web browser";
+			Log.e(TAG, error, e);
+			Toast.makeText(context, error, Toast.LENGTH_LONG).show();
+		}
+	}
+	
+	public static void openDonatePaypal(Context context) {
+		try {
+			Intent browserDonateIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(mExtLinkDonatePaypal));
 			context.startActivity(browserDonateIntent);
 		} catch (ActivityNotFoundException e) {
 			String error = "Unable to open web browser";

@@ -600,16 +600,12 @@ public class SoundboardMenu extends BoarderListActivity {
             	AlertDialog.Builder aboutBuilder = new AlertDialog.Builder(this);
             	aboutBuilder.setTitle("About");
             	aboutBuilder.setMessage(
-            			"Boarder is an opensource project. It's created and maintained by Jan Mikael Lindlöf\n" +
-            			"\n" +
-            			"It exists to be good and reliable software to create soundboards " +
-            			"for Android.\n" +
-            			"\n" +
-            			"You can download full source from Github.\n" +
-            			"\n" +
+            			"Boarder is an opensource project administrated by Mikael Lindlöf.\n\n" +
+            			"Source code is hosted to Github. You can view and contribute to it there.\n\n" +
             			"I'd like to talk with you. You can email me to seek for help or say hello.\n\n" +
             			"You should also post on XDA-forums to meet other soundboard loving people :)\n\n" +
-            			"You can find these medias in menu in \'soudboard menu\' (that screen you see on startup!)");
+            			"Find Boarder wiki on Help Center. You are most welcome to explore and improve it.\n\n" +
+            			"You can find link to these medias in the same menu with About.");
             	AlertDialog aboutAlert = aboutBuilder.create();
             	aboutAlert.show();
             	return true;
@@ -690,7 +686,7 @@ public class SoundboardMenu extends BoarderListActivity {
             	return true;
             	
             case R.id.menu_donate:
-            	ExternalIntent.openDonate(this);
+            	showDonateNotification();
             	return true;
             	
             case R.id.menu_rate:
@@ -699,6 +695,38 @@ public class SoundboardMenu extends BoarderListActivity {
         }
 
         return super.onMenuItemSelected(featureId, item);
+    }
+    
+    private void showDonateNotification() {
+    	LayoutInflater inflater = (LayoutInflater) SoundboardMenu.this.getSystemService(LAYOUT_INFLATER_SERVICE);
+    	View layout = inflater.inflate(R.layout.soundboard_menu_alert_donate,
+    			(ViewGroup) findViewById(R.id.alert_settings_root));
+
+    	AlertDialog.Builder builder = new AlertDialog.Builder(SoundboardMenu.this);
+    	builder.setView(layout);
+    	
+    	final TextView donateText = (TextView) layout.findViewById(R.id.donateText);
+    	final ImageView flattrImage = (ImageView) layout.findViewById(R.id.flattrImage);
+    	final ImageView paypalImage = (ImageView) layout.findViewById(R.id.paypalImage);
+
+    	donateText.setText("\nThank you for considering donation.\n\n" +
+    			"I develop Boarder because I love doing it. However money always helps.\n\n" +
+    			"Select PayPal to donate using credit/debit card or your Paypal account. " +
+    			"You can also flattr Boarder.\n\n");
+    	
+    	flattrImage.setOnClickListener(new OnClickListener() {
+    		public void onClick(View v) {
+    			ExternalIntent.openDonateFlattr(SoundboardMenu.this);
+    		}
+    	});
+    	
+    	paypalImage.setOnClickListener(new OnClickListener() {
+    		public void onClick(View v) {
+    			ExternalIntent.openDonatePaypal(SoundboardMenu.this);
+    		}
+    	});
+    	
+    	builder.show();
     }
     
     private void loadGlobalSettings() {
