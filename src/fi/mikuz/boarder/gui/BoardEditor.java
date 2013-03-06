@@ -2534,6 +2534,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	      						
 	      						if (column == mPressedSound.getAutoArrangeColumn() && row == mPressedSound.getAutoArrangeRow()) {
 	      							moveSound(event.getX(), event.getY());
+	      							mGsb.addSound(mPressedSound);
 	      						} else {
 	      							try {
 	      								moveSoundToSlot(swapSound, mPressedSound.getAutoArrangeColumn(), mPressedSound.getAutoArrangeRow(), 
