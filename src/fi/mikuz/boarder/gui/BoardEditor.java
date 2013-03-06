@@ -2499,29 +2499,32 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 								int width = panelSize.getWidth();
 								int height = panelSize.getHeight();
 	      						
+								float soundMiddleX = mPressedSound.getMiddleX();
+								float soundMiddleY = mPressedSound.getMiddleY();
+								
 	      						int column = -1, i = 0;
 	      						while (column == -1) {
-	      							if (event.getX() >= i*(width/mGsb.getAutoArrangeColumns()) && event.getX() <= (i+1)*(width/(mGsb.getAutoArrangeColumns()))) {
-	      								column = i;
-	        						}
-	      							if (i > 1000) {
-	      								Log.e(TAG, "column fail");
-	      								mPressedSound.getAutoArrangeColumn();
+	      							if (i >= mGsb.getAutoArrangeColumns()) {
+	      								//Sound middle is over the right edge
+	      								column = mGsb.getAutoArrangeColumns() - 1;
 	      								break;
 	      							}
+	      							if (soundMiddleX <= (i+1)*(width/(mGsb.getAutoArrangeColumns()))) {
+	      								column = i;
+	        						}
 	      							i++;
 	      						}
 	      						i = 0;
 	      						int row = -1;
 	      						while (row == -1) {
-	      							if (event.getY() >= i*(height/mGsb.getAutoArrangeRows()) && event.getY() <= (i+1)*(height/(mGsb.getAutoArrangeRows()))) {
-	      								row = i;
-	        						}
-	      							if (i > 1000) {
-	      								Log.e(TAG, "row fail");
-	      								mPressedSound.getAutoArrangeRow();
+	      							if (i >= mGsb.getAutoArrangeRows()) {
+	      								//Sound middle is over the bottom edge
+	      								row = mGsb.getAutoArrangeRows() - 1;
 	      								break;
 	      							}
+	      							if (soundMiddleY <= (i+1)*(height/(mGsb.getAutoArrangeRows()))) {
+	      								row = i;
+	        						}
 	      							i++;
 	      						}
 	      						

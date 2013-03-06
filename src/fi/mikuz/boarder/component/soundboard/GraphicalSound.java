@@ -25,6 +25,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.RectF;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
@@ -320,6 +321,54 @@ public class GraphicalSound implements Cloneable {
 	public int getSecondClickAction() {
 		return secondClickAction;
 	} 
+	public float getMiddleX() {
+		float lowerX = Float.MAX_VALUE;
+		float upperX = Float.MIN_VALUE;
+		
+		if (getHideImageOrText() != HIDE_IMAGE) {
+			float x = getImageX();
+			float width = getImageHeight();
+			if (x < lowerX) lowerX = x;
+			if (x + width > upperX) upperX = x + width;
+		}
+		
+		if (getHideImageOrText() != HIDE_TEXT) {
+			SoundNameDrawing soundNameDrawing = new SoundNameDrawing(this);
+			RectF size = soundNameDrawing.getNameFrameRect();
+			float x = size.left;
+			float width = size.right - x;
+			if (x < lowerX) lowerX = x;
+			if (x + width > upperX) upperX = x + width;
+		}
+		
+		float middleX = (upperX-lowerX)/2 + lowerX;
+		
+		return middleX;
+	}
+	public float getMiddleY() {
+		float lowerY = Float.MAX_VALUE;
+		float upperY = Float.MIN_VALUE;
+		
+		if (getHideImageOrText() != HIDE_IMAGE) {
+			float y = getImageY();
+			float height = getImageWidth();
+			if (y < lowerY) lowerY = y;
+			if (y + height > upperY) upperY = y + height;
+		}
+		
+		if (getHideImageOrText() != HIDE_TEXT) {
+			SoundNameDrawing soundNameDrawing = new SoundNameDrawing(this);
+			RectF size = soundNameDrawing.getNameFrameRect();
+			float y = size.top;
+			float height = size.bottom - y;
+			if (y < lowerY) lowerY = y;
+			if (y + height > upperY) upperY = y + height;
+		}
+		
+		float middleY = (upperY-lowerY)/2 + lowerY;
+		
+		return middleY;
+	}
 	public Object clone() {
         try {
             return super.clone();
