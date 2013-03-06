@@ -77,10 +77,7 @@ public class ImageDrawing {
 	}
 	
 	public static Bitmap decodeFile(Context context, File f) {
-		BitmapFactory.Options options = new BitmapFactory.Options();
-		options.inJustDecodeBounds = true;
-		BitmapFactory.decodeFile(f.getAbsolutePath(), options);
-		return decodeFile(context, f, options.outWidth, options.outHeight);
+		return decodeFile(context, f, decodeFileWidth(f), decodeFileHeight(f));
 	}
 	
 	public static Bitmap decodeFile(Context context, File f, float width, float height) {
@@ -208,6 +205,20 @@ public class ImageDrawing {
 	    long maxMemory = runtime.maxMemory();
 	    
 	    return (usedMemory > (maxMemory - maxMemory*0.05));
+	}
+	
+	public static int decodeFileWidth(File f) {
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeFile(f.getAbsolutePath(), options);
+		return options.outWidth;
+	}
+	
+	public static int decodeFileHeight(File f) {
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeFile(f.getAbsolutePath(), options);
+		return options.outHeight;
 	}
 
 }

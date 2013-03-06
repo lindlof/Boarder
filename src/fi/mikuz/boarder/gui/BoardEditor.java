@@ -1002,7 +1002,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	}
 	
 	@Override
-	protected void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
 
 		switch(requestCode) {
@@ -1029,10 +1029,22 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			if (resultCode == RESULT_OK) {
 				Bundle extras = intent.getExtras();
 				File background = new File(extras.getString(FileExplorer.ACTION_SELECT_BACKGROUND_FILE));
+				
+				float backgroundWidth = -1;
+				float backgroundHeight = -1;
+				if (mGsb.getBackgroundWidth() != 0 && mGsb.getBackgroundHeight() != 0) {
+					// If background file size exists use it by default
+					backgroundWidth = mGsb.getBackgroundWidth();
+					backgroundHeight = mGsb.getBackgroundHeight();
+				} else {
+					backgroundWidth = ImageDrawing.decodeFileWidth(background);
+					backgroundHeight = ImageDrawing.decodeFileHeight(background);
+				}
+				
 				mGsb.setBackgroundImagePath(background);
 				mGsb.setBackgroundWidthHeight(BoardEditor.super.mContext,
-						mGsb.getBackgroundImage().getWidth(),
-						mGsb.getBackgroundImage().getHeight());
+						backgroundWidth,
+						backgroundHeight);
 				mGsb.loadBackgroundImage(BoardEditor.super.mContext);
 				mGsb.setBackgroundX(0);
 				mGsb.setBackgroundY(0);
@@ -1134,14 +1146,16 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						BoardEditor.this);
 				removeBuilder.setView(removeLayout);
 				removeBuilder.setTitle("Changing sound");
+				
+				Bundle extras = intent.getExtras();
+				final File newPath = new File(extras.getString(FileExplorer.ACTION_CHANGE_SOUND_PATH));
 
 				removeBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						if (removeFileCheckBox.isChecked() == true) {
 							mPressedSound.getPath().delete();
 						}
-						Bundle extras = intent.getExtras();
-						mPressedSound.setPath(new File(extras.getString(FileExplorer.ACTION_CHANGE_SOUND_PATH)));
+						mPressedSound.setPath(newPath);
 					}
 				});
 
