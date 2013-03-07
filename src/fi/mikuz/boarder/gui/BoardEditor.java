@@ -1428,7 +1428,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		
 		sound.setAutoArrangeColumn(column);
 		sound.setAutoArrangeRow(row);
-		mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 	}
 	
 	public void placeToFreeSlot(final GraphicalSound placedSound) {
