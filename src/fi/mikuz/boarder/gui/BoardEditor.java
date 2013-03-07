@@ -1014,8 +1014,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
 				GraphicalSound sound = (GraphicalSound) xstream.fromXML(extras.getString(FileExplorer.ACTION_ADD_GRAPHICAL_SOUND));
 				sound.setDefaultImage(BoardEditor.super.mContext);
+				
 				sound.setAutoArrangeColumn(0);
 				sound.setAutoArrangeRow(0);
+				
 				if (mGsb.getAutoArrange()) {
 					placeToFreeSlot(sound);
 				} else {
@@ -1436,6 +1438,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				Looper.prepare();
 				
 				GraphicalSound sound = placedSound;
+				sound.generateNameFrameXYFromImageLocation();
 				try {
 					Slot slot = AutoArrange.getFreeSlot(mGsb.getSoundList(), mGsb.getAutoArrangeColumns(), mGsb.getAutoArrangeRows());
 					moveSoundToSlot(sound, slot.getColumn(), slot.getRow(), sound.getImageX(), sound.getImageY(), sound.getNameFrameX(), sound.getNameFrameY());
