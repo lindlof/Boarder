@@ -313,7 +313,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	return true;
             	
         	case R.id.menu_paste_sound:
-        		GraphicalSound pasteSound = SoundboardMenu.mCopiedSound;
+        		GraphicalSound pasteSound = (GraphicalSound) SoundboardMenu.mCopiedSound.clone();
         		if (pasteSound == null) {
         			Toast.makeText(super.mContext, "Nothing copied", Toast.LENGTH_LONG).show();
         		} else {
