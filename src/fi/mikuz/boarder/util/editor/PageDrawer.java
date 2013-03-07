@@ -252,7 +252,7 @@ public class PageDrawer {
 		
 		canvas.drawColor(drawGsb.getBackgroundColor());
 		
-		if (drawGsb.getUseBackgroundImage() == true && drawGsb.getBackgroundImagePath().exists()) {
+		if (drawGsb.getUseBackgroundImage() == true && drawGsb.getBackgroundImagePath() != null && drawGsb.getBackgroundImagePath().exists()) {
 			RectF bitmapRect = new RectF();
 			bitmapRect.set(drawGsb.getBackgroundX(), drawGsb.getBackgroundY(), 
 					drawGsb.getBackgroundWidth() + drawGsb.getBackgroundX(), drawGsb.getBackgroundHeight() + drawGsb.getBackgroundY());
