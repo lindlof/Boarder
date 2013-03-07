@@ -509,14 +509,11 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	          	builder.show();
                         	
             	    	} else if (item == 1) {
-            	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
-        	    				getSystemService(LAYOUT_INFLATER_SERVICE);
-            	    		View layout = inflater.inflate(R.layout.
-            	    			graphical_soundboard_editor_alert_board_background_settings,
+            	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
+            	    		View layout = inflater.inflate(R.layout.graphical_soundboard_editor_alert_board_background_settings,
                     	        (ViewGroup) findViewById(R.id.alert_settings_root));
             	    		
-            	    		final CheckBox checkUseBackgroundImage = 
-                      	  		(CheckBox) layout.findViewById(R.id.useBackgroundFileCheckBox);
+            	    		final CheckBox checkUseBackgroundImage = (CheckBox) layout.findViewById(R.id.useBackgroundFileCheckBox);
                   	  		checkUseBackgroundImage.setChecked(mGsb.getUseBackgroundImage());
                       	
                       		final Button backgroundColorButton =
@@ -547,15 +544,38 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
                 	          		}
                 				}
                       		});
+                      		
+                      		
                       	  	
-                      	  	final Button backgroundFileButton = 
-                      	  		(Button) layout.findViewById(R.id.backgroundFileButton);
+                      	  	final Button backgroundFileButton = (Button) layout.findViewById(R.id.backgroundFileButton);
                       	  	backgroundFileButton.setOnClickListener(new OnClickListener() {
             					public void onClick(View v) {
             						selectBackgroundFile();
             					}
                       	  	});
-                      	  	
+
+                      	  	final Button defaultBackgroundButton = (Button) layout.findViewById(R.id.defaultBackgroundButton);
+                      	  defaultBackgroundButton.setOnClickListener(new OnClickListener() {
+                      	  		public void onClick(View v) {
+                      	  			AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
+                      	  			builder.setTitle("Default background");
+                      	  			builder.setMessage("Are you sure you want to forget your background?");
+
+                      	  			builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                      	  				public void onClick(DialogInterface dialog, int whichButton) {
+                      	  					mGsb.setBackgroundImagePath(null);
+                      	  					mGsb.loadBackgroundImage(BoardEditor.super.mContext);
+                      	  				}
+                      	  			});
+
+                      	  			builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                      	  				public void onClick(DialogInterface dialog, int whichButton) {}
+                      	  			});
+
+                      	  			builder.show();
+                      	  		}
+                      	  	});
+
                       	  	mBackgroundWidthText = (TextView) layout.findViewById(R.id.backgroundWidthText);
                       	  	mBackgroundHeightText = (TextView) layout.findViewById(R.id.backgroundHeightText);
                       	  	
