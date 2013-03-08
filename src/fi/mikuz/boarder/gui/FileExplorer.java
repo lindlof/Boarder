@@ -67,6 +67,8 @@ public class FileExplorer extends BoarderListActivity {
 	
 	public static final String EXTRA_ACTION_KEY = "actionKey";
 	public static final String EXTRA_BOARD_NAME_KEY = "boardNameKey";
+	
+	public static final String SELECTED_FILE_KEY = "selectedFileKey";
  
 	private List<String> mItem = null;
 	private List<String> mPath = null;
@@ -81,7 +83,21 @@ public class FileExplorer extends BoarderListActivity {
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);  
 		setContentView(R.layout.file_browser);
 		mBoardPath = SoundboardMenu.mSbDir.getPath() + "/" + getIntent().getExtras().getString(FileExplorer.EXTRA_BOARD_NAME_KEY);
-		getDir(mSdcard);
+		
+		String initDir = null;
+		try {
+			initDir = savedInstanceState.getString(SELECTED_FILE_KEY);
+		} catch (NullPointerException e) {
+			initDir = mSdcard; // Use default init dir
+		}
+		
+		getDir(initDir);
+	}
+	
+	@Override
+    protected void onSaveInstanceState(Bundle outState) {
+    	super.onSaveInstanceState(outState);
+    	outState.putString(SELECTED_FILE_KEY, selectedFile.getAbsolutePath());
 	}
 
 	@Override
