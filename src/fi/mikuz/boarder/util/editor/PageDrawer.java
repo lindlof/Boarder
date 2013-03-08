@@ -334,6 +334,10 @@ public class PageDrawer {
 					    		}
 					    		
 					    	} else {
+					    		if (sound.getImage().isRecycled()) {
+					    			Log.v(TAG, "Sound image " + sound.getImagePath() + " is recycled. Reloading.");
+					    			sound.reloadImages(context);
+					    		}
 					    		canvas.drawBitmap(sound.getImage(), null, imageRect, soundImagePaint);
 					    	}
 						} catch(NullPointerException npe) {

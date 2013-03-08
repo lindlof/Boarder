@@ -109,7 +109,11 @@ public class ImageDrawing {
 	    	b = imageCache.get(cacheKey);
 	    	if (b != null) {
 	    		Log.v(TAG, "Found image " + f + " from cache as " + cacheKey);
-	    		return b;
+	    		if (b.isRecycled()) {
+	    			Log.v(TAG, "Image " + f + " is recycled. Decoding.");
+	    		} else {
+	    			return b;
+	    		}
 	    	}
 	    }
 	    

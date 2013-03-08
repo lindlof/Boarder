@@ -115,7 +115,7 @@ public class GraphicalSound implements Cloneable {
 		}
 	}
 	
-	private void reloadImages(Context context) {
+	public void reloadImages(Context context) {
 		if (this.image != null) {
 			if (getImagePath() == null) {
 				setDefaultImage(context);
@@ -135,7 +135,8 @@ public class GraphicalSound implements Cloneable {
 	}
 	
 	public void setDefaultImage(Context context) {
-		if (defaultSoundImage == null && context != null) { // context null for loadGraphicalSoundboardHolder
+		if ((defaultSoundImage == null || defaultSoundImage.isRecycled()) 
+				&& context != null) { // context null for loadGraphicalSoundboardHolder
 			defaultSoundImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.sound);
 		}
 		this.image = defaultSoundImage;
