@@ -26,6 +26,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.RectF;
+import android.util.Log;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
@@ -39,6 +40,7 @@ import fi.mikuz.boarder.util.editor.SoundNameDrawing;
  */
 @XStreamAlias("graphical-sound")
 public class GraphicalSound implements Cloneable {
+	private static final String TAG = GraphicalSound.class.getSimpleName();
 	
 	private static Bitmap defaultSoundImage;
 	
@@ -115,7 +117,7 @@ public class GraphicalSound implements Cloneable {
 		}
 	}
 	
-	public void reloadImages(Context context) {
+	private void reloadImages(Context context) {
 		if (this.image != null) {
 			if (getImagePath() == null) {
 				setDefaultImage(context);
@@ -255,7 +257,11 @@ public class GraphicalSound implements Cloneable {
 	public float getImageHeight() {
 		return imageHeight;
 	}
-	public Bitmap getImage() {
+	public Bitmap getImage(Context context) {
+		if (image.isRecycled()) {
+			Log.v(TAG, "Sound image " + getImagePath() + " is recycled. Reloading.");
+			reloadImages(context);
+		}
 		return image;
 	}
 	public String getName() {

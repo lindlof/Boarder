@@ -330,15 +330,11 @@ public class PageDrawer {
 					    		} catch(NullPointerException npe) {
 					    			Log.e(TAG, "Unable to draw active image for sound " + sound.getName());
 									sound.setDefaultActiveImage();
-					    			canvas.drawBitmap(sound.getImage(), null, imageRect, soundImagePaint);
+					    			canvas.drawBitmap(sound.getImage(context), null, imageRect, soundImagePaint);
 					    		}
 					    		
 					    	} else {
-					    		if (sound.getImage().isRecycled()) {
-					    			Log.v(TAG, "Sound image " + sound.getImagePath() + " is recycled. Reloading.");
-					    			sound.reloadImages(context);
-					    		}
-					    		canvas.drawBitmap(sound.getImage(), null, imageRect, soundImagePaint);
+					    		canvas.drawBitmap(sound.getImage(context), null, imageRect, soundImagePaint);
 					    	}
 						} catch(NullPointerException npe) {
 							Log.e(TAG, "Unable to draw image for sound " + sound.getName());

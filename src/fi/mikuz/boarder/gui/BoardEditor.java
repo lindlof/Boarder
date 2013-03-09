@@ -1089,10 +1089,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				mPressedSound.loadImages(BoardEditor.super.mContext);
 			}
 			if (mSoundImageDialog != null) {
-				mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
-				mSoundImageHeightText.setText("Height (" + mPressedSound.getImage().getHeight() + ")");
-				mSoundImageWidthInput.setText(Float.toString(mPressedSound.getImage().getWidth()));
-				mSoundImageHeightInput.setText(Float.toString(mPressedSound.getImage().getHeight()));
+				mSoundImageWidthText.setText("Width (" + mPressedSound.getImage(super.mContext).getWidth() + ")");
+				mSoundImageHeightText.setText("Height (" + mPressedSound.getImage(super.mContext).getHeight() + ")");
+				mSoundImageWidthInput.setText(Float.toString(mPressedSound.getImage(super.mContext).getWidth()));
+				mSoundImageHeightInput.setText(Float.toString(mPressedSound.getImage(super.mContext).getHeight()));
 			}
 			break;
 
@@ -2164,10 +2164,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					              	  	checkShowSoundImage.setChecked(mPressedSound.getHideImageOrText() != GraphicalSound.HIDE_IMAGE);
 					              	  	
 					              	  	mSoundImageWidthText = (TextView) layout.findViewById(R.id.soundImageWidthText);
-					              	  	mSoundImageWidthText.setText("Width (" + mPressedSound.getImage().getWidth() + ")");
+					              	  	mSoundImageWidthText.setText("Width (" + mPressedSound.getImage(BoardEditor.super.mContext).getWidth() + ")");
 					            	  	
 					            	  	mSoundImageHeightText = (TextView) layout.findViewById(R.id.soundImageHeightText);
-					            	  	mSoundImageHeightText.setText("Height (" + mPressedSound.getImage().getHeight() + ")");
+					            	  	mSoundImageHeightText.setText("Height (" + mPressedSound.getImage(BoardEditor.super.mContext).getHeight() + ")");
 					              	  	
 					              	  	mSoundImageWidthInput = (EditText) layout.findViewById(R.id.soundImageWidthInput);
 					              	  	mSoundImageWidthInput.setText(Float.toString(mPressedSound.getImageWidth()));  	
@@ -2235,8 +2235,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					              	  	resetSoundImageButton.setOnClickListener(new OnClickListener() {
 					    					public void onClick(View v) {
 					    						mPressedSound.setDefaultImage(BoardEditor.super.mContext);
-					    						String soundWidth = Integer.toString(mPressedSound.getImage().getWidth());
-					    						String soundHeight = Integer.toString(mPressedSound.getImage().getHeight());
+					    						String soundWidth = Integer.toString(mPressedSound.getImage(BoardEditor.super.mContext).getWidth());
+					    						String soundHeight = Integer.toString(mPressedSound.getImage(BoardEditor.super.mContext).getHeight());
 					    						mPressedSound.setImagePath(null);
 					    						mSoundImageWidthInput.setText(soundWidth);
 					              	  			mSoundImageHeightInput.setText(soundHeight);
