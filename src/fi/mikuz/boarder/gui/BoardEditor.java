@@ -676,9 +676,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	    		AlertDialog.Builder resetBuilder = new AlertDialog.Builder(
 		                			BoardEditor.this);
 		                	resetBuilder.setTitle("Change board icon");
-		                	resetBuilder.setMessage("You can change icon for this board.\n\n" +
-		                			"You need a png image:\n " + mSbDir + "/" + mBoardName + "/" + "icon.png\n\n" +
-		                			"Recommended size is about 80x80 pixels.");
+		                	resetBuilder.setMessage("To set an icon for this board add following png image file:\n " + mSbDir + "/" + mBoardName + "/" + "icon.png\n\n" +
+		                			"Recommended icon size is about 80x80 pixels.");
 		                	AlertDialog resetAlert = resetBuilder.create();
 		                	resetAlert.show();
             	    	} else if (item == 3) {
