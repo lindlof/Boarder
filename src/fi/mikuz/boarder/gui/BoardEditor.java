@@ -88,6 +88,7 @@ import fi.mikuz.boarder.util.SoundPlayerControl;
 import fi.mikuz.boarder.util.XStreamUtil;
 import fi.mikuz.boarder.util.dbadapter.MenuDbAdapter;
 import fi.mikuz.boarder.util.editor.BoardHistoryProvider;
+import fi.mikuz.boarder.util.editor.EditorLastState;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider.OverridePage;
 import fi.mikuz.boarder.util.editor.Joystick;
@@ -112,6 +113,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private GraphicalSoundboardProvider mGsbp;
 	private BoardHistory mBoardHistory;
 	private BoardHistoryProvider mBoardHistoryProvider;
+	
+	private EditorLastState mLastState;
 	
 	private Pagination mPagination;
 	private PageDrawer mPageDrawer;
@@ -149,7 +152,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private TouchGesture mCurrentGesture = null;
 	private final int DRAG_SWIPE_TIME = 300;
 	
-	private GraphicalSound mPressedSound = null;
+	public GraphicalSound mPressedSound = null;
 	private float mInitialNameFrameX = 0;
 	private float mInitialNameFrameY = 0;
 	private float mInitialImageX = 0;
@@ -213,6 +216,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         mPagination = new Pagination(mGsbp);
         mPagination.restorePaginationInstance(savedInstanceState);
         initEditorBoard();
+        
+        mLastState = new EditorLastState(this, extras);
 
         if (mGsb.getSoundList().isEmpty()) {
         	mMode = EDIT_BOARD;
@@ -1284,6 +1289,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     protected void onSaveInstanceState(Bundle outState) {
     	super.onSaveInstanceState(outState);
     	mPagination.savePaginationInstance(outState);
+    	mLastState.saveEditorState(super.mContext, outState);
     }
     
     @Override

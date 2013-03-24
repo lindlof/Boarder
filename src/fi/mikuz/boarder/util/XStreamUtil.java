@@ -55,8 +55,12 @@ public class XStreamUtil {
 	 */
 	public static Bundle getSoundBundle(Context context, GraphicalSound tempSound, GraphicalSoundboard tempGsb) {
 		
-		GraphicalSound sound = (GraphicalSound) tempSound.clone();
-		sound.unloadImages();
+		GraphicalSound sound = null;
+		try {
+			sound = (GraphicalSound) tempSound.clone();
+			sound.unloadImages();
+		} catch (NullPointerException e) {}
+		
 		GraphicalSoundboard gsb = GraphicalSoundboard.copy(context, tempGsb);
 		gsb.setSoundList(new ArrayList<GraphicalSound>());
 		GraphicalSoundboard.unloadImages(gsb);
