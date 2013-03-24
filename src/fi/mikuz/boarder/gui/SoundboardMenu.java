@@ -43,6 +43,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Parcelable;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
@@ -84,6 +85,7 @@ import fi.mikuz.boarder.gui.internet.InternetMenu;
 import fi.mikuz.boarder.service.TogglePlayPauseService;
 import fi.mikuz.boarder.util.ApiKeyLoader;
 import fi.mikuz.boarder.util.BoardLocal;
+import fi.mikuz.boarder.util.ContextUtils;
 import fi.mikuz.boarder.util.ExternalIntent;
 import fi.mikuz.boarder.util.FileProcessor;
 import fi.mikuz.boarder.util.GlobalSettings;
@@ -299,12 +301,14 @@ public class SoundboardMenu extends BoarderListActivity {
     }
     
     synchronized private void updateMenu() {
-    	
     	try {
     		Log.v(TAG, "Updating board list");
         	if (Environment.getExternalStorageDirectory().canRead() == false) {
-        		Toast msg = Toast.makeText(this, "Can't read sdcard", Toast.LENGTH_LONG);
-        		msg.show();
+        		runOnUiThread(new Runnable() {
+            	    public void run() {
+            	    	ContextUtils.toast(SoundboardMenu.this.mContext, "Can't read sdcard", Toast.LENGTH_LONG);
+            	    }
+            	});
         	} else if (mSbDir.canRead()) {
 
         		Cursor menuCursor = mDbHelper.fetchAllBoards();
