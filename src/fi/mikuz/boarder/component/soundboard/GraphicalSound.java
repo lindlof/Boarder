@@ -334,7 +334,7 @@ public class GraphicalSound implements Cloneable {
 		
 		if (getHideImageOrText() != HIDE_IMAGE) {
 			float x = getImageX();
-			float width = getImageHeight();
+			float width = getImageWidth();
 			if (x < lowerX) lowerX = x;
 			if (x + width > upperX) upperX = x + width;
 		}
@@ -358,7 +358,7 @@ public class GraphicalSound implements Cloneable {
 		
 		if (getHideImageOrText() != HIDE_IMAGE) {
 			float y = getImageY();
-			float height = getImageWidth();
+			float height = getImageHeight();
 			if (y < lowerY) lowerY = y;
 			if (y + height > upperY) upperY = y + height;
 		}
