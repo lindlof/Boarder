@@ -38,13 +38,11 @@ import org.apache.http.protocol.HTTP;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import fi.mikuz.boarder.gui.SoundboardMenu;
-import fi.mikuz.boarder.util.GlobalSettings;
-
 import android.os.Handler;
 import android.text.Html;
-import android.text.Spanned;
 import android.util.Log;
+import fi.mikuz.boarder.gui.internet.InternetMenu;
+import fi.mikuz.boarder.util.GlobalSettings;
 
 /**
  * 
@@ -76,6 +74,7 @@ public class ConnectionManager {
 							json.put(key, sendList.get(key));
 						}
 					}
+					json.put(InternetMenu.HTML_FILTER, false);
 
 					StringEntity se = new StringEntity(json.toString());
 					se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));

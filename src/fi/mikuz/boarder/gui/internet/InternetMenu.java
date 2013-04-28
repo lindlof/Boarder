@@ -111,6 +111,7 @@ public class InternetMenu extends BoarderActivity implements ConnectionListener 
     public static final String PAGE_NUMBER_KEY = "page_number";
     public static final String MAX_RESULTS_KEY = "max_results";
     public static final String SEARCH_WORD_KEY = "search_word";
+    public static final String HTML_FILTER = "htmlFilter";
     
     static final String PHP_OPERATION_KEY = "php_operation";
     static final int PHP_OPERATION_ADD = 0;
