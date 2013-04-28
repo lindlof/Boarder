@@ -81,6 +81,8 @@ public class ConnectionManager {
 					se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
 					httppost.setEntity(se);
 					
+					if (GlobalSettings.getSensitiveLogging()) Log.v(TAG, "Sending to "+url+": "+json.toString());
+					
 					HttpResponse response = httpclient.execute(httppost);
 					InputStream in = response.getEntity().getContent(); //Get the data in the entity
 					String result = convertStreamToString(in);
