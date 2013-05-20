@@ -3,6 +3,7 @@
 
 bin/
 gen/
+.settings/
 
 lint.xml
 
