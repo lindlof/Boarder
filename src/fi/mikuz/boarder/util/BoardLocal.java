@@ -78,7 +78,7 @@ public class BoardLocal {
 			return MenuDbAdapter.LOCAL_GREEN;
 		} catch (Exception e) {
 			// Do not crash here, just return red
-			Log.w(TAG, "Can't get board color for " + boardName + "\nError: " + e.getMessage());
+			Log.w(TAG, "Board \"" + boardName + "\" is broken. Try restore guide in the wiki.");
 			return MenuDbAdapter.LOCAL_RED;
 		}
     }
