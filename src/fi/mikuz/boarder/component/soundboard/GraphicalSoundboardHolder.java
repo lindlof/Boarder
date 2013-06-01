@@ -61,6 +61,7 @@ public class GraphicalSoundboardHolder {
 		holder.setOrientationMode(tempHolder.getOrientationMode());
 		holder.setPaginationSynchronizedBetweenOrientations(
 				tempHolder.isPaginationSynchronizedBetweenOrientations());
+		holder.version = tempHolder.getVersion();
 		
 		for (GraphicalSoundboard gsb : tempHolder.boardList) {
 			GraphicalSoundboard gsbCopy = GraphicalSoundboard.copy(context, gsb);
@@ -124,13 +125,17 @@ public class GraphicalSoundboardHolder {
 		this.paginationSynchronizedBetweenOrientations = paginationSynchronizedBetweenOrientations;
 	}
 	
+	private int getVersion() {
+		return version;
+	}
+	
 	public void migrate(boolean log) {
 		final int currentVersion = this.version;
 		if (currentVersion < 2) {
 			migrateVersion2();
+			this.version = 2;
+			if (log) Log.d(TAG, "Version migrated from " + currentVersion + " to " + this.version);
 		}
-		this.version = 2;
-		if (log) Log.d(TAG, "Version migrated from " + currentVersion + " to " + version);
 	}
 	
 	private void migrateVersion2() {
