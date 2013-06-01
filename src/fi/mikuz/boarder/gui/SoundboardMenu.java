@@ -157,7 +157,8 @@ public class SoundboardMenu extends BoarderListActivity {
 		} catch (NameNotFoundException e) {
 			Log.e(TAG, "Unable to get info from manifest", e);
 		}
-    	Log.v(TAG, "Starting Boarder v" + versionName + " dev: " + mDevelopmentMode);
+    	Log.i(TAG, "Starting Boarder v" + versionName + " dev: " + mDevelopmentMode);
+    	Log.i(TAG, "Boarder storage directory is " + mSbDir.getAbsolutePath());
     	
     	if (!mDevelopmentMode) BugSenseHandler.initAndStartSession(this, ApiKeyLoader.loadBugSenseApiKey(super.mContext, TAG));
         super.onCreate(savedInstanceState);

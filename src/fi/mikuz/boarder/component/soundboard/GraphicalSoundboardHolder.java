@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
@@ -33,9 +34,11 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
  */
 @XStreamAlias("graphical-soundboard-holder")
 public class GraphicalSoundboardHolder {
+	private static final String TAG = GraphicalSoundboardHolder.class.getSimpleName();
+	
+	private int version;
 	
 	public enum OrientationMode {ORIENTATION_MODE_PORTRAIT, ORIENTATION_MODE_LANDSCAPE, ORIENTATION_MODE_HYBRID};
-
 	private OrientationMode orientationMode;
 	
 	/**
@@ -49,6 +52,7 @@ public class GraphicalSoundboardHolder {
 		this.orientationMode = OrientationMode.ORIENTATION_MODE_PORTRAIT;
 		this.setPaginationSynchronizedBetweenOrientations(true);
 		this.boardList = new ArrayList<GraphicalSoundboard>();
+		this.version = 1;
 	}
 	
 	public static GraphicalSoundboardHolder copy(Context context, GraphicalSoundboardHolder tempHolder) {
@@ -118,6 +122,25 @@ public class GraphicalSoundboardHolder {
 	public void setPaginationSynchronizedBetweenOrientations(
 			boolean paginationSynchronizedBetweenOrientations) {
 		this.paginationSynchronizedBetweenOrientations = paginationSynchronizedBetweenOrientations;
+	}
+	
+	public void migrate() {
+		final int currentVersion = this.version;
+		if (currentVersion < 2) {
+			migrateVersion2();
+		}
+		this.version = 2;
+		Log.d(TAG, "Version migrated from " + currentVersion + " to " + version);
+	}
+	
+	private void migrateVersion2() {
+		Log.d(TAG, "Migrating to version 2");
+		for (GraphicalSoundboard board : getBoardList()) {
+			GraphicalSoundList soundList = (GraphicalSoundList) board.getSoundList();
+			for (GraphicalSound sound : soundList) {
+				soundList.soundIdCheck(sound);
+			}
+		}
 	}
 
 }

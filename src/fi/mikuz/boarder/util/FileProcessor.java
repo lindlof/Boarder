@@ -106,6 +106,7 @@ public class FileProcessor {
 	public static GraphicalSoundboardHolder loadSerializedBoardV1(File boardDir, File boardFile) throws IOException {
 		XStream xstream = XStreamUtil.graphicalBoardXStream();
 		GraphicalSoundboardHolder holder = (GraphicalSoundboardHolder) xstream.fromXML(boardFile);
+		holder.migrate();
 		changeBoardDirectoryReferences(holder, SoundboardMenu.mLocalBoardDir, boardDir);
 		return holder;
 	}
@@ -452,7 +453,7 @@ public class FileProcessor {
 			board.setBackgroundImagePath(replaceBoardPath(board.getBackgroundImagePath(), oldLocation, newLocation));
 			List<GraphicalSound> soundList = new ArrayList<GraphicalSound>();
 			
-			for (GraphicalSound sound : board.getSoundList()) {
+			for (GraphicalSound sound : board.getSoundList()) { // FIXME: board with no sounds will not work
 				sound.setPath(replaceBoardPath(sound.getPath(), oldLocation, newLocation));
 				sound.setImagePath(replaceBoardPath(sound.getImagePath(), oldLocation, newLocation));
 				sound.setActiveImagePath(replaceBoardPath(sound.getActiveImagePath(), oldLocation, newLocation));

@@ -21,6 +21,7 @@ package fi.mikuz.boarder.component.soundboard;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -40,10 +41,9 @@ import fi.mikuz.boarder.util.ImageDrawing;
 public class GraphicalSoundboard {
 	
 	private int id;
-	private int version;
 	private int pageNumber;
 	
-	private ArrayList<GraphicalSound> soundList;
+	private ImplicitSoundList soundList;
 	
 	public static final int SCREEN_ORIENTATION_PORTRAIT = 1;
 	public static final int SCREEN_ORIENTATION_LANDSCAPE = 0;
@@ -79,9 +79,8 @@ public class GraphicalSoundboard {
 	
 	private void init() {
 		id = 0;
-		version = 1;
+		this.soundList = new ImplicitSoundList();
 		setPageNumber(0);
-		soundList = new ArrayList<GraphicalSound>();
 		playSimultaneously = true;
 		boardVolume = (float) 1;
 		useBackgroundImage = false;
@@ -98,6 +97,9 @@ public class GraphicalSoundboard {
 		screenOrientation = SCREEN_ORIENTATION_PORTRAIT;
 		screenHeight = 0;
 		screenWidth = 0;
+		
+		GraphicalSoundList soundList = new GraphicalSoundList();
+		this.soundList.setList(soundList);
 	}
 	
 	public int getId() {
@@ -106,14 +108,6 @@ public class GraphicalSoundboard {
 
 	public void setId(int id) {
 		this.id = id;
-	}
-	
-	public int getVersion() {
-		return version;
-	}
-
-	public void setVersion(int version) {
-		this.version = version;
 	}
 	
 	public int getPageNumber() {
@@ -127,14 +121,13 @@ public class GraphicalSoundboard {
 	public static GraphicalSoundboard copy(Context context, GraphicalSoundboard tempGsb) {
 		GraphicalSoundboard gsb = new GraphicalSoundboard();
 		
-		ArrayList<GraphicalSound> gsbSoundList = new ArrayList<GraphicalSound>();
+		ArrayList<GraphicalSound> gsbSoundList = new GraphicalSoundList();
 		
 		for (GraphicalSound sound : tempGsb.getSoundList()) {
 			gsbSoundList.add((GraphicalSound)sound.clone());
 		}
 		
 		gsb.setId(tempGsb.getId());
-		gsb.setVersion(tempGsb.getVersion());
 		gsb.setPageNumber(tempGsb.getPageNumber());
 		gsb.setSoundList(gsbSoundList);
 		gsb.setPlaySimultaneously(tempGsb.getPlaySimultaneously());
@@ -320,14 +313,18 @@ public class GraphicalSoundboard {
 	public void setBoardVolume(Float boardVolume) {
 		this.boardVolume = boardVolume;
 	}
-	public ArrayList<GraphicalSound> getSoundList() {
-		return soundList;
+	public List<GraphicalSound> getSoundList() {
+		return soundList.getList();
 	}
 	public void setSoundList(ArrayList<GraphicalSound> soundList) {
-		this.soundList = soundList;
+		synchronized (soundList) {
+			this.soundList.setList(soundList);
+		}
 	}
 	public void addSound(GraphicalSound sound) {
-		this.soundList.add(sound);
+		synchronized (soundList) {
+			this.soundList.getList().add(sound);
+		}
 	}
 	public boolean getPlaySimultaneously() {
 		return playSimultaneously;
@@ -335,7 +332,6 @@ public class GraphicalSoundboard {
 	public void setPlaySimultaneously(boolean playSimultaneously) {
 		this.playSimultaneously = playSimultaneously;
 	}
-	
 	
 	
 	public int getScreenHeight() {

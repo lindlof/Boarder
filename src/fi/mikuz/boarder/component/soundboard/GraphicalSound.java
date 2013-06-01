@@ -54,6 +54,7 @@ public class GraphicalSound implements Cloneable {
 	public static final int SECOND_CLICK_STOP = 2;
 	private int secondClickAction;
 	
+	private long id;
 	private String name;
 	private File path;
 	private float volumeLeft;
@@ -80,6 +81,7 @@ public class GraphicalSound implements Cloneable {
 	private int autoArrangeRow;
 	
 	public GraphicalSound() {
+		this.id = -1;
 		this.setName("blank");
 		this.setNameSize(30);
 		this.setPath(null);
@@ -148,6 +150,12 @@ public class GraphicalSound implements Cloneable {
 		this.activeImage = null;
 	}
 	
+	public long getId() {
+		return this.id;
+	}
+	protected void setId(long id) {
+		this.id = id;
+	}
 	public int getAutoArrangeColumn() {
 		return autoArrangeColumn;
 	}

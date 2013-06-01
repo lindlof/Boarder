@@ -19,8 +19,6 @@
 
 package fi.mikuz.boarder.util;
 
-import java.util.ArrayList;
-
 import android.content.Context;
 import android.os.Bundle;
 
@@ -28,8 +26,10 @@ import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
+import fi.mikuz.boarder.component.soundboard.GraphicalSoundList;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
+import fi.mikuz.boarder.component.soundboard.ImplicitSoundList;
 
 /**
  * 
@@ -42,6 +42,11 @@ public class XStreamUtil {
 		xstream.processAnnotations(GraphicalSoundboardHolder.class);
 		xstream.processAnnotations(GraphicalSoundboard.class);
 		xstream.processAnnotations(GraphicalSound.class);
+		xstream.addImplicitCollection(ImplicitSoundList.class, "list");
+		
+		// Deprecated fields
+		xstream.omitField(GraphicalSoundboard.class, "version");
+		
 		return xstream;
 	}
 	
@@ -62,7 +67,7 @@ public class XStreamUtil {
 		} catch (NullPointerException e) {}
 		
 		GraphicalSoundboard gsb = GraphicalSoundboard.copy(context, tempGsb);
-		gsb.setSoundList(new ArrayList<GraphicalSound>());
+		gsb.setSoundList(new GraphicalSoundList());
 		GraphicalSoundboard.unloadImages(gsb);
 		
 		Bundle soundBundle = new Bundle();
@@ -79,7 +84,7 @@ public class XStreamUtil {
 	public static Bundle getSoundboardBundle(Context context, GraphicalSoundboard tempGsb) {
 		
 		GraphicalSoundboard gsb = GraphicalSoundboard.copy(context, tempGsb);
-		gsb.setSoundList(new ArrayList<GraphicalSound>());
+		gsb.setSoundList(new GraphicalSoundList());
 		GraphicalSoundboard.unloadImages(gsb);
 		
 		Bundle soundBundle = new Bundle();
