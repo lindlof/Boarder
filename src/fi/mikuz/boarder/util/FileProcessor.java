@@ -453,7 +453,7 @@ public class FileProcessor {
 			board.setBackgroundImagePath(replaceBoardPath(board.getBackgroundImagePath(), oldLocation, newLocation));
 			List<GraphicalSound> soundList = new ArrayList<GraphicalSound>();
 			
-			for (GraphicalSound sound : board.getSoundList()) { // FIXME: board with no sounds will not work
+			for (GraphicalSound sound : board.getSoundList()) {
 				sound.setPath(replaceBoardPath(sound.getPath(), oldLocation, newLocation));
 				sound.setImagePath(replaceBoardPath(sound.getImagePath(), oldLocation, newLocation));
 				sound.setActiveImagePath(replaceBoardPath(sound.getActiveImagePath(), oldLocation, newLocation));
