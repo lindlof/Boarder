@@ -43,7 +43,7 @@ public class BoardLocal {
 		
 		try {
 			// No failsafes, return red if error occurs
-			GraphicalSoundboardHolder boardHolder = FileProcessor.loadGraphicalSoundboardHolder(boardName);
+			GraphicalSoundboardHolder boardHolder = FileProcessor.loadGraphicalSoundboardHolder(boardName, false);
 			
 			for (GraphicalSoundboard gsb : boardHolder.getBoardList()) {
 				

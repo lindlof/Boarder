@@ -71,7 +71,7 @@ public class FileProcessor {
 	private static final String boardSaveFileName = "graphicalBoard";
 	private static final String boardTempSaveFileName = boardSaveFileName + ".tmp";
 	
-	public static GraphicalSoundboardHolder loadGraphicalSoundboardHolder(String boardName) throws IOException {
+	public static GraphicalSoundboardHolder loadGraphicalSoundboardHolder(String boardName, boolean log) throws IOException {
 		synchronized (boardSaveFileLock) {
 
 			File boardDir = constructBoardPath(boardName);
@@ -79,34 +79,34 @@ public class FileProcessor {
 			File tmpBoardFile = new File(boardDir, boardTempSaveFileName);
 
 			try {
-				GraphicalSoundboardHolder holder = loadSerializedBoardV1(boardDir, boardFile);
+				GraphicalSoundboardHolder holder = loadSerializedBoardV1(boardDir, boardFile, log);
 				return holder;
 			} catch(StreamException e) {
 				try {
-					Log.e(TAG, "Unable to load board \"" + boardName + "\"", e);
-					GraphicalSoundboardHolder tmpHolder = loadSerializedBoardV1(boardDir, tmpBoardFile);
-					Log.i(TAG, "Board \"" + boardName + "\" tmp file loaded successfully");
+					if (log) Log.e(TAG, "Unable to load board \"" + boardName + "\"", e);
+					GraphicalSoundboardHolder tmpHolder = loadSerializedBoardV1(boardDir, tmpBoardFile, log);
+					if (log) Log.i(TAG, "Board \"" + boardName + "\" tmp file loaded successfully");
 					return tmpHolder;
 				} catch(StreamException e2) {
-					Log.e(TAG, "Unable to load board \"" + boardName + "\" from tmp file", e2);
+					if (log) Log.e(TAG, "Unable to load board \"" + boardName + "\" from tmp file", e2);
 					GraphicalSoundboardHolder legacyHolder = null;
 					try {
 						legacyHolder = loadUnlimitedSoundboardBoard(boardDir, boardName);
 					} catch (Exception e3) {
-						Log.e(TAG, "Unable to load board \"" + boardName + "\" using legacy format");
+						if (log) Log.e(TAG, "Unable to load board \"" + boardName + "\" using legacy format");
 						return null;
 					}
-					Log.i(TAG, "Imported board \"" + boardName + "\" using Unlimited Soundboards format");
+					if (log) Log.i(TAG, "Imported board \"" + boardName + "\" using Unlimited Soundboards format");
 					return legacyHolder;
 				}
 			}
 		}
 	}
 
-	public static GraphicalSoundboardHolder loadSerializedBoardV1(File boardDir, File boardFile) throws IOException {
+	public static GraphicalSoundboardHolder loadSerializedBoardV1(File boardDir, File boardFile, boolean log) throws IOException {
 		XStream xstream = XStreamUtil.graphicalBoardXStream();
 		GraphicalSoundboardHolder holder = (GraphicalSoundboardHolder) xstream.fromXML(boardFile);
-		holder.migrate();
+		holder.migrate(log);
 		changeBoardDirectoryReferences(holder, SoundboardMenu.mLocalBoardDir, boardDir);
 		return holder;
 	}

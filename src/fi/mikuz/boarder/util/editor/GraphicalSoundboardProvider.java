@@ -62,7 +62,7 @@ public class GraphicalSoundboardProvider {
 	 */
 	public GraphicalSoundboardProvider(String boardName) {
 		try {
-			boardHolder = FileProcessor.loadGraphicalSoundboardHolder(boardName);
+			boardHolder = FileProcessor.loadGraphicalSoundboardHolder(boardName, true);
 		} catch (IOException e) {
 			Log.w(TAG, "Unable to load board holder", e);
 		}

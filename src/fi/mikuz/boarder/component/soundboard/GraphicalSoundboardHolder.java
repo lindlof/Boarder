@@ -124,17 +124,16 @@ public class GraphicalSoundboardHolder {
 		this.paginationSynchronizedBetweenOrientations = paginationSynchronizedBetweenOrientations;
 	}
 	
-	public void migrate() {
+	public void migrate(boolean log) {
 		final int currentVersion = this.version;
 		if (currentVersion < 2) {
 			migrateVersion2();
 		}
 		this.version = 2;
-		Log.d(TAG, "Version migrated from " + currentVersion + " to " + version);
+		if (log) Log.d(TAG, "Version migrated from " + currentVersion + " to " + version);
 	}
 	
 	private void migrateVersion2() {
-		Log.d(TAG, "Migrating to version 2");
 		for (GraphicalSoundboard board : getBoardList()) {
 			GraphicalSoundList soundList = (GraphicalSoundList) board.getSoundList();
 			for (GraphicalSound sound : soundList) {
