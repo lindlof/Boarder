@@ -170,7 +170,6 @@ public class ImageDrawing {
 	    	Exception e = new IOException("Unable to decode image " + f.getAbsolutePath());
 	    	Log.e(TAG, e.getMessage(), e);
 	    	if (context != null) ContextUtils.toast(context, e.getMessage());
-	    	BugSenseHandler.sendException(e);
 	    }
 	    
 	    if (imageCache != null && b != null && cacheKey != null) {
