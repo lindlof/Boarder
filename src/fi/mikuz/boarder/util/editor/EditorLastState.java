@@ -1,48 +1,116 @@
+/* ========================================================================= *
+ * Boarder                                                                   *
+ * http://boarder.mikuz.org/                                                 *
+ * ========================================================================= *
+ * Copyright (C) 2013 Boarder                                                *
+ *                                                                           *
+ * Licensed under the Apache License, Version 2.0 (the "License");           *
+ * you may not use this file except in compliance with the License.          *
+ * You may obtain a copy of the License at                                   *
+ *                                                                           *
+ *     http://www.apache.org/licenses/LICENSE-2.0                            *
+ *                                                                           *
+ * Unless required by applicable law or agreed to in writing, software       *
+ * distributed under the License is distributed on an "AS IS" BASIS,         *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ * See the License for the specific language governing permissions and       *
+ * limitations under the License.                                            *
+ * ========================================================================= */
+
 package fi.mikuz.boarder.util.editor;
 
-import android.content.Context;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-
-import com.thoughtworks.xstream.XStream;
-
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.gui.BoardEditor;
-import fi.mikuz.boarder.util.XStreamUtil;
 
+/**
+ * Remembers last state of the <code>BoardEditor</code>.
+ * <p>
+ * When leaving the {@link BoardEditor} activity in order to modify a page or sound 
+ * the editor itself may have changed or no longer live when returning to it.
+ * Possible causes are orientation change on hybrid boards or Android's 
+ * background activity killing.
+ * <p>
+ * In order to always resolve the context of data returned by activity in 
+ * <code>onActivityResult</code> method the editor must save its state when 
+ * leaving the activity.
+ * Additionally the state must honor the Android activity life cycle.
+ * <p>
+ * Life cycle of this object:
+ * <p><ol>
+ * <li><code>BoardEditor</code> creates this when calling {@link Activity#startActivityForResult(Intent,int)}
+ * <li><code>BoardEditor</code> calls {@link #saveEditorState(Bundle)} if necessary
+ * <li>this is restored on <code>BoardEditor</code> constructor if necessary
+ * <li><code>BoardEditor</code> uses and discards this on {@link Activity#onActivityResult(int,int,Intent)}
+ * </ol><p>
+ * 
+ * @author Jan Mikael Lindlöf
+ */
 public class EditorLastState {
 	private static final String TAG = EditorLastState.class.getSimpleName();
+	
+	private static final String EDITOR_PAGE_ID = "editorPageId";
+	private static final String EDITOR_PRESSED_SOUND_ID = "editorPressedSoundId";
 	
 	private BoardEditor editor;
 	
 	private GraphicalSoundboard lastPage;
 	private GraphicalSound lastPressedSound;
 	
-	public EditorLastState(BoardEditor editor, Bundle extras) {
-		this.editor = editor;
+	public EditorLastState(GraphicalSoundboard page, GraphicalSound pressedSound) {
+		this.lastPage = page;
+		this.lastPressedSound = pressedSound;
+	}
+	
+	public EditorLastState(GraphicalSoundboardProvider gsbp, Bundle extras) {
 		
-		XStream xstream = XStreamUtil.graphicalBoardXStream();
-        String lastPressedSound = null;
-        String lastPage = null;
+        Integer lastPageId = null;
+        Long lastPressedSoundId = null;
         try {
-        	lastPressedSound = extras.getString(XStreamUtil.SOUND_KEY);
-        	lastPage = extras.getString(XStreamUtil.SOUNDBOARD_KEY);
+        	lastPageId = extras.getInt(EDITOR_PAGE_ID);
+        	lastPressedSoundId = extras.getLong(EDITOR_PRESSED_SOUND_ID);
         } catch (NullPointerException e) {}
-        if (lastPressedSound != null) {
-        	Log.v(TAG, "Recovering last pressed sound as pressed.");
-        	// revert pressed sound being added to board when saving
-        	GraphicalSound sound = (GraphicalSound) xstream.fromXML(lastPressedSound);
-        	GraphicalSoundboard page = (GraphicalSoundboard) xstream.fromXML(lastPage);
+        
+        
+        
+        if (lastPageId != null) {
+        	Log.v(TAG, "Recovering last page.");
         	
-        	if (editor.mGsb.getId() == page.getId()) {
-        		editor.mPressedSound = sound;
-        		editor.mGsb.getSoundList().remove(sound);
-        		this.lastPage = editor.mGsb;
-        	} else {
-        		this.lastPage = page;
+        	for (GraphicalSoundboard page : gsbp.getBoardList()) {
+        		if (page.getId() == lastPageId) {
+        			this.lastPage = page;
+        			
+        			if (lastPressedSoundId != null) {
+        				Log.v(TAG, "Recovering last pressed sound.");
+        				
+        				for (GraphicalSound sound : page.getSoundList()) {
+            				if (sound.getId() == lastPressedSoundId) {
+            					this.lastPressedSound = sound;
+            					break;
+            				}
+            			}
+        			}
+        			
+        			break;
+        		}
         	}
-        	this.lastPressedSound = sound;
+        	
+        	if (this.lastPage != null) {
+        		Log.v(TAG, "Last page was recovered");
+        	}
+        	
+        	if (this.lastPressedSound != null) {
+        		Log.v(TAG, "Last pressed sound was not recovered");
+        	}
+        	
+        	if (this.lastPage != null && editor.mGsb != null && 
+        			this.lastPage.getId() != editor.mGsb.getId()) {
+				Log.d(TAG, "Current page differs from the saved");
+			}
         }
 	}
 	
@@ -54,8 +122,12 @@ public class EditorLastState {
 		return lastPressedSound;
 	}
 	
-	public void saveEditorState(Context context, Bundle outState) {
-		Bundle pressedSoundBundle = XStreamUtil.getSoundBundle(context, editor.mPressedSound, editor.mGsb);
-    	outState.putAll(pressedSoundBundle);
+	public void saveEditorState(Bundle outState) {
+		if (this.lastPage != null) {
+			outState.putInt(EDITOR_PAGE_ID, this.lastPage.getId());
+		}
+		if (this.lastPressedSound != null) {
+			outState.putLong(EDITOR_PRESSED_SOUND_ID, this.lastPressedSound.getId());
+		}
 	}
 }
