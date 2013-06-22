@@ -75,7 +75,6 @@ import com.thoughtworks.xstream.XStream;
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.app.BoarderActivity;
 import fi.mikuz.boarder.component.Slot;
-import fi.mikuz.boarder.component.soundboard.BoardHistory;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
@@ -111,8 +110,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	public GraphicalSoundboard mGsb;
 	private GraphicalSoundboardProvider mGsbp;
-	private BoardHistory mBoardHistory;
-	private BoardHistoryProvider mBoardHistoryProvider;
+	private BoardHistoryProvider mHistory;
 	
 	private EditorLastState mLastState;
 	
@@ -206,7 +204,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         ImageDrawing.registerCache(super.mContext);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         
-        mBoardHistoryProvider = new BoardHistoryProvider();
+        mHistory = new BoardHistoryProvider();
         
         Bundle extras = getIntent().getExtras();
         mBoardName = extras.getString(MenuDbAdapter.KEY_TITLE);
@@ -289,7 +287,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         		return true;
         		
         	case R.id.menu_undo:
-        		GraphicalSoundboard undoGsb = mBoardHistory.undo(BoardEditor.super.mContext);
+        		GraphicalSoundboard undoGsb = mHistory.undo(BoardEditor.super.mContext, mGsb);
         		if (undoGsb != null) {
         			loadBoard(undoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
             		overrideBoard(undoGsb);
@@ -301,7 +299,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         		return true;
         	
         	case R.id.menu_redo:
-        		GraphicalSoundboard redoGsb = mBoardHistory.redo(BoardEditor.super.mContext);
+        		GraphicalSoundboard redoGsb = mHistory.redo(BoardEditor.super.mContext, mGsb);
         		if (redoGsb != null) {
         			loadBoard(redoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
             		overrideBoard(redoGsb);
@@ -660,7 +658,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	          				Toast.makeText(BoardEditor.super.mContext, "Incorrect value", 
             	          						Toast.LENGTH_SHORT).show();
             	          			}
-            	          			mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+            	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
             	          		}
             	          	});
 
@@ -763,7 +761,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         	          					Toast.makeText(BoardEditor.super.mContext, "Not enought slots", 
             	          						Toast.LENGTH_SHORT).show();
         	          				}
-        	          				mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+        	          				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
         	          			} catch(NumberFormatException nfe) {
         	          				Toast.makeText(BoardEditor.super.mContext, "Incorrect value", 
         	          						Toast.LENGTH_SHORT).show();
@@ -796,13 +794,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		                	    	if (item == 0) { // Background
 		                	    		mGsb.setBackgroundX(0);
 		                	    		mGsb.setBackgroundY(0);
-		                	    		mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+		                	    		mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 		                	    	} else { // Sound
 		                	    		GraphicalSound sound = mGsb.getSoundList().get(item - extraItemCount);
 			                	    	sound.setNameFrameX(50);
 			        	    			sound.setNameFrameY(50);
 			        	    			sound.generateImageXYFromNameFrameLocation();
-			        	    			mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+			        	    			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 		                	    	}
 		                	    }
 		                	});
@@ -842,14 +840,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			OverridePage override = (overrideCurrentBoard) ? OverridePage.OVERRIDE_CURRENT : OverridePage.NO_OVERRIDE;
 			loadBoard(gsb, direction, override);
 			
-			int boardId = gsb.getId();
-			BoardHistory boardHistory = mBoardHistoryProvider.getBoardHistory(boardId);
-			
-			if (boardHistory == null) {
-				boardHistory = mBoardHistoryProvider.createBoardHistory(BoardEditor.super.mContext, boardId, gsb);
-			}
-			
-			this.mBoardHistory = boardHistory;
+			mHistory.createInitialHistoryCheckpoint(BoardEditor.super.mContext, gsb);
 			
 			issueResolutionConversion(gsb.getScreenOrientation());
 		} else {
@@ -1080,9 +1071,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				lastPage.setBackgroundX(0);
 				lastPage.setBackgroundY(0);
 				
-				if (lastPage == BoardEditor.this.mGsb) {
-					mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
-				}
+				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
 			}
 			if (mBackgroundDialog != null && mGsb.getBackgroundImage() != null) {
 				mBackgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
@@ -1160,9 +1149,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				Bundle extras = intent.getExtras();
 				lastPage.setBackgroundColor(extras.getInt("colorKey"));
 				
-				if (lastPage == BoardEditor.this.mGsb) {
-					mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
-				}
+				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
 			}
 			break;
 
@@ -1382,7 +1369,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				break;
 		}
 		mCopyColor = 0;
-		mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+		mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 	}
     
     void moveSound(float X, float Y) {
@@ -1482,7 +1469,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
 					page.getSoundList().add(sound);
 					if (page == BoardEditor.this.mGsb) {
-						mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+						mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 					}
 					
 				} catch (NullPointerException e) {
@@ -1539,9 +1526,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
 				page.getSoundList().add(sound);
 				
-				if (page == BoardEditor.this.mGsb) {
-					mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
-				}
+				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 			}
 		};
 		t.start();
@@ -1573,7 +1558,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				mPressedSound.setImageX(mPressedSound.getImageX() + movementX);
 				mPressedSound.setImageY(mPressedSound.getImageY() + movementY);
 			}
-			mBoardHistory.setHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+			mHistory.setHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 			return true;
 		} else {
 			return false;
@@ -1789,7 +1774,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					mResolutionAlert.setOnDismissListener(new OnDismissListener() {
 						public void onDismiss(DialogInterface dialog) {
 							mResolutionAlert = null;
-							mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+							mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 						}
 					});
 
@@ -2002,7 +1987,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						if (mMoveBackground) {
 							mGsb.setBackgroundX(event.getX() - mBackgroundLeftDistance);
 							mGsb.setBackgroundY(event.getY() - mBackgroundTopDistance);
-							mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+							mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 						} else if ((mCurrentGesture == TouchGesture.PRESS_BOARD || mFineTuningSound != null) 
 								&& mMode == EDIT_BOARD && holdTime() < 200) {
 							mCurrentGesture = TouchGesture.TAP;
@@ -2162,7 +2147,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          						Toast.LENGTH_SHORT).show();
 					    	          			}
 					    	          			
-					    	          			mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					    	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 					    	          		}
 					    	          	});
 		
@@ -2310,7 +2295,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          			if (notifyIncorrectValue == true) {
 					    	          				Toast.makeText(BoardEditor.super.mContext, "Incorrect value", Toast.LENGTH_SHORT).show();
 					    	          			}
-					    	          			mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					    	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 					    	          		}
 					    	          	});
 	
@@ -2434,7 +2419,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          			if (notifyIncorrectValue == true) {
 					    	          				Toast.makeText(BoardEditor.super.mContext, "Incorrect value", Toast.LENGTH_SHORT).show();
 					    	          			}
-					    	          			mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					    	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 					    	          		}
 					    	          	});
 	
@@ -2470,7 +2455,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          	  			mPressedSound.getPath().delete();
 					    	          	  		}
 					    	          	  		mGsb.getSoundList().remove(mPressedSound);
-					    	          	  		mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					    	          	  		mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 					    	          	    }
 					    	          	});
 	
@@ -2595,7 +2580,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 							} else {
 								mGsb.getSoundList().add(mPressedSound);
 							}
-							mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+							mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 							
 						} else if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == LISTEN_BOARD) {
 							playTouchedSound(mPressedSound);
@@ -2603,7 +2588,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						
 						if (mJoystick != null) {
 							removeJoystick();
-							mBoardHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+							mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 						}
 						
 						mCurrentGesture = null;
