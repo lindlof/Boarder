@@ -75,11 +75,6 @@ import fi.mikuz.boarder.util.ApiKeyLoader;
 import fi.mikuz.boarder.util.DropboxCacheUtils;
 import fi.mikuz.boarder.util.ExternalIntent;
 
-
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class DropboxMenu extends BoarderListActivity {
 	private static final String TAG = "Dropbox Menu";
 

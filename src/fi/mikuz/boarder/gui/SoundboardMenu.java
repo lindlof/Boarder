@@ -98,10 +98,6 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.MenuDbAdapter;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class SoundboardMenu extends BoarderListActivity {
 	public static final String TAG = SoundboardMenu.class.getSimpleName();
 	

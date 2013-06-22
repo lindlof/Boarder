@@ -58,10 +58,6 @@ import fi.mikuz.boarder.connection.ConnectionSuccessfulResponse;
 import fi.mikuz.boarder.connection.ConnectionUtils;
 import fi.mikuz.boarder.util.TimeoutProgressDialog;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class DownloadBoardComments extends BoarderListActivity implements ConnectionListener, OnScrollListener {
 	private static final String TAG = "InternetDownloadBoardComments";
 	

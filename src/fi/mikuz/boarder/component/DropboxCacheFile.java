@@ -21,10 +21,6 @@ package fi.mikuz.boarder.component;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 @XStreamAlias("dropbox-cache-file")
 public class DropboxCacheFile {
 	

@@ -25,10 +25,6 @@ import android.util.Log;
 import fi.mikuz.boarder.app.BoarderService;
 import fi.mikuz.boarder.util.SoundPlayerControl;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class TogglePlayPauseService extends BoarderService {
 	public static final String TAG = "TogglePlayPauseService";
 	

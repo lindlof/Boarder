@@ -31,10 +31,6 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
 import fi.mikuz.boarder.component.soundboard.ImplicitSoundList;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class XStreamUtil {
 
 	public static XStream graphicalBoardXStream() {

@@ -27,10 +27,6 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class TimeoutProgressDialog {
 	
 	private int timeout = 30000;

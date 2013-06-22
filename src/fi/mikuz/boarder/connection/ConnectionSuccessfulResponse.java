@@ -21,10 +21,6 @@ package fi.mikuz.boarder.connection;
 
 import org.json.JSONObject;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class ConnectionSuccessfulResponse implements ConnectionResponse {
 	
 	String connectionId;

@@ -29,8 +29,6 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 /**
  * Holds list of saved boards. Allocates resources for new boards to be saved.
- * 
- * @author Jan Mikael Lindlöf
  */
 @XStreamAlias("graphical-soundboard-holder")
 public class GraphicalSoundboardHolder {

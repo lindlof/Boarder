@@ -19,10 +19,6 @@
 
 package fi.mikuz.boarder.component;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class Slot {
 	private int column;
 	private int row;

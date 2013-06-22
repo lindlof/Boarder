@@ -47,8 +47,6 @@ import fi.mikuz.boarder.gui.BoardEditor;
  * <li>this is restored on <code>BoardEditor</code> constructor if necessary
  * <li><code>BoardEditor</code> uses and discards this on {@link Activity#onActivityResult(int,int,Intent)}
  * </ol><p>
- * 
- * @author Jan Mikael Lindlöf
  */
 public class EditorLastState {
 	private static final String TAG = EditorLastState.class.getSimpleName();

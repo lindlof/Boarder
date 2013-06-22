@@ -54,10 +54,6 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.util.XStreamUtil;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class ColorChanger extends BoarderActivity implements OnSeekBarChangeListener, ColorPickerDialog.OnColorChangedListener {
 	private String TAG = "ColorChanger";
 	

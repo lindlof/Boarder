@@ -29,8 +29,6 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
  * Knows and converts different orientation types.
  * 
  * It is safe to assume that Boarder and Activity Info types are the same.
- * 
- * @author Jan Mikael Lindlöf
  */
 public class OrientationUtil {
 	public static final String TAG = OrientationUtil.class.getSimpleName();

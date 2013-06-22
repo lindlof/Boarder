@@ -23,12 +23,6 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import android.util.Log;
-
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class Security {
 	
 	/**

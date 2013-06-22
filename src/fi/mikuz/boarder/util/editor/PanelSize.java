@@ -28,8 +28,6 @@ import fi.mikuz.boarder.gui.BoardEditor.DrawingPanel;
 
 /**
  * Attempts to define panel size.
- * 
- * @author Jan Mikael Lindlöf
  */
 public class PanelSize {
 	private static final String TAG = PanelSize.class.getSimpleName();

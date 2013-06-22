@@ -21,10 +21,6 @@ package fi.mikuz.boarder.component.soundboard;
 
 import java.util.List;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class ImplicitSoundList {
 	private GraphicalSoundList list;
 

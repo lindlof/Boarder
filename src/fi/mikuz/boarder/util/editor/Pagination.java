@@ -30,8 +30,6 @@ import fi.mikuz.boarder.util.ContextUtils;
 
 /**
  * Knows current status of pages. Provides pagination functionality.
- * 
- * @author Jan Mikael Lindlöf
  */
 public class Pagination {
 	public static final String TAG = Pagination.class.getSimpleName();

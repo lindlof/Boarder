@@ -59,10 +59,6 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
 import fi.mikuz.boarder.gui.SoundboardMenu;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class FileProcessor {
 	public static final String TAG = "FileProcessor";
 	

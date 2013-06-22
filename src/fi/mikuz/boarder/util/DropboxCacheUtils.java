@@ -43,10 +43,6 @@ import fi.mikuz.boarder.component.DropboxCache;
 import fi.mikuz.boarder.component.DropboxCacheFile;
 import fi.mikuz.boarder.gui.SoundboardMenu;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class DropboxCacheUtils {
 	private static final String TAG = "DropboxCacheUtils";
 	

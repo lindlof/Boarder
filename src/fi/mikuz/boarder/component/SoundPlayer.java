@@ -23,10 +23,6 @@ import java.io.IOException;
 
 import android.media.MediaPlayer;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class SoundPlayer extends MediaPlayer {
 	
 	private String playingFile;

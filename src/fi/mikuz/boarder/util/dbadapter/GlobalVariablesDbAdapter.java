@@ -43,10 +43,6 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class GlobalVariablesDbAdapter extends DbAdapter {
 
     public static final String KEY_VARIABLE = "variable";

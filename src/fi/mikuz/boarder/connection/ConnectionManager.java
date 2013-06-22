@@ -44,10 +44,6 @@ import android.util.Log;
 import fi.mikuz.boarder.gui.internet.InternetMenu;
 import fi.mikuz.boarder.util.GlobalSettings;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class ConnectionManager {
 	private static final String TAG = "ConnectionManager";
 	

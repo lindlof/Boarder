@@ -28,10 +28,6 @@ import android.graphics.Matrix;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class IconUtils {
 	public static Bitmap resizeIcon(Context context, Bitmap bitmap, float pixelsPerInch) {
 		DisplayMetrics metrics = context.getResources().getDisplayMetrics();

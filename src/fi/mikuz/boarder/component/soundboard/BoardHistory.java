@@ -28,8 +28,6 @@ import fi.mikuz.boarder.util.ContextUtils;
 
 /**
  * Stores changes in soundboard
- * 
- * @author Jan Mikael Lindlöf
  */
 public class BoardHistory {
 	private static final String TAG = BoardHistory.class.getSimpleName();

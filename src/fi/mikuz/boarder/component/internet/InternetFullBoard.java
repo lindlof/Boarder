@@ -27,10 +27,6 @@ import org.json.JSONObject;
 
 import fi.mikuz.boarder.gui.internet.InternetMenu;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class InternetFullBoard extends InternetVersionBoard {
 	
 	private String description;

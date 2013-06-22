@@ -29,15 +29,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
-
-import com.bugsense.trace.BugSenseHandler;
-
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class ImageDrawing {
 	private static final String TAG = ImageDrawing.class.getSimpleName();
 	

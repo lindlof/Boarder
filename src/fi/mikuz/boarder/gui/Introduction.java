@@ -35,10 +35,6 @@ import android.widget.Toast;
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.app.BoarderActivity;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class Introduction extends BoarderActivity {
 	public static final String TAG = "Guide";
 	

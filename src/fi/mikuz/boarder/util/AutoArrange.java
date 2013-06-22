@@ -24,10 +24,6 @@ import java.util.List;
 import fi.mikuz.boarder.component.Slot;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class AutoArrange {
 	public static Slot getFreeSlot(List<GraphicalSound> soundList, int autoArrangeColumns, int autoArrangeRows) {
 		Slot freeSlot = null;

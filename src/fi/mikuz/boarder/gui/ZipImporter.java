@@ -43,10 +43,6 @@ import android.widget.TextView;
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.app.BoarderActivity;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class ZipImporter extends BoarderActivity {
 	private static final String TAG = "ZipImporter";
 	

@@ -27,10 +27,6 @@ import android.util.Log;
 import fi.mikuz.boarder.component.soundboard.BoardHistory;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class BoardHistoryProvider {
 	private static final String TAG = BoardHistoryProvider.class.getSimpleName();
 	

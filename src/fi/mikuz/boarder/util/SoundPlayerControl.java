@@ -31,10 +31,6 @@ import android.widget.Toast;
 import fi.mikuz.boarder.component.SoundPlayer;
 import fi.mikuz.boarder.gui.SoundboardMenu;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public abstract class SoundPlayerControl {
 	private static final String TAG = SoundPlayerControl.class.getSimpleName();
 	
@@ -45,8 +41,6 @@ public abstract class SoundPlayerControl {
 	
 	/**
 	 * Fade in or out in ten steps.
-	 * 
-	 * @author Jan Mikael Lindlöf
 	 */
 	private static class FadeThread extends Thread {
 		

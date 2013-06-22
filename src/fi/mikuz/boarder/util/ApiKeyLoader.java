@@ -27,8 +27,6 @@ import android.util.Log;
 
 /**
  * To support an API you need to provide a plain API key in assets folder in defined file.
- * 
- * @author Jan Mikael Lindlöf
  */
 public class ApiKeyLoader {
 

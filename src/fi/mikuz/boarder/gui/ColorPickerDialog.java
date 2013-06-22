@@ -32,10 +32,6 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class ColorPickerDialog extends Dialog {
 
     public interface OnColorChangedListener {

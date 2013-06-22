@@ -33,10 +33,6 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.util.ImageDrawing;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 @XStreamAlias("graphical-soundboard")
 public class GraphicalSoundboard {
 	

@@ -28,10 +28,6 @@ import android.graphics.RectF;
 import android.util.Log;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class SoundNameDrawing {
 	public static final String TAG = "SoundNameDrawing";
 	

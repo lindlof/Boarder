@@ -53,10 +53,6 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.util.ImageDrawing;
 import fi.mikuz.boarder.util.XStreamUtil;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class FileExplorer extends BoarderListActivity {
 	
 	public static final String ACTION_SELECT_BACKGROUND_FILE = "selectBackgroundFile";

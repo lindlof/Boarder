@@ -97,10 +97,6 @@ import fi.mikuz.boarder.util.editor.Pagination;
 import fi.mikuz.boarder.util.editor.PanelSize;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private static final String TAG = BoardEditor.class.getSimpleName();
 	

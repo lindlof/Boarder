@@ -50,10 +50,6 @@ import fi.mikuz.boarder.util.TimeoutProgressDialog;
 import fi.mikuz.boarder.util.dbadapter.GlobalVariablesDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class InternetMenu extends BoarderActivity implements ConnectionListener {
     private static final String TAG = "InternetMenu";
     

@@ -29,10 +29,6 @@ import fi.mikuz.boarder.component.soundboard.GraphicalSoundboardHolder;
 import fi.mikuz.boarder.gui.SoundboardMenu;
 import fi.mikuz.boarder.util.dbadapter.MenuDbAdapter;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class BoardLocal {
 	public static final String TAG = "BoardLocal";
 

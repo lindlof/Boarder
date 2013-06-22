@@ -33,8 +33,6 @@ import fi.mikuz.boarder.util.FileProcessor;
 
 /**
  * Provides the soundboard editor a relevant soundboard from soundboard holder.
- * 
- * @author Jan Mikael Lindlöf
  */
 public class GraphicalSoundboardProvider {
 	public static final String TAG = GraphicalSoundboardProvider.class.getSimpleName();

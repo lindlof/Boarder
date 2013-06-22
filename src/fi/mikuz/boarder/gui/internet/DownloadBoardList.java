@@ -59,10 +59,6 @@ import fi.mikuz.boarder.connection.ConnectionManager;
 import fi.mikuz.boarder.connection.ConnectionSuccessfulResponse;
 import fi.mikuz.boarder.connection.ConnectionUtils;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class DownloadBoardList extends BoarderActivity {
 	private static final String TAG = "InternetDownloadBoardList";
 	

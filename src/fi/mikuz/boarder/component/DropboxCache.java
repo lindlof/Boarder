@@ -23,10 +23,6 @@ import java.util.List;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 @XStreamAlias("dropbox-cache")
 public class DropboxCache {
 	

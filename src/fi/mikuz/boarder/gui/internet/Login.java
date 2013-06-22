@@ -52,10 +52,6 @@ import fi.mikuz.boarder.util.Security;
 import fi.mikuz.boarder.util.TimeoutProgressDialog;
 import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class Login extends BoarderActivity implements ConnectionListener {
 	private static final String TAG = "InternetLogin";
 	

@@ -48,8 +48,6 @@ import fi.mikuz.boarder.util.TimeoutProgressDialog;
 
 /**
  * Internet account settings. Accessible when logged in.
- * 
- * @author Jan Mikael Lindlöf
  */
 public class Settings extends BoarderActivity implements ConnectionListener {
 	private static final String TAG = "InternetLogin";

@@ -34,8 +34,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -56,10 +54,6 @@ import fi.mikuz.boarder.connection.ConnectionSuccessfulResponse;
 import fi.mikuz.boarder.connection.ConnectionUtils;
 import fi.mikuz.boarder.util.TimeoutProgressDialog;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class Favorites extends BoarderListActivity implements ConnectionListener, OnScrollListener {
 	private static final String TAG = Favorites.class.getSimpleName();
 	

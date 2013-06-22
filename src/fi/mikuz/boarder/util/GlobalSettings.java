@@ -26,8 +26,6 @@ import android.content.SharedPreferences;
 /**
  * Stores global settings to SharedPreferences for static access across application sessions.
  * Settings are loaded from database to here.
- * 
- * @author Jan Mikael Lindlöf
  */
 public abstract class GlobalSettings {
 	

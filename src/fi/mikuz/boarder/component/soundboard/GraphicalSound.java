@@ -34,10 +34,6 @@ import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.util.ImageDrawing;
 import fi.mikuz.boarder.util.editor.SoundNameDrawing;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 @XStreamAlias("graphical-sound")
 public class GraphicalSound implements Cloneable {
 	private static final String TAG = GraphicalSound.class.getSimpleName();

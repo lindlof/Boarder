@@ -67,10 +67,6 @@ import fi.mikuz.boarder.connection.ConnectionUtils;
 import fi.mikuz.boarder.util.GlobalSettings;
 import fi.mikuz.boarder.util.TimeoutProgressDialog;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class DownloadBoard extends BoarderActivity implements ConnectionListener {
 	private static final String TAG = "InternetDownloadBoard";
 	

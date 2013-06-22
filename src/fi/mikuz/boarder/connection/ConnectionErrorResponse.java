@@ -19,10 +19,6 @@
 
 package fi.mikuz.boarder.connection;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class ConnectionErrorResponse implements ConnectionResponse {
 
 	String connectionId;

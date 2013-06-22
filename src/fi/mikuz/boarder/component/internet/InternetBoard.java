@@ -24,10 +24,6 @@ import org.json.JSONObject;
 
 import fi.mikuz.boarder.gui.internet.InternetMenu;
 
-/**
- * 
- * @author Jan Mikael Lindlöf
- */
 public class InternetBoard {
 	
 	private int boardId;
