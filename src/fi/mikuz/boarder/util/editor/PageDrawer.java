@@ -371,7 +371,7 @@ public class PageDrawer {
 		}
 		
 		if (joystick != null) {
-			canvas.drawBitmap(joystick.getJoystickImage(), null, joystick.getJoystickImageRect(), soundImagePaint);
+			canvas.drawBitmap(Joystick.getJoystickImage(context), null, joystick.getJoystickImageRect(), soundImagePaint);
 		}
 		
 		return canvas;

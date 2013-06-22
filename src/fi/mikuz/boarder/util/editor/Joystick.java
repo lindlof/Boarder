@@ -29,8 +29,15 @@ import android.view.MotionEvent;
 
 public class Joystick {
 	
+	/*
+	 * Initial joystick position
+	 */
 	private float joystickX = 0;
 	private float joystickY = 0;
+	
+	/*
+	 * Distance to the target from initial joystick position.
+	 */
 	private float joystickDistanceX = 0;
 	private float joystickDistanceY = 0;
 	
@@ -38,14 +45,14 @@ public class Joystick {
 	private float joystickReferenceDistance;
 	
 	private RectF joystickImageRect;
-	private Bitmap joystickImage;
+	
+	private static Bitmap joystickImage;
 
 	public Joystick(Context context, MotionEvent event) {
 		joystickSide = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, context.getResources().getDisplayMetrics());
         joystickReferenceDistance = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, context.getResources().getDisplayMetrics());
         
         joystickImageRect = new RectF();
-        joystickImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.joystick);
         
         joystickX = event.getX();
 		joystickY = event.getY();
@@ -104,7 +111,10 @@ public class Joystick {
 		return dragDistance;
 	}
 
-	public Bitmap getJoystickImage() {
+	public static Bitmap getJoystickImage(Context context) {
+		if (joystickImage == null || joystickImage.isRecycled()) {
+			joystickImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.joystick);
+		}
 		return joystickImage;
 	}
 
