@@ -1067,6 +1067,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				lastPage.setBackgroundX(0);
 				lastPage.setBackgroundY(0);
 				
+				overrideBoard(lastPage);
 				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
 			}
 			if (mBackgroundDialog != null && mGsb.getBackgroundImage() != null) {
@@ -1084,6 +1085,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_IMAGE_FILE));
 				lastSound.setImagePath(image);
 				lastSound.loadImages(BoardEditor.super.mContext);
+				
+				overrideBoard(lastPage);
+				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
 			}
 			if (mSoundImageDialog != null) {
 				mSoundImageWidthText.setText("Width (" + mPressedSound.getImage(super.mContext).getWidth() + ")");
@@ -1100,6 +1104,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				File image = new File(extras.getString(FileExplorer.ACTION_SELECT_SOUND_ACTIVE_IMAGE_FILE));
 				lastSound.setActiveImagePath(image);
 				lastSound.loadImages(BoardEditor.super.mContext);
+				
+				overrideBoard(lastPage);
+				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
 			}
 			break;
 
@@ -1111,6 +1118,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					mCopyColor = CHANGE_NAME_COLOR;
 				} else {
 					lastSound.setNameTextColorInt(extras.getInt("colorKey"));
+					
+					overrideBoard(lastPage);
+					mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
 				}
 			}
 			break;
@@ -1123,6 +1133,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					mCopyColor = CHANGE_INNER_PAINT_COLOR;
 				} else {
 					lastSound.setNameFrameInnerColorInt(extras.getInt("colorKey"));
+					
+					overrideBoard(lastPage);
+					mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
 				}
 			}
 			break;
@@ -1135,6 +1148,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					mCopyColor = CHANGE_BORDER_PAINT_COLOR;
 				} else {
 					lastSound.setNameFrameBorderColorInt(extras.getInt("colorKey"));
+					
+					overrideBoard(lastPage);
+					mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
 				}
 			}
 			break;
@@ -1145,6 +1161,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				Bundle extras = intent.getExtras();
 				lastPage.setBackgroundColor(extras.getInt("colorKey"));
 				
+				overrideBoard(lastPage);
 				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
 			}
 			break;
@@ -1176,6 +1193,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 							lastSound.getPath().delete();
 						}
 						lastSound.setPath(newPath);
+						
+						overrideBoard(lastPage);
+						mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, lastPage);
 					}
 				});
 
@@ -1192,8 +1212,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		default:
 			break;
 		}
-		
-		overrideBoard(lastPage);
 	}
 	
 	private void initializeConvert() {
@@ -1466,11 +1484,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					moveSoundToSlot(sound, slot.getColumn(), slot.getRow(), sound.getImageX(), sound.getImageY(), sound.getNameFrameX(), sound.getNameFrameY());
 
 					page.getSoundList().add(sound);
-					overrideBoard(page);
 					
-					if (page == BoardEditor.this.mGsb) {
-						mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
-					}
+					overrideBoard(page);
+					mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, page);
 					
 				} catch (NullPointerException e) {
 					Toast.makeText(BoardEditor.super.mContext, "No slot available", Toast.LENGTH_SHORT).show();
@@ -1525,9 +1541,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				}
 
 				page.getSoundList().add(sound);
-				overrideBoard(page);
 				
-				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+				overrideBoard(page);
+				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, page);
 			}
 		};
 		t.start();
