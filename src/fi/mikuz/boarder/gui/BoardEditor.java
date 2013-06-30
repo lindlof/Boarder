@@ -1160,7 +1160,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
 				final CheckBox removeFileCheckBox = 
 						(CheckBox) removeLayout.findViewById(R.id.removeFile);
-				removeFileCheckBox.setText(" DELETE " + mPressedSound.getPath().getAbsolutePath());
+				removeFileCheckBox.setText(" DELETE " + lastSound.getPath().getAbsolutePath());
 
 				AlertDialog.Builder removeBuilder = new AlertDialog.Builder(
 						BoardEditor.this);
