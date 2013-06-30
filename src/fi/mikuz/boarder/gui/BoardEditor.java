@@ -1034,7 +1034,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				sound.setAutoArrangeColumn(0);
 				sound.setAutoArrangeRow(0);
 				
-				if (mGsb.getAutoArrange()) {
+				if (lastPage.getAutoArrange()) {
 					placeToFreeSlot(sound, lastPage);
 				} else {
 					placeToFreeSpace(sound, lastPage);
