@@ -64,12 +64,11 @@ public class FileExplorer extends BoarderListActivity {
 	public static final String EXTRA_ACTION_KEY = "actionKey";
 	public static final String EXTRA_BOARD_NAME_KEY = "boardNameKey";
 	
-	public static final String SELECTED_FILE_KEY = "selectedFileKey";
+	public static final String CURRENT_DIRECTORY_KEY = "currentDirectoryKey";
  
-	private List<String> mItem = null;
 	private List<String> mPath = null;
+	private File mCurrentDir = null;
 	private boolean mSdDir = false;
-	private File selectedFile;
 	private String mSdcard = Environment.getExternalStorageDirectory().toString();
 	private String mBoardPath = mSdcard;
 
@@ -82,7 +81,7 @@ public class FileExplorer extends BoarderListActivity {
 		
 		String initDir = null;
 		try {
-			initDir = savedInstanceState.getString(SELECTED_FILE_KEY);
+			initDir = savedInstanceState.getString(CURRENT_DIRECTORY_KEY);
 		} catch (NullPointerException e) {
 			initDir = mSdcard; // Use default init dir
 		}
@@ -93,7 +92,7 @@ public class FileExplorer extends BoarderListActivity {
 	@Override
     protected void onSaveInstanceState(Bundle outState) {
     	super.onSaveInstanceState(outState);
-    	outState.putString(SELECTED_FILE_KEY, selectedFile.getAbsolutePath());
+    	outState.putString(CURRENT_DIRECTORY_KEY, mCurrentDir.getAbsolutePath());
 	}
 
 	@Override
@@ -124,11 +123,11 @@ public class FileExplorer extends BoarderListActivity {
     private void getDir(String dirPath) {
      setTitle(this.getString(R.string.select_item) + " - " + dirPath);
      
-     mItem = new ArrayList<String>();
+     final List<String> mItem = new ArrayList<String>();
      mPath = new ArrayList<String>();
      
-     File f = new File(dirPath);
-     File[] files = f.listFiles();
+     mCurrentDir = new File(dirPath);
+     File[] files = mCurrentDir.listFiles();
      
      if (dirPath.equals(mSdcard)) {
     	 mItem.add("Board dir");
@@ -138,7 +137,7 @@ public class FileExplorer extends BoarderListActivity {
 	     mItem.add("SD card");
 	     mPath.add(mSdcard);
 	     mItem.add("../");
-    	 mPath.add(f.getParent()); 
+    	 mPath.add(mCurrentDir.getParent()); 
     	 mSdDir = false;
      }
      
@@ -182,7 +181,7 @@ public class FileExplorer extends BoarderListActivity {
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
   
-    	selectedFile = new File(mPath.get(position));
+    	final File selectedFile = new File(mPath.get(position));
   
     	if (selectedFile.isDirectory()) {
     		if(selectedFile.canRead())
