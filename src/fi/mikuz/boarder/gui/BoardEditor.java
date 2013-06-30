@@ -1337,7 +1337,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     
     private void overrideBoard(GraphicalSoundboard gsb) {
     	GraphicalSoundboard overrideGsb = GraphicalSoundboard.copy(BoardEditor.super.mContext, gsb);
-		if (mPressedSound != null && mCurrentGesture == TouchGesture.DRAG) overrideGsb.getSoundList().add(mPressedSound); // Sound is being dragged
+		if (mPressedSound != null && mCurrentGesture == TouchGesture.DRAG) {
+			// Sound is being dragged
+			overrideGsb.getSoundList().add(mPressedSound);
+		}
 		mGsbp.overrideBoard(BoardEditor.super.mContext, overrideGsb);
     }
     
