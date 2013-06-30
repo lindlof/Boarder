@@ -51,7 +51,7 @@ public class BoardHistoryProvider {
 	
 	private BoardHistory getBoardHistory(Context context, GraphicalSoundboard page) {
 		int pageId = page.getId();
-		if (lastHistory.getBoardId() == pageId) {
+		if (lastHistory != null && lastHistory.getBoardId() == pageId) {
 			return lastHistory;
 		}
 		for (BoardHistory history : historyList) {

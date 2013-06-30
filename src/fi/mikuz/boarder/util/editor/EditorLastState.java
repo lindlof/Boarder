@@ -54,8 +54,6 @@ public class EditorLastState {
 	private static final String EDITOR_PAGE_ID = "editorPageId";
 	private static final String EDITOR_PRESSED_SOUND_ID = "editorPressedSoundId";
 	
-	private BoardEditor editor;
-	
 	private GraphicalSoundboard lastPage;
 	private GraphicalSound lastPressedSound;
 	
@@ -104,11 +102,6 @@ public class EditorLastState {
         	if (this.lastPressedSound != null) {
         		Log.v(TAG, "Last pressed sound was not recovered");
         	}
-        	
-        	if (this.lastPage != null && editor.mGsb != null && 
-        			this.lastPage.getId() != editor.mGsb.getId()) {
-				Log.d(TAG, "Current page differs from the saved");
-			}
         }
 	}
 	
