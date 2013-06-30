@@ -213,8 +213,12 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         
         mLastState = new EditorLastState(mGsbp, extras);
 
-        if (mGsb.getSoundList().isEmpty()) {
-        	mMode = EDIT_BOARD;
+        mMode = EDIT_BOARD;
+        for (GraphicalSoundboard page : mGsbp.getBoardList()) {
+        	if (page.getSoundList().size() > 0) {
+            	mMode = LISTEN_BOARD;
+            	break;
+            }
         }
 
         File icon = new File(mSbDir, mBoardName + "/icon.png");
