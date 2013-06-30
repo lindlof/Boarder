@@ -19,6 +19,7 @@
 
 package fi.mikuz.boarder.gui;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -255,6 +256,7 @@ public class ColorChanger extends BoarderActivity implements OnSeekBarChangeList
 		mSound.setNameFrameY(0);
 	}
 	
+	@SuppressLint("WrongCall")
 	private void drawPreview() {
 		if (mPreview.getWidth() == 0 || mPreview.getHeight() == 0) {
 			Log.d(TAG, "Waiting for layout to initialize");
