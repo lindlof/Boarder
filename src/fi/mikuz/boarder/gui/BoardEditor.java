@@ -1191,7 +1191,9 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
 		default:
 			break;
-		}			
+		}
+		
+		overrideBoard(lastPage);
 	}
 	
 	private void initializeConvert() {
@@ -1464,6 +1466,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					moveSoundToSlot(sound, slot.getColumn(), slot.getRow(), sound.getImageX(), sound.getImageY(), sound.getNameFrameX(), sound.getNameFrameY());
 
 					page.getSoundList().add(sound);
+					overrideBoard(page);
+					
 					if (page == BoardEditor.this.mGsb) {
 						mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 					}
@@ -1521,6 +1525,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				}
 
 				page.getSoundList().add(sound);
+				overrideBoard(page);
 				
 				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
 			}
