@@ -1373,11 +1373,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     }
     
     private void overrideBoard(GraphicalSoundboard gsb) {
-    	GraphicalSoundboard overrideGsb = GraphicalSoundboard.copy(BoardEditor.super.mContext, gsb);
-		if (mPressedSound != null && mCurrentGesture == TouchGesture.DRAG) {
+    	if (mPressedSound != null && mCurrentGesture == TouchGesture.DRAG) {
 			// Sound is being dragged
-			overrideGsb.getSoundList().add(mPressedSound);
+    		gsb.getSoundList().add(mPressedSound);
+			mCurrentGesture = null;
+			mHistory.createHistoryCheckpoint(super.mContext, gsb);
 		}
+    	GraphicalSoundboard overrideGsb = GraphicalSoundboard.copy(BoardEditor.super.mContext, gsb);
 		mGsbp.overrideBoard(BoardEditor.super.mContext, overrideGsb);
     }
     
@@ -2585,7 +2587,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	
 					    	invalidate();
 						} else if (mCurrentGesture == TouchGesture.DRAG) {
-							if (mGsb.getAutoArrange()) {
+							if (mModifiedPage.getAutoArrange()) {
 								
 								PanelSize panelSize = new PanelSize(BoardEditor.this);
 								int width = panelSize.getWidth();
@@ -2596,12 +2598,12 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 								
 	      						int column = -1, i = 0;
 	      						while (column == -1) {
-	      							if (i >= mGsb.getAutoArrangeColumns()) {
+	      							if (i >= mModifiedPage.getAutoArrangeColumns()) {
 	      								//Sound middle is over the right edge
-	      								column = mGsb.getAutoArrangeColumns() - 1;
+	      								column = mModifiedPage.getAutoArrangeColumns() - 1;
 	      								break;
 	      							}
-	      							if (soundMiddleX <= (i+1)*(width/(mGsb.getAutoArrangeColumns()))) {
+	      							if (soundMiddleX <= (i+1)*(width/(mModifiedPage.getAutoArrangeColumns()))) {
 	      								column = i;
 	        						}
 	      							i++;
@@ -2609,19 +2611,19 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	      						i = 0;
 	      						int row = -1;
 	      						while (row == -1) {
-	      							if (i >= mGsb.getAutoArrangeRows()) {
+	      							if (i >= mModifiedPage.getAutoArrangeRows()) {
 	      								//Sound middle is over the bottom edge
-	      								row = mGsb.getAutoArrangeRows() - 1;
+	      								row = mModifiedPage.getAutoArrangeRows() - 1;
 	      								break;
 	      							}
-	      							if (soundMiddleY <= (i+1)*(height/(mGsb.getAutoArrangeRows()))) {
+	      							if (soundMiddleY <= (i+1)*(height/(mModifiedPage.getAutoArrangeRows()))) {
 	      								row = i;
 	        						}
 	      							i++;
 	      						}
 	      						
 	      						GraphicalSound swapSound = null;
-	      						for (GraphicalSound sound : mGsb.getSoundList()) {
+	      						for (GraphicalSound sound : mModifiedPage.getSoundList()) {
 	      							if (sound.getAutoArrangeColumn() == column && sound.getAutoArrangeRow() == row) {
 	      								swapSound = sound;
 	      							}
@@ -2629,20 +2631,20 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	      						
 	      						if (column == mPressedSound.getAutoArrangeColumn() && row == mPressedSound.getAutoArrangeRow()) {
 	      							moveSound(event.getX(), event.getY());
-	      							mGsb.addSound(mPressedSound);
+	      							mModifiedPage.addSound(mPressedSound);
 	      						} else {
 	      							try {
 	      								moveSoundToSlot(swapSound, mPressedSound.getAutoArrangeColumn(), mPressedSound.getAutoArrangeRow(), 
 	      										swapSound.getImageX(), swapSound.getImageY(), swapSound.getNameFrameX(), swapSound.getNameFrameY());
 	      							} catch (NullPointerException e) {}
 	      							moveSoundToSlot(mPressedSound, column, row, mInitialImageX, mInitialImageY, mInitialNameFrameX, mInitialNameFrameY);
-	      							mGsb.addSound(mPressedSound);
+	      							mModifiedPage.addSound(mPressedSound);
 	      						}
 	  							
 							} else {
-								mGsb.getSoundList().add(mPressedSound);
+								mModifiedPage.getSoundList().add(mPressedSound);
 							}
-							mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+							mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mModifiedPage);
 							
 						} else if (mCurrentGesture == TouchGesture.PRESS_BOARD && mMode == LISTEN_BOARD) {
 							playTouchedSound(mPressedSound);
@@ -2650,7 +2652,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 						
 						if (mJoystick != null) {
 							removeJoystick();
-							mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+							mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mModifiedPage);
 						}
 						
 						mCurrentGesture = null;
