@@ -2066,13 +2066,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	optionsBuilder.setItems(items, new DialogInterface.OnClickListener() {
 					    	    public void onClick(DialogInterface dialog, int item) {
 					    	    	
-					    	    	if (item == 0) {
+					    	    	if (item == 0) { // Fine tuning
 					    	    		if (mFineTuningSound == null) {
 					    	    			mFineTuningSound = mPressedSound;
 					    	    		} else {
 					    	    			mFineTuningSound = null;
 					    	    		}
-					    	    	} else if (item == 1) {
+					    	    	} else if (item == 1) { // Info
 					    	    		SoundNameDrawing soundNameDrawing = new SoundNameDrawing(mPressedSound);
 					    	    		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
 					    	    		builder.setTitle("Sound info");
@@ -2103,7 +2103,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					                					"\n\nShow name frame inner paint:\n"+mPressedSound.getShowNameFrameBorderPaint());
 					                					
 					                	builder.show();
-					    	    	} else if (item == 2) {
+					    	    	} else if (item == 2) { // Name settings
 					    	    		
 						    	    	LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
 					    	    			getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -2140,7 +2140,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    			  			
 					    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 					    		        		i.putExtra("parentKey", "changeNameColor");
-					    		        		i.putExtras(XStreamUtil.getSoundBundle(BoardEditor.super.mContext, mPressedSound, mGsb));
+					    		        		i.putExtras(XStreamUtil.getSoundBundle(BoardEditor.super.mContext, mPressedSound, mModifiedPage));
 					    		            	startActivityForResult(i, CHANGE_NAME_COLOR);
 					    					}
 					              	  	});
@@ -2154,7 +2154,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    			  			
 					    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 					    		        		i.putExtra("parentKey", "changeinnerPaintColor");
-					    		        		i.putExtras(XStreamUtil.getSoundBundle(BoardEditor.super.mContext, mPressedSound, mGsb));
+					    		        		i.putExtras(XStreamUtil.getSoundBundle(BoardEditor.super.mContext, mPressedSound, mModifiedPage));
 					    		            	startActivityForResult(i, CHANGE_INNER_PAINT_COLOR);
 					    					}
 					              	  	});
@@ -2168,7 +2168,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    			  			
 					    			  			Intent i = new Intent(BoardEditor.this, ColorChanger.class);
 					    		        		i.putExtra("parentKey", "changeBorderPaintColor");
-					    		        		i.putExtras(XStreamUtil.getSoundBundle(BoardEditor.super.mContext, mPressedSound, mGsb));
+					    		        		i.putExtras(XStreamUtil.getSoundBundle(BoardEditor.super.mContext, mPressedSound, mModifiedPage));
 					    		            	startActivityForResult(i, CHANGE_BORDER_PAINT_COLOR);
 					    					}
 					              	  	});
@@ -2209,7 +2209,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          						Toast.LENGTH_SHORT).show();
 					    	          			}
 					    	          			
-					    	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					    	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mModifiedPage);
 					    	          		}
 					    	          	});
 		
@@ -2220,7 +2220,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          	
 					    	          	builder.show();
 			    						
-					    	    	} else if (item == 3) {
+					    	    	} else if (item == 3) { // Image settings
 					    	    		
 					    	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
 					    	    			getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -2357,7 +2357,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          			if (notifyIncorrectValue == true) {
 					    	          				Toast.makeText(BoardEditor.super.mContext, "Incorrect value", Toast.LENGTH_SHORT).show();
 					    	          			}
-					    	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					    	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mModifiedPage);
 					    	          		}
 					    	          	});
 	
@@ -2375,7 +2375,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          	
 					    	          	mSoundImageDialog = builder.create();
 					    	          	mSoundImageDialog.show();
-					    	    	} else if (item == 4) {
+					    	    	} else if (item == 4) { // Sound settings
 					    	    		
 					    	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
 				    	    				getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -2481,7 +2481,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          			if (notifyIncorrectValue == true) {
 					    	          				Toast.makeText(BoardEditor.super.mContext, "Incorrect value", Toast.LENGTH_SHORT).show();
 					    	          			}
-					    	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					    	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mModifiedPage);
 					    	          		}
 					    	          	});
 	
@@ -2491,10 +2491,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          	});
 					    	          	
 					    	          	builder.show();
-					    	    	} else if (item ==5) {
+					    	    	} else if (item ==5) { // Copy sound
 					    	    		SoundboardMenu.mCopiedSound = (GraphicalSound) mPressedSound.clone();
 					    	    		
-					    	    	} else if (item == 6) {
+					    	    	} else if (item == 6) { // Remove sound
 					                	
 					                	LayoutInflater removeInflater = (LayoutInflater) 
 					                			BoardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -2516,8 +2516,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          	  		if (removeFileCheckBox.isChecked() == true) {
 					    	          	  			mPressedSound.getPath().delete();
 					    	          	  		}
-					    	          	  		mGsb.getSoundList().remove(mPressedSound);
-					    	          	  		mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+					    	          	  		mModifiedPage.getSoundList().remove(mPressedSound);
+					    	          	  		mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mModifiedPage);
 					    	          	    }
 					    	          	});
 	
@@ -2527,7 +2527,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          	});
 					    	          	
 					              	  	removeBuilder.show();
-					    	    	} else if (item == 7) {
+					    	    	} else if (item == 7) { // Set as...
 					    	    		final CharSequence[] items = {"Ringtone", "Notification", "Alerts"};
 	
 					                	AlertDialog.Builder setAsBuilder = new AlertDialog.Builder(
