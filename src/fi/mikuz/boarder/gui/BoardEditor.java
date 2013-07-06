@@ -146,7 +146,23 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private TouchGesture mCurrentGesture = null;
 	private final int DRAG_SWIPE_TIME = 300;
 	
-	public GraphicalSound mPressedSound = null;
+	/**
+	 * Sound which is currently being subject to modification.
+	 */
+	public GraphicalSound mPressedSound;
+	/**
+	 * Page which is currently being subject to modification.
+	 * <p>
+	 * Set when modifying a page or a sound.
+	 * That is, when tapping the menu button or board.
+	 * <p>
+	 * Used on dialogs and activity results as the source.
+	 * However, this is not used when clicking on something less stateless.
+	 * <p>
+	 * Always override if reassigning.
+	 */
+	public GraphicalSoundboard mModifiedPage;
+	
 	private float mInitialNameFrameX = 0;
 	private float mInitialNameFrameY = 0;
 	private float mInitialImageX = 0;
@@ -252,6 +268,15 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		changeBoard(newGsb, false);
 	}
 	
+	private void setAsModifiedPage() {
+		if (mModifiedPage != mGsb) {
+			if (mModifiedPage != null) {
+				overrideBoard(mModifiedPage);
+			}
+			mModifiedPage = mGsb;
+		}
+	}
+	
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
 		menu.clear();
@@ -274,6 +299,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	
 	@Override
     public boolean onOptionsItemSelected(MenuItem item) {
+		setAsModifiedPage();
 		
         switch(item.getItemId()) {
         	case R.id.menu_listen_mode:
@@ -292,7 +318,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         			loadBoard(undoGsb, SwipingDirection.NO_ANIMATION, OverridePage.OVERRIDE_NEW);
             		overrideBoard(undoGsb);
             		issueResolutionConversion(undoGsb.getScreenOrientation());
-            		
         		}
         		mFineTuningSound = null;
         		removeJoystick();
@@ -374,13 +399,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	    		GraphicalSoundboard swapGsb = mGsbp.addBoardPage(currentOrientation);
             	    		changeBoard(swapGsb, true);
             	    	} else if (item == 2) {
-            	    		GraphicalSoundboard deleteGsb = mGsb;
+            	    		GraphicalSoundboard deleteGsb = mModifiedPage;
             	    		mGsbp.deletePage(BoardEditor.super.mContext, deleteGsb);
             	    		GraphicalSoundboard gsb = mGsbp.getPage(BoardEditor.super.mContext, deleteGsb.getScreenOrientation(), deleteGsb.getPageNumber());
             	    		if (gsb == null) gsb = mPagination.getBoard(BoardEditor.super.mContext, deleteGsb.getScreenOrientation());
             	    		changeBoard(gsb, SwipingDirection.NO_DIRECTION, false, true);
             	    	} else if (item == 3) {
-            	    		mPagination.initMove(mGsb);
+            	    		mPagination.initMove(mModifiedPage);
             	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
             	    	}
             	    }
@@ -454,7 +479,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	setAsBuilder.setTitle("Board settings");
             	setAsBuilder.setItems(items, new DialogInterface.OnClickListener() {
             	    public void onClick(DialogInterface dialog, int item) {
-            	    	if (item == 0) {
+            	    	if (item == 0) { // Sound
             	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
             	    			getSystemService(LAYOUT_INFLATER_SERVICE);
                         	View layout = inflater.inflate(R.layout.graphical_soundboard_editor_alert_board_sound_settings,
@@ -462,10 +487,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
                         	
                         	final CheckBox checkPlaySimultaneously = 
                       	  		(CheckBox) layout.findViewById(R.id.playSimultaneouslyCheckBox);
-                      	  	checkPlaySimultaneously.setChecked(mGsb.getPlaySimultaneously());
+                      	  	checkPlaySimultaneously.setChecked(mModifiedPage.getPlaySimultaneously());
                       	  	
                       	  	final EditText boardVolumeInput = (EditText) layout.findViewById(R.id.boardVolumeInput);
-                  	  			boardVolumeInput.setText(mGsb.getBoardVolume()*100 + "%");
+                  	  			boardVolumeInput.setText(mModifiedPage.getBoardVolume()*100 + "%");
                   	  			
                   	  		AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
                       	  	builder.setView(layout);
@@ -475,7 +500,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	          		public void onClick(DialogInterface dialog, int whichButton) {
             	          			boolean notifyIncorrectValue = false;
             	          			
-            	          			mGsb.setPlaySimultaneously(checkPlaySimultaneously.isChecked());
+            	          			mModifiedPage.setPlaySimultaneously(checkPlaySimultaneously.isChecked());
             	          			
             	          			Float boardVolumeValue = null;
             	          			try {
@@ -489,7 +514,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	          				
             	          				
             	          				if (boardVolumeValue >= 0 && boardVolumeValue <= 1 && boardVolumeValue != null) {
-            	          					mGsb.setBoardVolume(boardVolumeValue);
+            	          					mModifiedPage.setBoardVolume(boardVolumeValue);
             		          			} else {
             		          				notifyIncorrectValue = true;
             		          			}
@@ -511,13 +536,13 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	          	
             	          	builder.show();
                         	
-            	    	} else if (item == 1) {
+            	    	} else if (item == 1) { // Background
             	    		LayoutInflater inflater = (LayoutInflater) BoardEditor.this.getSystemService(LAYOUT_INFLATER_SERVICE);
             	    		View layout = inflater.inflate(R.layout.graphical_soundboard_editor_alert_board_background_settings,
                     	        (ViewGroup) findViewById(R.id.alert_settings_root));
             	    		
             	    		final CheckBox checkUseBackgroundImage = (CheckBox) layout.findViewById(R.id.useBackgroundFileCheckBox);
-                  	  		checkUseBackgroundImage.setChecked(mGsb.getUseBackgroundImage());
+                  	  		checkUseBackgroundImage.setChecked(mModifiedPage.getUseBackgroundImage());
                       	
                       		final Button backgroundColorButton =
                       			(Button) layout.findViewById(R.id.backgroundColorButton);
@@ -525,7 +550,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
                 				public void onClick(View v) {
                 					Intent i = new Intent(BoardEditor.this, ColorChanger.class);
                 			    	i.putExtra("parentKey", "changeBackgroundColor");
-                			    	i.putExtras(XStreamUtil.getSoundboardBundle(BoardEditor.super.mContext, mGsb));
+                			    	i.putExtras(XStreamUtil.getSoundboardBundle(BoardEditor.super.mContext, mModifiedPage));
                 			    	startActivityForResult(i, CHANGE_BACKGROUND_COLOR);
                 				}
                       		});
@@ -558,7 +583,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
                       	  	});
 
                       	  	final Button defaultBackgroundButton = (Button) layout.findViewById(R.id.defaultBackgroundButton);
-                      	  defaultBackgroundButton.setOnClickListener(new OnClickListener() {
+                      	  	defaultBackgroundButton.setOnClickListener(new OnClickListener() {
                       	  		public void onClick(View v) {
                       	  			AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
                       	  			builder.setTitle("Default background");
@@ -566,8 +591,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
                       	  			builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                       	  				public void onClick(DialogInterface dialog, int whichButton) {
-                      	  					mGsb.setBackgroundImagePath(null);
-                      	  					mGsb.loadBackgroundImage(BoardEditor.super.mContext);
+                      	  					mModifiedPage.setBackgroundImagePath(null);
+                      	  					mModifiedPage.loadBackgroundImage(BoardEditor.super.mContext);
                       	  				}
                       	  			});
 
@@ -582,16 +607,16 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
                       	  	mBackgroundWidthText = (TextView) layout.findViewById(R.id.backgroundWidthText);
                       	  	mBackgroundHeightText = (TextView) layout.findViewById(R.id.backgroundHeightText);
                       	  	
-                      	  	if (mGsb.getBackgroundImage() != null) {
-	                      	  	mBackgroundWidthText.setText("Width (" + mGsb.getBackgroundImage().getWidth() + ")");
-	            				mBackgroundHeightText.setText("Height (" + mGsb.getBackgroundImage().getHeight() + ")");
+                      	  	if (mModifiedPage.getBackgroundImage() != null) {
+	                      	  	mBackgroundWidthText.setText("Width (" + mModifiedPage.getBackgroundImage().getWidth() + ")");
+	            				mBackgroundHeightText.setText("Height (" + mModifiedPage.getBackgroundImage().getHeight() + ")");
                       	  	}
                       	  	
                       	  	mBackgroundWidthInput = (EditText) layout.findViewById(R.id.backgroundWidthInput);
-                      	  	mBackgroundWidthInput.setText(Float.toString(mGsb.getBackgroundWidth()));
+                      	  	mBackgroundWidthInput.setText(Float.toString(mModifiedPage.getBackgroundWidth()));
                       	  	
                       	  	mBackgroundHeightInput = (EditText) layout.findViewById(R.id.backgroundHeightInput);
-                    	  	mBackgroundHeightInput.setText(Float.toString(mGsb.getBackgroundHeight()));
+                    	  	mBackgroundHeightInput.setText(Float.toString(mModifiedPage.getBackgroundHeight()));
 
                     	  	final CheckBox scaleWidthHeight = 
                     	  			(CheckBox) layout.findViewById(R.id.scaleWidthHeightCheckBox);
@@ -606,7 +631,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		              	  			} catch(NumberFormatException nfe) {Log.e(TAG, "Unable to calculate width and height scale", nfe);}
                     	  		}
                     	  	});
-                    	  	mWidthHeightScale = mGsb.getBackgroundWidth() / mGsb.getBackgroundHeight();
+                    	  	mWidthHeightScale = mModifiedPage.getBackgroundWidth() / mModifiedPage.getBackgroundHeight();
 
                       	  	mBackgroundWidthInput.setOnKeyListener(new OnKeyListener() {
             					public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -644,10 +669,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	          		public void onClick(DialogInterface dialog, int whichButton) {
             	          			
             	          			boolean notifyIncorrectValue = false;
-            	          			mGsb.setUseBackgroundImage(checkUseBackgroundImage.isChecked());
+            	          			mModifiedPage.setUseBackgroundImage(checkUseBackgroundImage.isChecked());
             	          			
             	          			try {
-            	          				mGsb.setBackgroundWidthHeight(BoardEditor.super.mContext, 
+            	          				mModifiedPage.setBackgroundWidthHeight(BoardEditor.super.mContext, 
             	          						Float.valueOf(mBackgroundWidthInput.getText().toString()).floatValue(),
             	          						Float.valueOf(mBackgroundHeightInput.getText().toString()).floatValue());
             	          			} catch(NumberFormatException nfe) {
@@ -658,7 +683,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	          				Toast.makeText(BoardEditor.super.mContext, "Incorrect value", 
             	          						Toast.LENGTH_SHORT).show();
             	          			}
-            	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+            	          			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mModifiedPage);
             	          		}
             	          	});
 
@@ -675,7 +700,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	          	
             	          	mBackgroundDialog = builder.create();
             	          	mBackgroundDialog.show();
-            	    	} else if (item == 2) {
+            	    	} else if (item == 2) { // Icon
             	    		AlertDialog.Builder resetBuilder = new AlertDialog.Builder(
 		                			BoardEditor.this);
 		                	resetBuilder.setTitle("Change board icon");
@@ -683,7 +708,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		                			"Recommended icon size is about 80x80 pixels.");
 		                	AlertDialog resetAlert = resetBuilder.create();
 		                	resetAlert.show();
-            	    	} else if (item == 3) {
+            	    	} else if (item == 3) { // Screen orientation
             	    		final CharSequence[] items = {"Portrait", "Landscape", "Hybrid (beta)"};
 
 		                	AlertDialog.Builder orientationBuilder = new AlertDialog.Builder(BoardEditor.this);
@@ -718,70 +743,69 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		                	
 		                	AlertDialog orientationAlert = orientationBuilder.create();
 		                	orientationAlert.show();
-            	    	} else if (item == 4) {
-            	    	//Auto-arrange
-            	    	LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
-    	    				getSystemService(LAYOUT_INFLATER_SERVICE);
-        	    		View layout = inflater.inflate(R.layout.
-        	    			graphical_soundboard_editor_alert_auto_arrange,
-                	        (ViewGroup) findViewById(R.id.alert_settings_root));
-        	    		
-        	    		final CheckBox checkEnableAutoArrange = 
-                  	  		(CheckBox) layout.findViewById(R.id.enableAutoArrange);
-        	    		checkEnableAutoArrange.setChecked(mGsb.getAutoArrange());
-                  	  	
-        	    		final EditText columnsInput = (EditText) layout.findViewById(R.id.columnsInput);
-        	    		columnsInput.setText(Integer.toString(mGsb.getAutoArrangeColumns()));
-                  	  	
-        	    		final EditText rowsInput = (EditText) layout.findViewById(R.id.rowsInput);
-        	    		rowsInput.setText(Integer.toString(mGsb.getAutoArrangeRows()));
-                  	 	
-                  	 	AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
-                  	  	builder.setView(layout);
-                  	  	builder.setTitle("Board settings");
-              	  	
-        	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-        	          		public void onClick(DialogInterface dialog, int whichButton) {
-        	          			try {
-        	          				int columns = Integer.valueOf(
-        	          						columnsInput.getText().toString()).intValue();
-        	          				int rows = Integer.valueOf(
-        	          						rowsInput.getText().toString()).intValue();
-        	          				
-        	          				if (mGsb.getSoundList().size() <= columns*rows || !checkEnableAutoArrange.isChecked()) {
-        	          					if (mGsb.getAutoArrange() != checkEnableAutoArrange.isChecked() ||
-        	          							mGsb.getAutoArrangeColumns() != columns ||
-        	          							mGsb.getAutoArrangeRows() != rows) {
-        	          						
-        	          						mGsb.setAutoArrange(checkEnableAutoArrange.isChecked());
-	            	          				mGsb.setAutoArrangeColumns(columns);
-	            	          				mGsb.setAutoArrangeRows(rows);
-        	          					}
-        	          				} else {
-        	          					Toast.makeText(BoardEditor.super.mContext, "Not enought slots", 
-            	          						Toast.LENGTH_SHORT).show();
-        	          				}
-        	          				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
-        	          			} catch(NumberFormatException nfe) {
-        	          				Toast.makeText(BoardEditor.super.mContext, "Incorrect value", 
-        	          						Toast.LENGTH_SHORT).show();
-        	          			}
-        	          		}
-        	          	});
-
-        	          	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-        		          	public void onClick(DialogInterface dialog, int whichButton) {
-        	          	    }
-        	          	});
-        	          	
-        	          	builder.show();
-            	    	} else if (item == 5) {
+            	    	} else if (item == 4) { //Auto-arrange
+	            	    	LayoutInflater inflater = (LayoutInflater) BoardEditor.this.
+	    	    				getSystemService(LAYOUT_INFLATER_SERVICE);
+	        	    		View layout = inflater.inflate(R.layout.
+	        	    			graphical_soundboard_editor_alert_auto_arrange,
+	                	        (ViewGroup) findViewById(R.id.alert_settings_root));
+	        	    		
+	        	    		final CheckBox checkEnableAutoArrange = 
+	                  	  		(CheckBox) layout.findViewById(R.id.enableAutoArrange);
+	        	    		checkEnableAutoArrange.setChecked(mModifiedPage.getAutoArrange());
+	                  	  	
+	        	    		final EditText columnsInput = (EditText) layout.findViewById(R.id.columnsInput);
+	        	    		columnsInput.setText(Integer.toString(mModifiedPage.getAutoArrangeColumns()));
+	                  	  	
+	        	    		final EditText rowsInput = (EditText) layout.findViewById(R.id.rowsInput);
+	        	    		rowsInput.setText(Integer.toString(mModifiedPage.getAutoArrangeRows()));
+	                  	 	
+	                  	 	AlertDialog.Builder builder = new AlertDialog.Builder(BoardEditor.this);
+	                  	  	builder.setView(layout);
+	                  	  	builder.setTitle("Board settings");
+	              	  	
+	        	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+	        	          		public void onClick(DialogInterface dialog, int whichButton) {
+	        	          			try {
+	        	          				int columns = Integer.valueOf(
+	        	          						columnsInput.getText().toString()).intValue();
+	        	          				int rows = Integer.valueOf(
+	        	          						rowsInput.getText().toString()).intValue();
+	        	          				
+	        	          				if (mModifiedPage.getSoundList().size() <= columns*rows || !checkEnableAutoArrange.isChecked()) {
+	        	          					if (mModifiedPage.getAutoArrange() != checkEnableAutoArrange.isChecked() ||
+	        	          							mModifiedPage.getAutoArrangeColumns() != columns ||
+	        	          							mModifiedPage.getAutoArrangeRows() != rows) {
+	        	          						
+	        	          						mModifiedPage.setAutoArrange(checkEnableAutoArrange.isChecked());
+	        	          						mModifiedPage.setAutoArrangeColumns(columns);
+	        	          						mModifiedPage.setAutoArrangeRows(rows);
+	        	          					}
+	        	          				} else {
+	        	          					Toast.makeText(BoardEditor.super.mContext, "Not enought slots", 
+	            	          						Toast.LENGTH_SHORT).show();
+	        	          				}
+	        	          				mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mModifiedPage);
+	        	          			} catch(NumberFormatException nfe) {
+	        	          				Toast.makeText(BoardEditor.super.mContext, "Incorrect value", 
+	        	          						Toast.LENGTH_SHORT).show();
+	        	          			}
+	        	          		}
+	        	          	});
+	
+	        	          	builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+	        		          	public void onClick(DialogInterface dialog, int whichButton) {
+	        	          	    }
+	        	          	});
+	        	          	
+	        	          	builder.show();
+            	    	} else if (item == 5) { // Reset position
             	    		ArrayList<String> itemArray = new ArrayList<String>();
             	    		
             	    		final int extraItemCount = 1;
             	    		itemArray.add("> Background image");
             	    		
-		    	    		for (GraphicalSound sound : mGsb.getSoundList()) {
+		    	    		for (GraphicalSound sound : mModifiedPage.getSoundList()) {
 		    	    			itemArray.add(sound.getName());
 		    	    		}
 		    	    		CharSequence[] items = itemArray.toArray(new CharSequence[itemArray.size()]);
@@ -792,15 +816,15 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		                	resetBuilder.setItems(items, new DialogInterface.OnClickListener() {
 		                	    public void onClick(DialogInterface dialog, int item) {
 		                	    	if (item == 0) { // Background
-		                	    		mGsb.setBackgroundX(0);
-		                	    		mGsb.setBackgroundY(0);
-		                	    		mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+		                	    		mModifiedPage.setBackgroundX(0);
+		                	    		mModifiedPage.setBackgroundY(0);
+		                	    		mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mModifiedPage);
 		                	    	} else { // Sound
-		                	    		GraphicalSound sound = mGsb.getSoundList().get(item - extraItemCount);
+		                	    		GraphicalSound sound = mModifiedPage.getSoundList().get(item - extraItemCount);
 			                	    	sound.setNameFrameX(50);
 			        	    			sound.setNameFrameY(50);
 			        	    			sound.generateImageXYFromNameFrameLocation();
-			        	    			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mGsb);
+			        	    			mHistory.createHistoryCheckpoint(BoardEditor.super.mContext, mModifiedPage);
 		                	    	}
 		                	    }
 		                	});
@@ -853,13 +877,19 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	}
 	
 	public void loadBoard(GraphicalSoundboard gsb, SwipingDirection direction, OverridePage override) {
-		GraphicalSoundboard.loadImages(super.mContext, gsb);
-		
 		if (override == OverridePage.OVERRIDE_CURRENT) {
 			overrideBoard(mGsb);
 		} else if (override == OverridePage.OVERRIDE_NEW) {
 			overrideBoard(gsb);
 		}
+		
+		if (gsb != null && mModifiedPage != null && 
+				gsb.getId() == mModifiedPage.getId()) {
+			// Loading a page that is currently being modified
+			gsb = mModifiedPage;
+		}
+		
+		GraphicalSoundboard.loadImages(super.mContext, gsb);
 		
 		mGsb = gsb;
 		mPageDrawer.switchPage(gsb, direction);
@@ -1285,7 +1315,6 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     		
     		removeJoystick();
     		this.mFineTuningSound = null;
-    		this.mPressedSound = null;
     	}
     	
     	super.onConfigurationChanged(newConfig);
@@ -1326,7 +1355,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     private void save() {
     	if (mBoardName != null) {
     		try {
-    			overrideBoard(mGsb);
+    			overrideBoard(mModifiedPage);
     			mGsbp.saveBoard(BoardEditor.super.mContext, mBoardName);
         		Log.v(TAG, "Board " + mBoardName + " saved");
     		} catch (IOException e) {
@@ -1930,6 +1959,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 
 		@Override
 		public boolean onTouchEvent(MotionEvent event) {
+			setAsModifiedPage();
 			mLatestEventX = event.getX();
 			mLatestEventY = event.getY();
 			
