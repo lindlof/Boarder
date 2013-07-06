@@ -1026,11 +1026,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	}
 	
 	private void finishBoard() {
-		try {
-			BoardEditor.this.finish();
-		} catch (Throwable e) {
-			Log.e(TAG, "Error closing board", e);
-		}
+		BoardEditor.this.finish();
 	}
 	
 	private void selectBackgroundFile() {
