@@ -862,7 +862,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			if (mThread != null) mThread.interrupt();
 			
 			OverridePage override = (overrideCurrentBoard) ? OverridePage.OVERRIDE_CURRENT : OverridePage.NO_OVERRIDE;
-			loadBoard(gsb, direction, override);
+			gsb = loadBoard(gsb, direction, override);
 			
 			mHistory.createInitialHistoryCheckpoint(BoardEditor.super.mContext, gsb);
 			
@@ -876,7 +876,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		setTitle(mBoardName + " - " + (pageNumber+1));
 	}
 	
-	public void loadBoard(GraphicalSoundboard gsb, SwipingDirection direction, OverridePage override) {
+	public GraphicalSoundboard loadBoard(GraphicalSoundboard gsb, SwipingDirection direction, OverridePage override) {
 		if (override == OverridePage.OVERRIDE_CURRENT) {
 			overrideBoard(mGsb);
 		} else if (override == OverridePage.OVERRIDE_NEW) {
@@ -885,14 +885,22 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 		
 		if (gsb != null && mModifiedPage != null && 
 				gsb.getId() == mModifiedPage.getId()) {
-			// Loading a page that is currently being modified
-			gsb = mModifiedPage;
+			// Loading the page that is currently being modified
+			
+			if (mGsb != null && mGsb.getId() == mModifiedPage.getId()) {
+				// Loading the same page. Allow that and point the modified page to the current instance.
+				mModifiedPage = gsb;
+			} else {
+				// Coming back from a different page. modifiedPage is the newest instance.
+				gsb = mModifiedPage;
+			}
 		}
 		
 		GraphicalSoundboard.loadImages(super.mContext, gsb);
 		
 		mGsb = gsb;
 		mPageDrawer.switchPage(gsb, direction);
+		return gsb;
 	}
 	
 	private void orientationTurningConflictActionAlert(final int screenOrientation) {
