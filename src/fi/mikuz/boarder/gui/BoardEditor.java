@@ -1363,9 +1363,11 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     private void save() {
     	if (mBoardName != null) {
     		try {
-    			overrideBoard(mModifiedPage);
-    			mGsbp.saveBoard(BoardEditor.super.mContext, mBoardName);
-        		Log.v(TAG, "Board " + mBoardName + " saved");
+    			if (mModifiedPage != null) {
+    				overrideBoard(mModifiedPage);
+        			mGsbp.saveBoard(BoardEditor.super.mContext, mBoardName);
+            		Log.v(TAG, "Board " + mBoardName + " saved");
+    			}
     		} catch (IOException e) {
     			Log.e(TAG, "Unable to save " + mBoardName, e);
     		}
