@@ -2234,10 +2234,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					              	  	checkShowSoundImage.setChecked(mPressedSound.getHideImageOrText() != GraphicalSound.HIDE_IMAGE);
 					              	  	
 					              	  	mSoundImageWidthText = (TextView) layout.findViewById(R.id.soundImageWidthText);
-					              	  	mSoundImageWidthText.setText("Width (" + mPressedSound.getImage(BoardEditor.super.mContext).getWidth() + ")");
+					              	  	mSoundImageWidthText.setText("Width (" + mPressedSound.getImageForce(BoardEditor.super.mContext).getWidth() + ")");
 					            	  	
 					            	  	mSoundImageHeightText = (TextView) layout.findViewById(R.id.soundImageHeightText);
-					            	  	mSoundImageHeightText.setText("Height (" + mPressedSound.getImage(BoardEditor.super.mContext).getHeight() + ")");
+					            	  	mSoundImageHeightText.setText("Height (" + mPressedSound.getImageForce(BoardEditor.super.mContext).getHeight() + ")");
 					              	  	
 					              	  	mSoundImageWidthInput = (EditText) layout.findViewById(R.id.soundImageWidthInput);
 					              	  	mSoundImageWidthInput.setText(Float.toString(mPressedSound.getImageWidth()));  	

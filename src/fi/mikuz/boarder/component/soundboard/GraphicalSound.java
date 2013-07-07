@@ -268,6 +268,13 @@ public class GraphicalSound implements Cloneable {
 		}
 		return image;
 	}
+	/**
+	 * Call this if the image may be already unloaded.
+	 */
+	public Bitmap getImageForce(Context context) {
+		loadImages(context);
+		return getImage(context);
+	}
 	public String getName() {
 		return name;
 	}
