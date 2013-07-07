@@ -1346,7 +1346,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     @Override
     protected void onPause() {
     	save();
-    	mLastState = new EditorLastState(this.mGsb, this.mPressedSound);
+    	mLastState = new EditorLastState(this.mModifiedPage, this.mPressedSound);
     	super.onPause();
     }
     
