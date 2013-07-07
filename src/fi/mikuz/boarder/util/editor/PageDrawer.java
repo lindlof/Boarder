@@ -322,9 +322,9 @@ public class PageDrawer {
 								sound.getImageHeight() + sound.getImageY());
 						
 					    try {
-					    	if (SoundPlayerControl.isPlaying(sound.getPath()) && sound.getActiveImage() != null) {
+					    	if (SoundPlayerControl.isPlaying(sound.getPath()) && sound.getActiveImage(context) != null) {
 					    		try {
-					    			canvas.drawBitmap(sound.getActiveImage(), null, imageRect, soundImagePaint);
+					    			canvas.drawBitmap(sound.getActiveImage(context), null, imageRect, soundImagePaint);
 					    		} catch(NullPointerException npe) {
 					    			Log.e(TAG, "Unable to draw active image for sound " + sound.getName());
 									sound.setDefaultActiveImage();

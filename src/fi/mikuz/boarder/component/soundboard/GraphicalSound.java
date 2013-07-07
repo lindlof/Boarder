@@ -110,7 +110,7 @@ public class GraphicalSound implements Cloneable {
 				if (this.image == null) setDefaultImage(context);
 			}
 		}
-		if (getActiveImage() == null && getActiveImagePath() != null) {
+		if (this.activeImage == null && getActiveImagePath() != null) {
 			this.activeImage = ImageDrawing.decodeSoundActiveImage(context, this);
 		}
 	}
@@ -124,7 +124,7 @@ public class GraphicalSound implements Cloneable {
 				if (this.image == null) setDefaultImage(context);
 			}
 		}
-		if (getActiveImage() != null && getActiveImagePath() != null) {
+		if (this.activeImage != null && getActiveImagePath() != null) {
 			this.activeImage = ImageDrawing.decodeSoundActiveImage(context, this);
 		}
 	}
@@ -317,7 +317,11 @@ public class GraphicalSound implements Cloneable {
 	public void setActiveImagePath(File activeImagePath) {
 		this.activeImagePath = activeImagePath;
 	}
-	public Bitmap getActiveImage() {
+	public Bitmap getActiveImage(Context context) {
+		if (activeImage.isRecycled()) {
+			Log.v(TAG, "Sound active image " + getImagePath() + " is recycled. Reloading.");
+			reloadImages(context);
+		}
 		return activeImage;
 	}
 	public float getActiveImageWidth() {
