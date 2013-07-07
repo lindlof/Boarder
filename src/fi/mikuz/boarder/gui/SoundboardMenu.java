@@ -43,7 +43,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Parcelable;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
@@ -101,7 +100,7 @@ import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 public class SoundboardMenu extends BoarderListActivity {
 	public static final String TAG = SoundboardMenu.class.getSimpleName();
 	
-	public static final boolean mDevelopmentMode = true; //FIXME for release
+	public static final boolean mDevelopmentMode = false; //FIXME for release
 	
 	public static final String EXTRA_LAUNCH_BAORD_KEY = "SoundboardMenu.boardToLaunch";
 	public static final String EXTRA_HIDE_SOUNDBOARDMENU = "SoundboardMenu.hideSoundboardmenu";
