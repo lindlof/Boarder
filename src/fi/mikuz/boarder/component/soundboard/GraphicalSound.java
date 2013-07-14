@@ -262,7 +262,7 @@ public class GraphicalSound implements Cloneable {
 		return imageHeight;
 	}
 	public Bitmap getImage(Context context) {
-		if (image.isRecycled()) {
+		if (image != null && image.isRecycled()) {
 			Log.v(TAG, "Sound image " + getImagePath() + " is recycled. Reloading.");
 			reloadImages(context);
 		}
@@ -325,7 +325,7 @@ public class GraphicalSound implements Cloneable {
 		this.activeImagePath = activeImagePath;
 	}
 	public Bitmap getActiveImage(Context context) {
-		if (activeImage.isRecycled()) {
+		if (activeImage != null && activeImage.isRecycled()) {
 			Log.v(TAG, "Sound active image " + getImagePath() + " is recycled. Reloading.");
 			reloadImages(context);
 		}
