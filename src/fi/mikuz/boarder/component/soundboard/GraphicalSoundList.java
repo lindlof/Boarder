@@ -21,6 +21,7 @@ package fi.mikuz.boarder.component.soundboard;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 
 public class GraphicalSoundList extends ArrayList<GraphicalSound> {
@@ -29,28 +30,28 @@ public class GraphicalSoundList extends ArrayList<GraphicalSound> {
 	
 	@Override
 	public boolean add(GraphicalSound sound) {
-		boolean result = super.add(sound);
 		soundIdCheck(sound);
+		boolean result = super.add(sound);
 		return result;
 	}
 	
 	@Override
 	public void add(int index, GraphicalSound sound) {
-		super.add(index, sound);
 		soundIdCheck(sound);
+		super.add(index, sound);
 	}
 
 	@Override
 	public boolean addAll(Collection<? extends GraphicalSound> sounds) {
-		boolean result = super.addAll(sounds);
 		soundsIdCheck(sounds);
+		boolean result = super.addAll(sounds);
 		return result;
 	}
 
 	@Override
 	public boolean addAll(int index, Collection<? extends GraphicalSound> sounds) {
-		boolean result = super.addAll(index, sounds);
 		soundsIdCheck(sounds);
+		boolean result = super.addAll(index, sounds);
 		return result;
 	}
 	
@@ -60,9 +61,26 @@ public class GraphicalSoundList extends ArrayList<GraphicalSound> {
 		}
 	}
 	
-	void soundIdCheck(GraphicalSound sound) {
+	/**
+	 * Call before adding the sound as that marks the id as already taken.
+	 * @param sound
+	 */
+	protected void soundIdCheck(GraphicalSound sound) {
+		// Allocate if the sound is new
 		if (sound.getId() == -1) {
 			sound.setId(this.allocateSoundId());
+		}
+		
+		// Allocate if the id is already taken
+		Iterator<GraphicalSound> listSoundIter = super.iterator();
+		synchronized (this) {
+			while (listSoundIter.hasNext()) {
+				GraphicalSound listSound = listSoundIter.next();
+				if (sound.getId() == listSound.getId()) {
+					sound.setId(this.allocateSoundId());
+					return;
+				}
+			}
 		}
 	}
 	
