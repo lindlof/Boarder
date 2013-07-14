@@ -1883,6 +1883,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			super(context);
             getHolder().addCallback(this);
             mThread = new DrawingThread(getHolder(), this);
+            SoundboardMenu.mDrawingThread = mThread;
 		}
 		
 		private GraphicalSound findPressedSound(MotionEvent pressInitEvent) {

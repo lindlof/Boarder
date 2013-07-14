@@ -169,6 +169,8 @@ public abstract class SoundPlayerControl {
     	    	}
     		}
         }
+        
+        refreshDrawing();
 	}
 
 	public static void togglePlayPause(Context context) {
@@ -210,6 +212,8 @@ public abstract class SoundPlayerControl {
 			fadeThread = new FadeThread();
 			fadeThread.start();
 		}
+		
+		refreshDrawing();
     }
 	
 	public static boolean isPlaying(File soundPath) {
@@ -247,6 +251,8 @@ public abstract class SoundPlayerControl {
 		if (!soundFound) {
 			playSound(playSimultaneously, soundPath, volumeLeft, volumeRight, boardVolume);
 		}
+		
+		refreshDrawing();
 	}
 	
 	public static void stopSound(boolean playSimultaneously, File soundPath, Float volumeLeft, Float volumeRight, 
@@ -271,6 +277,13 @@ public abstract class SoundPlayerControl {
 		if (!soundFound) {
 			playSound(playSimultaneously, soundPath, volumeLeft, volumeRight, boardVolume);
 		}
+		
+		refreshDrawing();
+	}
+	
+	private static void refreshDrawing() {
+		Thread drawing = SoundboardMenu.mDrawingThread;
+        if (drawing != null) drawing.interrupt();
 	}
 	
 	public static SoundPlayer getSoundPlayer(File soundPath) {

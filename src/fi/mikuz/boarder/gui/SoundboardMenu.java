@@ -118,6 +118,7 @@ public class SoundboardMenu extends BoarderListActivity {
 	
 	public static List<SoundPlayer> mSoundPlayerList = new ArrayList<SoundPlayer>();
 	public static GraphicalSound mCopiedSound = null;
+	public static Thread mDrawingThread = null;
 	
 	public static final File mBoarderDir = new File(Environment.getExternalStorageDirectory(), "boarder");
 	public static final File mSbDir = new File(mBoarderDir, "boards");
