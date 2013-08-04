@@ -341,16 +341,18 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	return true;
             	
         	case R.id.menu_paste_sound:
-        		GraphicalSound pasteSound = (GraphicalSound) SoundboardMenu.mCopiedSound.clone();
-        		if (pasteSound == null) {
+        		GraphicalSound copiedSound = SoundboardMenu.mCopiedSound;
+        		if (copiedSound == null) {
         			Toast.makeText(super.mContext, "Nothing copied", Toast.LENGTH_LONG).show();
-        		} else {
-        			if (mGsb.getAutoArrange()) {
-        				placeToFreeSlot(pasteSound, this.mGsb);
-        			} else {
-        				placeToFreeSpace(pasteSound, this.mGsb);
-        			}
+        			return true;
         		}
+        		
+        		GraphicalSound pasteSound = (GraphicalSound) copiedSound.clone();
+    			if (mGsb.getAutoArrange()) {
+    				placeToFreeSlot(pasteSound, this.mGsb);
+    			} else {
+    				placeToFreeSpace(pasteSound, this.mGsb);
+    			}
             	return true;
             	
             case R.id.menu_save_board:
