@@ -35,6 +35,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.database.StaleDataException;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -383,6 +384,8 @@ public class SoundboardMenu extends BoarderListActivity {
     	} catch (StaleDataException e) {
     		Log.w(TAG, "Unable to update board list", e);
     	} catch (IllegalStateException e) {
+    		Log.w(TAG, "Unable to update board list", e);
+    	} catch (CursorIndexOutOfBoundsException e) {
     		Log.w(TAG, "Unable to update board list", e);
     	}
 
