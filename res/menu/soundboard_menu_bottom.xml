@@ -23,19 +23,7 @@
         android:id="@+id/menu_about"
         android:title="@string/menu_about"/>
     <item
-        android:id="@+id/menu_rate"
-        android:title="Rate"/>
-    <item
-        android:id="@+id/menu_donate"
-        android:title="Donate"/>
-    <item
-        android:id="@+id/menu_email"
-        android:title="@string/menu_email"/>
-    <item
-        android:id="@+id/xda"
-        android:title="XDA forums"/>
-    <item
-        android:id="@+id/menu_github"
-        android:title="github"/>
+        android:id="@+id/menu_support_links"
+        android:title="@string/support_links"/>
 
 </menu>

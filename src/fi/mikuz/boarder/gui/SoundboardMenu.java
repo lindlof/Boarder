@@ -625,7 +625,7 @@ public class SoundboardMenu extends BoarderListActivity {
             	aboutBuilder.setMessage(
             			"Boarder is an opensource project administrated by Mikael Lindlöf.\n\n" +
             			"Source code is hosted to Github. You can view and contribute to it there.\n\n" +
-            			"I'd like to talk with you. You can email me to seek for help or say hello.\n\n" +
+            			"I'd like to talk with you. You can email us to seek for help or say hello.\n\n" +
             			"You should also post on XDA-forums to meet other soundboard loving people :)\n\n" +
             			"Find Boarder wiki on Help Center. You are most welcome to explore and improve it.\n\n" +
             			"You can find link to these medias in the same menu with About.");
@@ -690,31 +690,34 @@ public class SoundboardMenu extends BoarderListActivity {
             	builder.show();
             	return true;
             	
-            case R.id.xda:
-            	ExternalIntent.openXdaForums(this);
-            	return true;
-            	
-            case R.id.menu_email:
-            	final Intent emailIntent = new Intent( android.content.Intent.ACTION_SEND);
-            	emailIntent.setType("plain/text");
-            	emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
-            			new String[] { "mikuz.dev@gmail.com" });
-            	startActivity(Intent.createChooser(emailIntent, "Send mail"));
-            	return true;
-            	
-            case R.id.menu_github:
-            	Intent browserGithubIntent = new Intent(Intent.ACTION_VIEW, 
-            			Uri.parse("https://github.com/Mikuz/Boarder"));
-            	startActivity(browserGithubIntent);
-            	return true;
-            	
-            case R.id.menu_donate:
-            	showDonateNotification();
-            	return true;
-            	
-            case R.id.menu_rate:
-            	ExternalIntent.openGooglePlay(this);
-            	return true;
+            case R.id.menu_support_links:
+            
+	            CharSequence[] pageItems = {"Email us", "XDA forums", "Github", "Donate", "Rate"};
+	
+	        	AlertDialog.Builder pageBuilder = new AlertDialog.Builder(SoundboardMenu.this);
+	        	pageBuilder.setTitle("Support & links");
+	        	pageBuilder.setItems(pageItems, new DialogInterface.OnClickListener() {
+	        	    public void onClick(DialogInterface dialog, int item) {
+	        	    	if (item == 0) { // Email us
+	        	    		ExternalIntent.openEmail(SoundboardMenu.super.mContext);
+	                    	
+	        	    	} else if (item == 1) { // XDA forums
+	        	    		ExternalIntent.openXdaForums(SoundboardMenu.super.mContext);
+	        	    		
+	        	    	} else if (item == 2) { // Github
+	        	    		ExternalIntent.openGithub(SoundboardMenu.super.mContext);
+	                    	
+	        	    	} else if (item == 3) { // Donate
+	        	    		showDonateNotification();
+	        	    		
+	        	    	} else if (item == 4) { // Rate
+	        	    		ExternalIntent.openGooglePlay(SoundboardMenu.super.mContext);
+	        	    		
+	        	    	}
+	        	    }
+	        	});
+	        	pageBuilder.show();
+	        	return true;
         }
 
         return super.onMenuItemSelected(featureId, item);
@@ -733,7 +736,7 @@ public class SoundboardMenu extends BoarderListActivity {
     	final ImageView paypalImage = (ImageView) layout.findViewById(R.id.paypalImage);
 
     	donateText.setText("\nThank you for considering donation.\n\n" +
-    			"I develop Boarder because I love doing it. However money always helps.\n\n" +
+    			"We develop Boarder because I love doing it. However money always helps.\n\n" +
     			"Select PayPal to donate using credit/debit card or your Paypal account. " +
     			"You can also flattr Boarder.\n\n");
     	

@@ -29,10 +29,11 @@ import android.widget.Toast;
 public abstract class ExternalIntent {
 	private static final String TAG = ExternalIntent.class.getSimpleName();
 	
-	private static final String mExtLinkDonateFlattr = "https://flattr.com/thing/8aeacefc6a7b51a10f7777d01a3604d1";
+	private static final String mExtLinkDonateFlattr = "https://flattr.com/thing/1816151/Boarder";
 	private static final String mExtLinkDonatePaypal = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=ZY98RYEQTS7TY";
-	private static final String mExtLinkXDA = "https://forum.xda-developers.com/showthread.php?p=23224859#post23224859";
-	public static final String mExtLinkMarket = "market://details?id=fi.mikuz.boarder";
+	private static final String mExtLinkXDA          = "https://forum.xda-developers.com/showthread.php?p=23224859#post23224859";
+	public  static final String mExtLinkMarket       = "market://details?id=fi.mikuz.boarder";
+	private static final String mExtLinkGithub       = "https://github.com/Mikuz/Boarder";
 	
 	public static void openDonateFlattr(Context context) {
 		try {
@@ -76,5 +77,30 @@ public abstract class ExternalIntent {
     		Toast.makeText(context, "Could not open Google Play. Opening XDA forums instead.", Toast.LENGTH_LONG).show();
     		openXdaForums(context);
     	}
+	}
+	
+	public static void openGithub(Context context) {
+		Intent browserGithubIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(mExtLinkGithub));
+    	try {
+    		context.startActivity(browserGithubIntent);
+    	} catch (ActivityNotFoundException e) {
+    		String error = "Unable to open web browser";
+    		Log.e(TAG, error, e);
+    		Toast.makeText(context, error, Toast.LENGTH_LONG).show();
+    	}
+	}
+	
+	public static void openEmail(Context context) {
+		final Intent emailIntent = new Intent( android.content.Intent.ACTION_SEND);
+		try {
+	    	emailIntent.setType("plain/text");
+	    	emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL,
+	    			new String[] { "mikuz.dev@gmail.com" });
+	    	context.startActivity(Intent.createChooser(emailIntent, "Send mail"));
+		} catch (ActivityNotFoundException e) {
+			String error = "Unable to open email client";
+    		Log.e(TAG, error, e);
+    		Toast.makeText(context, error, Toast.LENGTH_LONG).show();
+		}
 	}
 }

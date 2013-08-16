@@ -13,7 +13,7 @@
     <string name="menu_dropbox">Dropbox</string>
     <string name="menu_duplicate_board">Duplicate</string>
     <string name="menu_global_settings">Settings</string>
-    <string name="menu_email">Email me</string>
+    <string name="support_links">Support &amp; links</string>
     <string name="menu_help_text">
         &lt;html>
 			&lt;body bgcolor = \"#1C1C1C\" TEXT = \"#ffffff\" LINK = \"ffcc33\" VLINK = \"ff9933\">
