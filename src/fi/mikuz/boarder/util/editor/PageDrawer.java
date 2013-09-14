@@ -158,7 +158,7 @@ public class PageDrawer {
 		initializingAnimation = false;
 	}
 	
-	public Canvas drawSurface(Canvas canvas, GraphicalSound pressedSound) {
+	public Canvas drawSurface(Canvas canvas, GraphicalSound pressedSound, boolean editMode) {
 		Paint paint = new Paint();
 		canvas.drawColor(Color.BLACK);
 
@@ -227,7 +227,7 @@ public class PageDrawer {
 
 		if (!topGsgFading) {
 			// Drawing directly to SurfaceView canvas is a lot faster.
-			drawPage(canvas, topGsb, pressedSound);
+			drawPage(canvas, topGsb, pressedSound, editMode);
 		}
 
 		return canvas;
@@ -241,12 +241,12 @@ public class PageDrawer {
 		
 		Bitmap pageBitmap = Bitmap.createBitmap(size.x, size.y, BITMAP_CONF);
 		Canvas pageCanvas = new Canvas(pageBitmap);
-		drawPage(pageCanvas, gsb, pressedSound);
+		drawPage(pageCanvas, gsb, pressedSound, false);
 		
 		return pageBitmap;
 	}
 	
-	private Canvas drawPage(Canvas canvas, GraphicalSoundboard drawGsb, GraphicalSound pressedSound) {
+	private Canvas drawPage(Canvas canvas, GraphicalSoundboard drawGsb, GraphicalSound pressedSound, boolean editMode) {
 		
 		canvas.drawColor(drawGsb.getBackgroundColor());
 		

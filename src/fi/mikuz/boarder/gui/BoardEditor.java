@@ -2686,7 +2686,8 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 				GraphicalSound pressedSound = null;
 				if (mCurrentGesture == TouchGesture.DRAG) pressedSound = mPressedSound;
 				
-				mPageDrawer.drawSurface(canvas, pressedSound);
+				boolean editMode = (mMode == EDIT_BOARD);
+				mPageDrawer.drawSurface(canvas, pressedSound, editMode);
 			}
 
 		}
