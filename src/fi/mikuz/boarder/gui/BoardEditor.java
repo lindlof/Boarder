@@ -1442,7 +1442,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     		if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
     			
     			float targetX = X-mNameFrameDragDistanceX;
-    			float targetY = Y-mNameFrameDragDistanceX;
+    			float targetY = Y-mNameFrameDragDistanceY;
     			
     			// Black bars won't move beyond half screen
     			PanelSize panelSize = new PanelSize(BoardEditor.this);
