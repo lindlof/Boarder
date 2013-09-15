@@ -1440,8 +1440,27 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     void moveSound(float X, float Y) {
     	if (mPressedSound != null) {
     		if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_TEXT) {
-    			mPressedSound.setNameFrameX(X-mNameFrameDragDistanceX);
-    			mPressedSound.setNameFrameY(Y-mNameFrameDragDistanceY);
+    			
+    			float targetX = X-mNameFrameDragDistanceX;
+    			float targetY = Y-mNameFrameDragDistanceX;
+    			
+    			// Black bars won't move beyond half screen
+    			PanelSize panelSize = new PanelSize(BoardEditor.this);
+    			int width = panelSize.getWidth();
+    			int height = panelSize.getHeight();
+    			
+    			if (mPressedSound.getPath().getAbsolutePath().equals(SoundboardMenu.mLeftBlackBarSoundFilePath)) {
+    				targetX = (targetX > width/2) ? width/2 : targetX;
+    			} else if (mPressedSound.getPath().getAbsolutePath().equals(SoundboardMenu.mRightBlackBarSoundFilePath)) {
+    				targetX = (targetX < width/2) ? width/2 : targetX;
+    			} else if (mPressedSound.getPath().getAbsolutePath().equals(SoundboardMenu.mTopBlackBarSoundFilePath)) {
+    				targetY = (targetY > height/2) ? height/2 : targetY;
+    			} else if (mPressedSound.getPath().getAbsolutePath().equals(SoundboardMenu.mBottomBlackBarSoundFilePath)) {
+    				targetY = (targetY < height/2) ? height/2 : targetY;
+    			}
+    			
+    			mPressedSound.setNameFrameX(targetX);
+    			mPressedSound.setNameFrameY(targetY);
     		}
     		if (mPressedSound.getLinkNameAndImage() || mDragTarget == DRAG_IMAGE) {
     			mPressedSound.setImageX(X-mImageDragDistanceX);
