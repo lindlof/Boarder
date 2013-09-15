@@ -1323,6 +1323,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     		this.mFineTuningSound = null;
     	}
     	
+    	if (mThread != null) mThread.interrupt();
     	super.onConfigurationChanged(newConfig);
     }
     
