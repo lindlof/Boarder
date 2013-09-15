@@ -75,6 +75,8 @@ public class GraphicalSound implements Cloneable {
 	private float namePixelSize;
 	private int autoArrangeColumn;
 	private int autoArrangeRow;
+	private boolean loopIndefinitely;
+	
 	
 	public GraphicalSound() {
 		this.id = -1;
@@ -99,6 +101,8 @@ public class GraphicalSound implements Cloneable {
 		this.setNameFrameBorderColor(255, 255, 255, 255);
 		this.setShowNameFrameInnerPaint(true);
 		this.setShowNameFrameBorderPaint(true);
+		
+		this.setLoopIndefinitely(false);
 	}
 	
 	public void loadImages(Context context) {
@@ -343,6 +347,14 @@ public class GraphicalSound implements Cloneable {
 	public int getSecondClickAction() {
 		return secondClickAction;
 	} 
+	
+	public boolean getLoopIndefinitely() {
+		return loopIndefinitely;
+	}
+	public void setLoopIndefinitely(boolean loopIndefinitely) {
+		this.loopIndefinitely = loopIndefinitely;
+	}
+	
 	public float getMiddleX() {
 		float lowerX = Float.MAX_VALUE;
 		float upperX = Float.MIN_VALUE;
@@ -391,6 +403,7 @@ public class GraphicalSound implements Cloneable {
 		
 		return middleY;
 	}
+	
 	public Object clone() {
         try {
             return super.clone();

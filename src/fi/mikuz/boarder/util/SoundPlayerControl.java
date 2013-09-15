@@ -122,8 +122,8 @@ public abstract class SoundPlayerControl {
 		}
 	}
 	
-	public static void playSound(boolean playSimultaneously, File soundPath, Float volumeLeft, Float volumeRight, 
-			Float boardVolume) {
+	public static void playSound(boolean playSimultaneously, boolean loopIndefinitely, File soundPath, 
+			Float volumeLeft, Float volumeRight, Float boardVolume) {
 		
 		SoundPlayer soundPlayer = new SoundPlayer();
 		try {
@@ -156,7 +156,7 @@ public abstract class SoundPlayerControl {
         
         if (playerPrepared) {
         	soundPlayer.setVolume(volumeLeft*boardVolume, volumeRight*boardVolume);
-        	
+        	soundPlayer.setLooping(loopIndefinitely);
         	soundPlayer.start();
     		
     		ListIterator<SoundPlayer> iterator = SoundboardMenu.mSoundPlayerList.listIterator();
@@ -230,7 +230,7 @@ public abstract class SoundPlayerControl {
 		return playing;
 	}
 
-	public static void pauseSound(boolean playSimultaneously, File soundPath, Float volumeLeft, Float volumeRight, 
+	public static void pauseSound(boolean playSimultaneously, boolean loopIndefinitely, File soundPath, Float volumeLeft, Float volumeRight, 
 			Float boardVolume) {
 
 		ListIterator<SoundPlayer> iterator = SoundboardMenu.mSoundPlayerList.listIterator();
@@ -242,6 +242,7 @@ public abstract class SoundPlayerControl {
 					soundPlayer.pause();
 				} else {
 					soundPlayer.setFadeVolume(soundPlayer.getLeftVolume(), soundPlayer.getRightVolume());
+					soundPlayer.setLooping(loopIndefinitely);
 					soundPlayer.start();
 				}
 				soundFound = true;
@@ -249,13 +250,13 @@ public abstract class SoundPlayerControl {
 			}
 		}
 		if (!soundFound) {
-			playSound(playSimultaneously, soundPath, volumeLeft, volumeRight, boardVolume);
+			playSound(playSimultaneously, loopIndefinitely, soundPath, volumeLeft, volumeRight, boardVolume);
 		}
 		
 		refreshDrawing();
 	}
 	
-	public static void stopSound(boolean playSimultaneously, File soundPath, Float volumeLeft, Float volumeRight, 
+	public static void stopSound(boolean playSimultaneously, boolean loopIndefinitely, File soundPath, Float volumeLeft, Float volumeRight, 
 			Float boardVolume) {
 		
 		ListIterator<SoundPlayer> iterator = SoundboardMenu.mSoundPlayerList.listIterator();
@@ -268,6 +269,7 @@ public abstract class SoundPlayerControl {
 					iterator.remove();
 				} else {
 					soundPlayer.setFadeVolume(soundPlayer.getLeftVolume(), soundPlayer.getRightVolume());
+					soundPlayer.setLooping(loopIndefinitely);
 					soundPlayer.start();
 				}
 				soundFound = true;
@@ -275,7 +277,7 @@ public abstract class SoundPlayerControl {
 			}
 		}
 		if (!soundFound) {
-			playSound(playSimultaneously, soundPath, volumeLeft, volumeRight, boardVolume);
+			playSound(playSimultaneously, loopIndefinitely, soundPath, volumeLeft, volumeRight, boardVolume);
 		}
 		
 		refreshDrawing();

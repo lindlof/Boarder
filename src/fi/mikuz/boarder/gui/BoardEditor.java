@@ -1390,14 +1390,14 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			SoundPlayerControl.togglePlayPause(super.mContext);
 		} else {
 			if (sound.getSecondClickAction() == GraphicalSound.SECOND_CLICK_PLAY_NEW) {
-				SoundPlayerControl.playSound(mGsb.getPlaySimultaneously(), sound.getPath(), sound.getVolumeLeft(), 
-            			sound.getVolumeRight(), mGsb.getBoardVolume());
+				SoundPlayerControl.playSound(mGsb.getPlaySimultaneously(), sound.getLoopIndefinitely(), sound.getPath(), 
+						sound.getVolumeLeft(), sound.getVolumeRight(), mGsb.getBoardVolume());
 			} else if (sound.getSecondClickAction() == GraphicalSound.SECOND_CLICK_PAUSE) {
-				SoundPlayerControl.pauseSound(mGsb.getPlaySimultaneously(), sound.getPath(), sound.getVolumeLeft(), 
-            			sound.getVolumeRight(), mGsb.getBoardVolume());
+				SoundPlayerControl.pauseSound(mGsb.getPlaySimultaneously(), sound.getLoopIndefinitely(), sound.getPath(), 
+						sound.getVolumeLeft(), sound.getVolumeRight(), mGsb.getBoardVolume());
 			} else if (sound.getSecondClickAction() == GraphicalSound.SECOND_CLICK_STOP) {
-				SoundPlayerControl.stopSound(mGsb.getPlaySimultaneously(), sound.getPath(), sound.getVolumeLeft(), 
-            			sound.getVolumeRight(), mGsb.getBoardVolume());
+				SoundPlayerControl.stopSound(mGsb.getPlaySimultaneously(), sound.getLoopIndefinitely(), sound.getPath(),
+						sound.getVolumeLeft(), sound.getVolumeRight(), mGsb.getBoardVolume());
 			}
 			mCanvasInvalidated = true;
 		}
@@ -2391,6 +2391,10 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					              	  		(CheckBox) layout.findViewById(R.id.linkNameAndImageCheckBox);
 					    	    		linkNameAndImageCheckBox.setChecked(mPressedSound.getLinkNameAndImage());
 					    	    		
+					    	    		final CheckBox loopIndefinitely = 
+						              	  	(CheckBox) layout.findViewById(R.id.loopIndefinitely);
+					    	    		loopIndefinitely.setChecked(mPressedSound.getLoopIndefinitely());
+					    	    		
 					    	    		final Button changeSoundPathButton = 
 					              	  		(Button) layout.findViewById(R.id.changeSoundPathButton);
 					    	    		changeSoundPathButton.setOnClickListener(new OnClickListener() {
@@ -2438,6 +2442,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 					    	          	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 					    	          		public void onClick(DialogInterface dialog, int whichButton) {
 					    	          			mPressedSound.setLinkNameAndImage(linkNameAndImageCheckBox.isChecked());
+					    	          			mPressedSound.setLoopIndefinitely(loopIndefinitely.isChecked());
 					    	          			if (mPressedSound.getLinkNameAndImage()) {
 						    	          			mPressedSound.generateImageXYFromNameFrameLocation();
 					    	          			}
