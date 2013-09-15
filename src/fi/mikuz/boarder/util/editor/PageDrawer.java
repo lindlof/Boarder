@@ -273,7 +273,12 @@ public class PageDrawer {
 			
 			for (GraphicalSound sound : drawList) {
 				Paint barPaint = new Paint();
-				barPaint.setColor(sound.getNameFrameInnerColor());
+				if (editMode) {
+					barPaint.setColor(Color.argb(125, 255, 178, 102));
+				} else {
+					barPaint.setColor(sound.getNameFrameInnerColor());
+				}
+				
 				String soundPath = sound.getPath().getAbsolutePath();
 				if (soundPath.equals(SoundboardMenu.mTopBlackBarSoundFilePath)) {
 					canvas.drawRect(0, 0, canvas.getWidth(), sound.getNameFrameY(), barPaint);
