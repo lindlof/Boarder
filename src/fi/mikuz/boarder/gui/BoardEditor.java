@@ -105,7 +105,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 	private int mCurrentOrientation;
 	
 	public GraphicalSoundboard mGsb;
-	private GraphicalSoundboardProvider mGsbp;
+	private volatile GraphicalSoundboardProvider mGsbp;
 	private BoardHistoryProvider mHistory;
 	
 	private EditorLastState mLastState;
@@ -1261,12 +1261,17 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
 			public void run() {
 				Looper.prepare();
 				try {
+					if (mModifiedPage != null) {
+						overrideBoard(mModifiedPage);
+					}
+					
 					if (mClearBoardDir) {
 						cleanDirectory(new File(mSbDir, mBoardName).listFiles());
 					}
 					
 					FileProcessor.convertGraphicalBoard((Activity) BoardEditor.this, mBoardName, mGsbp);
-					save();
+					plainSave();
+					
 				} catch (IOException e) {
 					Log.e(TAG, "Error converting board", e);
 				}
@@ -1370,6 +1375,23 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
     		} catch (IOException e) {
     			Log.e(TAG, "Unable to save " + mBoardName, e);
     		}
+    	}
+    }
+    
+    /**
+     * Save for operations that touch more that a single page.
+     * Caller must handle modified page overriding.
+     */
+    private void plainSave() {
+    	if (mBoardName != null) {
+	    	try {
+	    		mModifiedPage = null;
+	    		changeBoard(mGsbp.getPage(super.mContext, mGsb.getScreenOrientation(), mGsb.getPageNumber()), false);
+	    		mGsbp.saveBoard(BoardEditor.super.mContext, mBoardName);
+	        	Log.v(TAG, "Board " + mBoardName + " saved");
+			} catch (IOException e) {
+				Log.e(TAG, "Unable to save " + mBoardName, e);
+			}
     	}
     }
     
