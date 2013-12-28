@@ -585,7 +585,7 @@ public class DropboxMenu extends BoarderListActivity {
             			try {
             				final ArrayList<String> boards = mCbla.getAllSelectedTitles();
             				if (!(mOperation == DOWNLOAD_OPERATION)) {
-            					mToastMessage = "Select 'Download/Share' mode";
+            					mToastMessage = "Select 'Download' mode";
             					mHandler.post(mShowToast);
             				} else if (boards.size() < 1)  {
             					mToastMessage = "Select boards to share";
@@ -641,7 +641,7 @@ public class DropboxMenu extends BoarderListActivity {
             					Looper.prepare();
             					try {
             						mApi.addFromCopyRef(importCodeInput.getText().toString(), "/" + importNameInput.getText().toString());
-            						mToastMessage = "Download the board from 'Download/Share'";
+            						mToastMessage = "Download the board from 'Download'";
             						mHandler.post(mShowToast);
             					} catch (DropboxException e) {
             						Log.e(TAG, "Unable to get shared board", e);
