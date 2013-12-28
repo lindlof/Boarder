@@ -38,13 +38,13 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 import fi.mikuz.boarder.R;
+import fi.mikuz.boarder.app.Boarder;
 import fi.mikuz.boarder.app.BoarderActivity;
 import fi.mikuz.boarder.connection.ConnectionErrorResponse;
 import fi.mikuz.boarder.connection.ConnectionListener;
 import fi.mikuz.boarder.connection.ConnectionManager;
 import fi.mikuz.boarder.connection.ConnectionSuccessfulResponse;
 import fi.mikuz.boarder.connection.ConnectionUtils;
-import fi.mikuz.boarder.gui.SoundboardMenu;
 import fi.mikuz.boarder.util.ExternalIntent;
 import fi.mikuz.boarder.util.TimeoutProgressDialog;
 import fi.mikuz.boarder.util.dbadapter.GlobalVariablesDbAdapter;
@@ -53,7 +53,7 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 public class InternetMenu extends BoarderActivity implements ConnectionListener {
     private static final String TAG = "InternetMenu";
     
-    private static final String phpRepURL = (SoundboardMenu.mDevelopmentMode) ? "http://test.boarder.mikuz.org/" : "https://secure.bluehost.com/~mikuzorg/boarder/";
+    private static final String phpRepURL = (Boarder.mDevelopmentMode) ? "http://test.boarder.mikuz.org/" : "https://secure.bluehost.com/~mikuzorg/boarder/";
     static final String mGetSessionValidURL = InternetMenu.phpRepURL + "getSessionInfo.php";
     static final String mGetBoardsURL = InternetMenu.phpRepURL + "getBoards.php";
     static final String mGetBoardURL = InternetMenu.phpRepURL + "getBoard.php";

@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.acra.annotation.ReportsCrashes;
+
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -32,7 +34,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
@@ -40,7 +41,6 @@ import android.database.StaleDataException;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.AudioManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -74,16 +74,12 @@ import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.bugsense.trace.BugSenseHandler;
-
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.app.BoarderListActivity;
 import fi.mikuz.boarder.component.SoundPlayer;
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.gui.internet.InternetMenu;
 import fi.mikuz.boarder.service.TogglePlayPauseService;
-import fi.mikuz.boarder.util.ApiKeyLoader;
 import fi.mikuz.boarder.util.BoardLocal;
 import fi.mikuz.boarder.util.ContextUtils;
 import fi.mikuz.boarder.util.ExternalIntent;
@@ -98,10 +94,9 @@ import fi.mikuz.boarder.util.dbadapter.LoginDbAdapter;
 import fi.mikuz.boarder.util.dbadapter.MenuDbAdapter;
 import fi.mikuz.boarder.util.editor.GraphicalSoundboardProvider;
 
+@ReportsCrashes(formKey = "", formUri = "")
 public class SoundboardMenu extends BoarderListActivity {
 	public static final String TAG = SoundboardMenu.class.getSimpleName();
-	
-	public static final boolean mDevelopmentMode = false; //FIXME for release
 	
 	public static final String EXTRA_LAUNCH_BAORD_KEY = "SoundboardMenu.boardToLaunch";
 	public static final String EXTRA_HIDE_SOUNDBOARDMENU = "SoundboardMenu.hideSoundboardmenu";
@@ -148,16 +143,8 @@ public class SoundboardMenu extends BoarderListActivity {
     	super.mContext = (Context) this;
     	ImageDrawing.registerCache(super.mContext);
     	
-    	String versionName = null;
-    	try {
-    		versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-		} catch (NameNotFoundException e) {
-			Log.e(TAG, "Unable to get info from manifest", e);
-		}
-    	Log.i(TAG, "Starting Boarder v" + versionName + " dev: " + mDevelopmentMode);
     	Log.i(TAG, "Boarder storage directory is " + mSbDir.getAbsolutePath());
     	
-    	if (!mDevelopmentMode) BugSenseHandler.initAndStartSession(this, ApiKeyLoader.loadBugSenseApiKey(super.mContext, TAG));
         super.onCreate(savedInstanceState);
         
         mIntent = getIntent();

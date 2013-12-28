@@ -69,5 +69,6 @@
     <!--General-->
     <string name="app_name">Boarder</string>
     <string name="menu_play_pause">Play / Pause</string>
+    <string name="crash_toast_text">Boarder crashed</string>
     
 </resources>

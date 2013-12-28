@@ -26,6 +26,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
+import org.acra.ACRA;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -53,7 +54,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bugsense.trace.BugSenseHandler;
 import com.thoughtworks.xstream.XStream;
 
 import fi.mikuz.boarder.R;
@@ -324,7 +324,7 @@ public class DownloadBoard extends BoarderActivity implements ConnectionListener
 							startActivity(browserIntent);
 						} catch (ActivityNotFoundException e) {
 							Log.e(TAG, "Unable to open board url", e);
-							BugSenseHandler.sendException(e);
+							ACRA.getErrorReporter().handleException(e);
 						}
 					}
 				});

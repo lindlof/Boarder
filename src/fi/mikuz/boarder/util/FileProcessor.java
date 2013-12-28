@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.acra.ACRA;
 import org.apache.commons.io.IOUtils;
 
 import android.app.Activity;
@@ -49,7 +50,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 
-import com.bugsense.trace.BugSenseHandler;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.StreamException;
 
@@ -260,10 +260,10 @@ public class FileProcessor {
 			    IOUtils.copy(in, out);
 			} catch (FileNotFoundException e) {
 				Log.e(TAG, "Failed to backup", e);
-				BugSenseHandler.sendException(e);
+				ACRA.getErrorReporter().handleException(e);
 			} catch (IOException e) {
 				Log.e(TAG, "Failed to backup", e);
-				BugSenseHandler.sendException(e);
+				ACRA.getErrorReporter().handleException(e);
 			}
 		}
 	}
@@ -517,7 +517,7 @@ public class FileProcessor {
 	    		toastMsg = "Couldn't save screenshot";
 	    	}
 		} catch (FileNotFoundException e) {
-			BugSenseHandler.sendException(e);
+			ACRA.getErrorReporter().handleException(e);
 			Log.e(TAG, "Error saving screenshot", e);
 			toastMsg = "Error saving screenshot";
 		}
@@ -540,7 +540,7 @@ public class FileProcessor {
 		    out.close();
 		}
 		catch(IOException e) {
-			BugSenseHandler.sendException(e);
+			ACRA.getErrorReporter().handleException(e);
 			Log.e(TAG, "Error zipping", e);
 		}
 	}

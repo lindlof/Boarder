@@ -19,7 +19,7 @@
 
 package fi.mikuz.boarder.util.editor;
 
-import com.bugsense.trace.BugSenseHandler;
+import org.acra.ACRA;
 
 import android.os.Looper;
 import android.util.Log;
@@ -67,7 +67,7 @@ public class PanelSize {
 		if (width <= 0 || height <= 0) {
 			Exception e = new IllegalStateException("Unable to find real panel size");
 			Log.e(TAG, "Unable to find real panel size", e);
-			BugSenseHandler.sendException(e);
+			ACRA.getErrorReporter().handleException(e);
 		}
 	}
 

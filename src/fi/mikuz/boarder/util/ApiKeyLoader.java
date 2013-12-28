@@ -29,10 +29,6 @@ import android.util.Log;
  * To support an API you need to provide a plain API key in assets folder in defined file.
  */
 public class ApiKeyLoader {
-
-	public static String loadBugSenseApiKey(Context context, String TAG) {
-		return loadApiKey(context, TAG, "ApiKeys/BugSenseApiKey.txt");
-	}
 	
 	public static String loadDropboxApiKey(Context context, String TAG) {
 		return loadApiKey(context, TAG, "ApiKeys/DropboxApiKey.txt");
@@ -40,6 +36,18 @@ public class ApiKeyLoader {
 	
 	public static String loadDropboxApiSecret(Context context, String TAG) {
 		return loadApiKey(context, TAG, "ApiKeys/DropboxApiSecret.txt");
+	}
+	
+	public static String loadAcraApiUser(Context context, String TAG) {
+		return loadApiKey(context, TAG, "ApiKeys/AcraApiUser.txt");
+	}
+	
+	public static String loadAcraApiPassword(Context context, String TAG) {
+		return loadApiKey(context, TAG, "ApiKeys/AcraApiPassword.txt");
+	}
+	
+	public static String loadAcraApiUrl(Context context, String TAG) {
+		return loadApiKey(context, TAG, "ApiKeys/AcraApiUrl.txt");
 	}
 	
 	public static String loadApiKey(Context context, String TAG, String asset) {

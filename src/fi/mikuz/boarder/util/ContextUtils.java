@@ -19,12 +19,12 @@
 
 package fi.mikuz.boarder.util;
 
+import org.acra.ACRA;
+
 import android.content.Context;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
-
-import com.bugsense.trace.BugSenseHandler;
 
 public abstract class ContextUtils {
 	private static final String TAG = ContextUtils.class.getSimpleName();
@@ -38,11 +38,11 @@ public abstract class ContextUtils {
 		if (Looper.myLooper() == null) {
 			Exception e = new IllegalStateException("Not running in a looper");
 			Log.e(TAG, errLogMsg, e);
-			BugSenseHandler.sendException(e);
+			ACRA.getErrorReporter().handleException(e);
 		} else if (Looper.myLooper() != Looper.getMainLooper()) {
 			Exception e = new IllegalStateException("Not running in the main looper");
 			Log.e(TAG, errLogMsg, e);
-			BugSenseHandler.sendException(e);
+			ACRA.getErrorReporter().handleException(e);
 		} else {
 			try {
 				Toast.makeText(context, toast, duration).show();

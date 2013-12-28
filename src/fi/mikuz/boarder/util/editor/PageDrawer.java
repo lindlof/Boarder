@@ -24,6 +24,8 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 
+import org.acra.ACRA;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -36,9 +38,6 @@ import android.graphics.RectF;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
-
-import com.bugsense.trace.BugSenseHandler;
-
 import fi.mikuz.boarder.component.soundboard.GraphicalSound;
 import fi.mikuz.boarder.component.soundboard.GraphicalSoundboard;
 import fi.mikuz.boarder.gui.SoundboardMenu;
@@ -342,7 +341,7 @@ public class PageDrawer {
 						} catch(NullPointerException npe) {
 							Log.e(TAG, "Unable to draw image for sound " + sound.getName());
 							npe.printStackTrace();
-							BugSenseHandler.sendException(npe);
+							ACRA.getErrorReporter().handleException(npe);
 							sound.setDefaultImage(context);
 						}
 				    }
