@@ -22,3 +22,16 @@ The Apache Software Foundation (http://www.apache.org/).
 
 This project contains annotations derived from JCIP-ANNOTATIONS
 Copyright (c) 2005 Brian Goetz and Tim Peierls. See http://www.jcip.net
+
+
+================================================================
+=  Notice for included library acra-4.5.0.jar                  =
+================================================================
+
+Application Crash Reporting for Android
+Copyright (c) 2013 Kevin Gaudin
+http://acra.ch
+
+This product is licensed under the terms of the Apache Software License 2.0. See the LICENSE file for the full license text.
+
+This product includes software (package org.acra.jraf.android.util.activitylifecyclecallbackscompat) developed at JRAF, Copyright (C) 2013 Benoit 'BoD' Lubek (BoD@JRAF.org), ASL 2.0.
