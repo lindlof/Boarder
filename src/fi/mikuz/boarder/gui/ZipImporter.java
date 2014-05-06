@@ -40,6 +40,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 import fi.mikuz.boarder.R;
 import fi.mikuz.boarder.app.BoarderActivity;
 
@@ -58,7 +59,13 @@ public class ZipImporter extends BoarderActivity {
 		mInfoText = (TextView)findViewById(R.id.infoText);
 		mInfoText.setText("Please wait");
 		
-		unzipArchive(new File(getIntent().getData().getPath()), SoundboardMenu.mSbDir);
+		if (getIntent().getData() != null && getIntent().getData().getPath() != null) {
+			unzipArchive(new File(getIntent().getData().getPath()), SoundboardMenu.mSbDir);
+		} else {
+			String msg = "Invalid file path";
+			Log.e(TAG, msg);
+			Toast.makeText(super.mContext, msg, Toast.LENGTH_LONG).show();
+		}
 	}
 
 	@SuppressWarnings("rawtypes")
