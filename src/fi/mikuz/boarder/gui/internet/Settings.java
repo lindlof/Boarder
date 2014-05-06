@@ -64,9 +64,8 @@ public class Settings extends BoarderActivity implements ConnectionListener {
 		setContentView(R.layout.internet_settings);
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		
-		Bundle extras = getIntent().getExtras();
 		@SuppressWarnings("unchecked")
-		HashMap<String,String> lastSession = (HashMap<String,String>) extras.getSerializable(InternetMenu.LOGIN_KEY);
+		HashMap<String,String> lastSession = (HashMap<String,String>) getIntent().getSerializableExtra(InternetMenu.LOGIN_KEY);
 		
 		try {
 			mUserId = lastSession.get(InternetMenu.USER_ID_KEY);

@@ -73,11 +73,11 @@ public class ColorChanger extends BoarderActivity implements OnSeekBarChangeList
         super.onCreate(savedInstanceState);
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		
-		Bundle extras = getIntent().getExtras();
-		mParent = extras.getString("parentKey");
+		mParent = getIntent().getStringExtra("parentKey");
 		
 		if (mParent.equals("changeBackgroundColor")) mChangingSoundColor = false;
 		
+		Bundle extras = getIntent().getExtras();
 		XStream xstream = XStreamUtil.graphicalBoardXStream();
 		if (mChangingSoundColor) mSound = (GraphicalSound) xstream.fromXML(extras.getString(XStreamUtil.SOUND_KEY));
 		mGsb = (GraphicalSoundboard) xstream.fromXML(extras.getString(XStreamUtil.SOUNDBOARD_KEY));

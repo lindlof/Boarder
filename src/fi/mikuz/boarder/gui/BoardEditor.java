@@ -218,8 +218,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         
         mHistory = new BoardHistoryProvider();
         
-        Bundle extras = getIntent().getExtras();
-        mBoardName = extras.getString(MenuDbAdapter.KEY_TITLE);
+        mBoardName = getIntent().getStringExtra(MenuDbAdapter.KEY_TITLE);
         setTitle(mBoardName);
 
         mGsbp = new GraphicalSoundboardProvider(mBoardName);
@@ -227,6 +226,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
         mPagination.restorePaginationInstance(savedInstanceState);
         initEditorBoard();
         
+        Bundle extras = getIntent().getExtras();
         mLastState = new EditorLastState(mGsbp, extras);
 
         mMode = EDIT_BOARD;
