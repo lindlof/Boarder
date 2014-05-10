@@ -104,6 +104,12 @@ public class Pagination {
     	}
 		resetMove();
 		
+		if (fromPageNumber == toPageNumber) {
+			ContextUtils.toast(context, "Move canceled");
+			return;
+		}
+		
+		Log.v(TAG, "Moving page " + fromPageNumber + " to " + toPageNumber);
 		List<GraphicalSoundboard> pages = new ArrayList<GraphicalSoundboard>();
 		
 		int beginPageNumber = (fromPageNumber < toPageNumber) ? fromPageNumber : toPageNumber;
@@ -120,12 +126,14 @@ public class Pagination {
 			if (pageNumber == fromPageNumber) {
 				gsb.setPageNumber(toPageNumber);
 				gsbp.overrideBoard(context, gsb);
-			} else if (fromPageNumber > toPageNumber) {
-				gsb.setPageNumber(pageNumber + 1);
-				gsbp.overrideBoard(context, gsb);
-			} else if (fromPageNumber < toPageNumber) {
-				gsb.setPageNumber(pageNumber - 1);
-				gsbp.overrideBoard(context, gsb);
+			} else {
+				if (fromPageNumber > toPageNumber) {
+					gsb.setPageNumber(pageNumber + 1);
+					gsbp.overrideBoard(context, gsb);
+				} else {
+					gsb.setPageNumber(pageNumber - 1);
+					gsbp.overrideBoard(context, gsb);
+				}
 			}
 		}
 	}
