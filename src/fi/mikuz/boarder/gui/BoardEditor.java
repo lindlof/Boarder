@@ -424,6 +424,7 @@ public class BoardEditor extends BoarderActivity { //TODO destroy god object
             	mPagination.movePage(BoardEditor.super.mContext, mGsb);
             	GraphicalSoundboard gsb = mGsbp.getPage(BoardEditor.super.mContext, currentGsb.getScreenOrientation(), toPageNumber);
             	changeBoard(gsb, SwipingDirection.NO_DIRECTION, false, true);
+            	mModifiedPage = null;
 	    		BoardEditor.this.onCreateOptionsMenu(mMenu);
             	return true;
                 
