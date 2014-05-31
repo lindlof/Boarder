@@ -23,7 +23,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-
+/**
+ * Custom list to allocate ID's to sounds that are added.
+ * TODO: Allocate used ID's that are not reserved anymore.
+ * 
+ * @author Jan Mikael Lindlöf
+ */
 public class GraphicalSoundList extends ArrayList<GraphicalSound> {
 	
 	private static final long serialVersionUID = 7248111265110278835L;
@@ -62,7 +67,10 @@ public class GraphicalSoundList extends ArrayList<GraphicalSound> {
 	}
 	
 	/**
-	 * Call before adding the sound as that marks the id as already taken.
+	 * Makes sure that sound's ID is unique.
+	 * <p>
+	 * Call before adding the sound.
+	 * Sound's ID would seem to be already taken if it was already added.
 	 * @param sound
 	 */
 	protected void soundIdCheck(GraphicalSound sound) {

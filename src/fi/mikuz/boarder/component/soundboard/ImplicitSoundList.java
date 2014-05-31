@@ -30,12 +30,10 @@ import fi.mikuz.boarder.util.XStreamUtil;
  * <p>
  * Implicit collection class itself is ignored in serialized XML and all collection 
  * items it contains are directly inserted without wrapping object.
- * I want that wrapping object so an extra intermediary object was introduced.
- * This is that extra object.
  * <p>
- * The need to use implicit collection comes from XStreams inability to use 
- * custom collections without introducing a bogus class attribute.
- * That class attribute could create serious problems with loading legacy
+ * Need to use implicit collection comes from XStream's inability to use 
+ * custom collections without an unnecessary class attribute.
+ * Class attribute could create serious problems with loading legacy
  * boards in the future.
  */
 public class ImplicitSoundList {
