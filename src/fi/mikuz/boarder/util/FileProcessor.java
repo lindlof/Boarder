@@ -67,35 +67,50 @@ public class FileProcessor {
 	private static final String boardSaveFileName = "graphicalBoard";
 	private static final String boardTempSaveFileName = boardSaveFileName + ".tmp";
 	
-	public static GraphicalSoundboardHolder loadGraphicalSoundboardHolder(String boardName, boolean log) throws IOException {
+	public static GraphicalSoundboardHolder loadGraphicalSoundboardHolder(String boardName, boolean extensiveLoad) throws IOException {
 		synchronized (boardSaveFileLock) {
 
 			File boardDir = constructBoardPath(boardName);
 			File boardFile = new File(boardDir, boardSaveFileName);
 			File tmpBoardFile = new File(boardDir, boardTempSaveFileName);
+			
+			// Don't log like crazy when loading boards in batch mode
+			boolean log = extensiveLoad;
 
+			GraphicalSoundboardHolder holder = null;
+			
 			try {
-				GraphicalSoundboardHolder holder = loadSerializedBoardV1(boardDir, boardFile, log);
-				return holder;
+				holder = loadSerializedBoardV1(boardDir, boardFile, log);
 			} catch(StreamException e) {
 				try {
 					if (log) Log.e(TAG, "Unable to load board \"" + boardName + "\"", e);
-					GraphicalSoundboardHolder tmpHolder = loadSerializedBoardV1(boardDir, tmpBoardFile, log);
-					if (log) Log.i(TAG, "Board \"" + boardName + "\" tmp file loaded successfully");
-					return tmpHolder;
+					holder = loadSerializedBoardV1(boardDir, tmpBoardFile, log);
+					if (log) Log.d(TAG, "Board \"" + boardName + "\" tmp file loaded successfully");
 				} catch(StreamException e2) {
 					if (log) Log.e(TAG, "Unable to load board \"" + boardName + "\" from tmp file", e2);
-					GraphicalSoundboardHolder legacyHolder = null;
 					try {
-						legacyHolder = loadUnlimitedSoundboardBoard(boardDir, boardName);
+						holder = loadUnlimitedSoundboardBoard(boardDir, boardName);
 					} catch (Exception e3) {
 						if (log) Log.e(TAG, "Unable to load board \"" + boardName + "\" using legacy format");
 						return null;
 					}
 					if (log) Log.i(TAG, "Imported board \"" + boardName + "\" using Unlimited Soundboards format");
-					return legacyHolder;
 				}
 			}
+			
+			Log.d(TAG, "Board \"" + boardName + "\" loaded");
+			
+			if (extensiveLoad) { // Perform some tasks only when board is fully loaded
+				int i = 0;
+				while (i < 20 && !holder.verifyIntegrity()) {
+					i++;
+				}
+				if (i == 0) Log.d(TAG, "Board \"" + boardName + "\" integrity verified");
+				else if (i < 20) Log.w(TAG, "Board \"" + boardName + "\" integrity fixed");
+				else Log.e(TAG, "Board \"" + boardName + "\" integrity fixing failed");
+			}
+			
+			return holder;
 		}
 	}
 

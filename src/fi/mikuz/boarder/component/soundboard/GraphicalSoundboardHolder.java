@@ -27,6 +27,8 @@ import android.util.Log;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
+import fi.mikuz.boarder.util.Logger;
+
 /**
  * Holds list of saved boards. Allocates resources for new boards to be saved.
  */
@@ -74,7 +76,7 @@ public class GraphicalSoundboardHolder {
 	 * @param gsbTemplate
 	 * @return Board with new id
 	 */
-	public GraphicalSoundboard allocateBoardResources(GraphicalSoundboard gsbTemplate) {
+	public synchronized GraphicalSoundboard allocateBoardResources(GraphicalSoundboard gsbTemplate) {
 		int boardId = allocateBoardId();
 		int boardPageNumber = allocateBoardPage(gsbTemplate.getScreenOrientation());
 		gsbTemplate.setId(boardId);
@@ -84,22 +86,54 @@ public class GraphicalSoundboardHolder {
 		return gsbTemplate;
 	}
 	
-	private int allocateBoardId() {
+	private synchronized int allocateBoardId() {
+		return highestPageId() + 1;
+	}
+	
+	/**
+	 * Find highest page ID.
+	 * @return Highest page ID or -1 if no pages found
+	 */
+	private int highestPageId() {
 		int highestId = -1;
 		for (GraphicalSoundboard board : this.getBoardList()) {
 			highestId = (board.getId() > highestId) ? board.getId() : highestId;
 		}
-		return highestId + 1;
+		return highestId;
 	}
 	
-	private int allocateBoardPage(int screenOrientation) {
+	private synchronized int allocateBoardPage(int screenOrientation) {
+		int highestPage = highestPageNumber(screenOrientation);
+		short[] pagesCounters = new short[highestPage+1];
+		
+		for (GraphicalSoundboard board : getBoardList()) {
+			if (board.getScreenOrientation() == screenOrientation) {
+				pagesCounters[board.getPageNumber()]++;
+			}
+		}
+		
+		for (int i = 0; i < pagesCounters.length; i++) {
+			if (pagesCounters[i] == 0) {
+				Log.d(TAG, "Allocating missing page " + i);
+				return i;
+			}
+		}
+		Log.d(TAG, "Allocating new page after " + highestPage);
+		return highestPage + 1;
+	}
+	
+	/**
+	 * Find highest page number.
+	 * @return Highest page number or -1 if no pages found
+	 */
+	private int highestPageNumber(int screenOrientation) {
 		int highestPage = -1;
 		for (GraphicalSoundboard board : this.getBoardList()) {
 			if (board.getScreenOrientation() == screenOrientation) {
 				highestPage = (board.getPageNumber() > highestPage) ? board.getPageNumber() : highestPage;
 			}
 		}
-		return highestPage + 1;
+		return highestPage;
 	}
 	
 	public OrientationMode getOrientationMode() {
@@ -143,6 +177,70 @@ public class GraphicalSoundboardHolder {
 				soundList.soundIdCheck(sound);
 			}
 		}
+	}
+	
+	/**
+	 * Verify and fix board data.
+	 * <p>
+	 * Load time verification that board data isn't in corrupted state.
+	 * @return true if data is valid
+	 */
+	public synchronized boolean verifyIntegrity() {
+		short[] idCounters = new short[highestPageId()+1];
+		short[] portraitPageCounters = 
+				new short[highestPageNumber(GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT)+1];
+		short[] landscapePageCounters = 
+				new short[highestPageNumber(GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE)+1];
+		
+
+		for (GraphicalSoundboard board : getBoardList()) {
+			int id = board.getId();
+			int pageNum = board.getPageNumber();
+			
+			idCounters[id]++;
+			if (idCounters[id] > 1) {
+				Logger.silentError(TAG, "Detected pages with duplicate ID " + id + ", allocating a new ID");
+				board.setId(allocateBoardId());
+				return false;
+			}
+			
+			switch (board.getScreenOrientation()) {
+			case GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT:
+				portraitPageCounters[pageNum]++;
+				if (portraitPageCounters[pageNum] > 1) {
+					Logger.silentError(TAG, "Detected portrait pages with duplicate page number " + pageNum+ ", allocating a new number");
+					board.setPageNumber(allocateBoardPage(GraphicalSoundboard.SCREEN_ORIENTATION_PORTRAIT));
+					return false;
+				}
+				break;
+			case GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE:
+				landscapePageCounters[pageNum]++;
+				if (landscapePageCounters[pageNum] > 1) {
+					Logger.silentError(TAG, "Detected landscape pages with duplicate page number " + pageNum+ ", allocating a new number");
+					board.setPageNumber(allocateBoardPage(GraphicalSoundboard.SCREEN_ORIENTATION_LANDSCAPE));
+					return false;
+				}
+				break;
+			default:
+				Log.e(TAG, "Illegal screen orientation " + board.getScreenOrientation());
+			}
+		}
+		
+		for (int i = 0; i < portraitPageCounters.length; i++) {
+			if (portraitPageCounters[i] == 0) {
+				Logger.silentWarning(TAG, "Detected missing portrait page number " + i);
+				// User should be able to fix this by adding a new page
+			}
+		}
+		
+		for (int i = 0; i < landscapePageCounters.length; i++) {
+			if (portraitPageCounters[i] == 0) {
+				Logger.silentWarning(TAG, "Detected missing landscape page number " + i);
+				// User should be able to fix this by adding a new page
+			}
+		}
+		
+		return true;
 	}
 
 }
