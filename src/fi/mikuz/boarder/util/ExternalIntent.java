@@ -31,7 +31,6 @@ public abstract class ExternalIntent {
 	
 	private static final String mExtLinkDonateFlattr = "https://flattr.com/thing/1816151/Boarder";
 	private static final String mExtLinkDonatePaypal = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=ZY98RYEQTS7TY";
-	private static final String mExtLinkXDA          = "https://forum.xda-developers.com/showthread.php?p=23224859#post23224859";
 	public  static final String mExtLinkMarket       = "market://details?id=fi.mikuz.boarder";
 	private static final String mExtLinkGithub       = "https://github.com/Mikuz/Boarder";
 	
@@ -57,17 +56,6 @@ public abstract class ExternalIntent {
 		}
 	}
 	
-	public static void openXdaForums(Context context) {
-		try {
-			Intent browserXdaIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(mExtLinkXDA));
-			context.startActivity(browserXdaIntent);
-		} catch (ActivityNotFoundException e) {
-			String error = "Unable to open web browser";
-    		Log.e(TAG, error, e);
-    		Toast.makeText(context, error, Toast.LENGTH_LONG).show();
-    	}
-	}
-	
 	public static void openGooglePlay(Context context) {
 		Intent browserRateIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(mExtLinkMarket));
     	try {
@@ -75,7 +63,7 @@ public abstract class ExternalIntent {
     	} catch (ActivityNotFoundException e) {
     		Log.e(TAG, "Unable to open external activity", e);
     		Toast.makeText(context, "Could not open Google Play. Opening XDA forums instead.", Toast.LENGTH_LONG).show();
-    		openXdaForums(context);
+    		openGithub(context);
     	}
 	}
 	

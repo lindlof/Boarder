@@ -679,7 +679,7 @@ public class SoundboardMenu extends BoarderListActivity {
             	
             case R.id.menu_support_links:
             
-	            CharSequence[] pageItems = {"Email us", "XDA forums", "Github", "Donate", "Rate"};
+	            CharSequence[] pageItems = {"Email us", "Github", "Donate", "Rate"};
 	
 	        	AlertDialog.Builder pageBuilder = new AlertDialog.Builder(SoundboardMenu.this);
 	        	pageBuilder.setTitle("Support & links");
@@ -688,16 +688,13 @@ public class SoundboardMenu extends BoarderListActivity {
 	        	    	if (item == 0) { // Email us
 	        	    		ExternalIntent.openEmail(SoundboardMenu.super.mContext);
 	                    	
-	        	    	} else if (item == 1) { // XDA forums
-	        	    		ExternalIntent.openXdaForums(SoundboardMenu.super.mContext);
-	        	    		
-	        	    	} else if (item == 2) { // Github
+	        	    	} else if (item == 1) { // Github
 	        	    		ExternalIntent.openGithub(SoundboardMenu.super.mContext);
 	                    	
-	        	    	} else if (item == 3) { // Donate
+	        	    	} else if (item == 2) { // Donate
 	        	    		showDonateNotification();
 	        	    		
-	        	    	} else if (item == 4) { // Rate
+	        	    	} else if (item == 3) { // Rate
 	        	    		ExternalIntent.openGooglePlay(SoundboardMenu.super.mContext);
 	        	    		
 	        	    	}
