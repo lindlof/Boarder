@@ -15,11 +15,16 @@ It's also a tool application for easily building and sharing rich soundboards.
 
 ### Highly customizable soundboards
 
-Board can be in portrait and/or landscape orientation. Board can have multiple pages.
-Background image and color can be set for a page. Icon can be set for a board.
-Sound button contains two parts: image and text. Image can be resized and it can change when the sound is playing.
-Text size, text color and textbox color can be modified. Text and image can be linked and/or hidden.
-Sound can have alternative action and icon when playing.
+* Board can be in portrait and/or landscape orientation.
+* Board can have multiple pages.
+* Background image and color can be set for a page.
+* Icon can be set for a board.
+
+Sound button contains two parts: image and text.
+* Image can be resized and it can change when the sound is playing.
+* Text size, text color and textbox color can be modified.
+* Text and image can be linked and/or hidden.
+* Sound can have alternative action and icon when playing.
 
 ### Easy modification
 
@@ -40,10 +45,10 @@ Board can be easily converted from resolution to another.
 
 ## Links
 
-Wiki https://github.com/Mikuz/Boarder/wiki
-Source https://github.com/Mikuz/Boarder
-Downloads https://github.com/Mikuz/Boarder/releases
-Issue tracker https://github.com/Mikuz/Boarder/issues
+* Wiki https://github.com/Mikuz/Boarder/wiki
+* Source https://github.com/Mikuz/Boarder
+* Downloads https://github.com/Mikuz/Boarder/releases
+* Issue tracker https://github.com/Mikuz/Boarder/issues
 
-Android Play - https://play.google.com/store/apps/details?id=fi.mikuz.boarder
-Market link - market://details?id=fi.mikuz.boarder
+* Android Play - https://play.google.com/store/apps/details?id=fi.mikuz.boarder
+* Market link - market://details?id=fi.mikuz.boarder
