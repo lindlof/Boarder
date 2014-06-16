@@ -19,7 +19,7 @@ import fi.mikuz.boarder.util.ApiKeyLoader;
 public class Boarder extends Application {
 
 	public static final String TAG = Boarder.class.getSimpleName();
-	public static final boolean mDevelopmentMode = true; //FIXME for release
+	public static final boolean mDevelopmentMode = false; //FIXME for release
 	
 	@Override
 	public final void onCreate() {
