@@ -49,6 +49,6 @@ Board can be easily converted from resolution to another.
 * Source https://github.com/Mikuz/Boarder
 * Downloads https://github.com/Mikuz/Boarder/releases
 * Issue tracker https://github.com/Mikuz/Boarder/issues
-
 * Android Play - https://play.google.com/store/apps/details?id=fi.mikuz.boarder
 * Market link - market://details?id=fi.mikuz.boarder
+
